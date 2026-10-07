@@ -1,0 +1,39 @@
+#!/bin/bash
+# kernel-install plugin: sign .dellptl kernels with the akmods MOK key so they
+# boot under Secure Boot. Runs before 20-grub.install copies the image to /boot.
+# Install to /etc/kernel/install.d/10-sign-dellptl.install
+
+COMMAND="$1"
+KERNEL_VERSION="$2"
+KERNEL_IMAGE="$4"
+
+[[ $COMMAND == add ]] || exit 0
+[[ $KERNEL_VERSION == *.dellptl.* ]] || exit 0
+[[ -f $KERNEL_IMAGE ]] || exit 0
+
+KEY=/etc/pki/akmods/private/private_key.priv
+CERT_DER=/etc/pki/akmods/certs/public_key.der
+
+if [[ ! -r $KEY || ! -r $CERT_DER ]]; then
+    echo "sign-dellptl: akmods key not found, kernel left unsigned" >&2
+    exit 0
+fi
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+openssl x509 -inform DER -in "$CERT_DER" -out "$tmp/cert.pem" || exit 1
+
+if sbverify --cert "$tmp/cert.pem" "$KERNEL_IMAGE" >/dev/null 2>&1; then
+    exit 0
+fi
+
+# Local builds come signed with the untrusted Red Hat Test CA; some shim
+# versions only check the first signature, so strip it before signing.
+cp "$KERNEL_IMAGE" "$tmp/unsigned"
+while sbverify --list "$tmp/unsigned" 2>/dev/null | grep -q '^signature'; do
+    sbattach --remove "$tmp/unsigned" >/dev/null || exit 1
+done
+
+sbsign --key "$KEY" --cert "$tmp/cert.pem" --output "$tmp/vmlinuz" "$tmp/unsigned" || exit 1
+cat "$tmp/vmlinuz" > "$KERNEL_IMAGE"
+echo "sign-dellptl: signed $KERNEL_IMAGE with akmods MOK key"

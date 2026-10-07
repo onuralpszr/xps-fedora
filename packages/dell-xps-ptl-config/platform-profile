@@ -1,0 +1,36 @@
+#!/bin/bash
+# Set the Dell and SoC platform-profile handlers individually.
+#
+# Panther Lake XPS exposes two handlers: dell-pc (Dell thermal modes:
+# cool/quiet/balanced/performance, = BIOS ThermalManagement) and the Intel
+# "SoC Power Slider" (low-power/balanced/performance). The legacy
+# /sys/firmware/acpi/platform_profile only offers what both share
+# (balanced/performance), so tuned's power-saver request (low-power|quiet)
+# never reaches either. Called from the xps-ptl-* tuned profiles.
+#
+# Usage: platform-profile start|stop <dell-pc profile> <soc profile>
+set -u
+
+set_handler() {
+    local name=$1 want=$2 h
+    for h in /sys/class/platform-profile/*; do
+        [[ -r $h/name && $(<"$h/name") == "$name" ]] || continue
+        if [[ " $(<"$h/choices") " == *" $want "* ]]; then
+            echo "$want" > "$h/profile"
+        else
+            echo "platform-profile: $name has no '$want' (choices: $(<"$h/choices"))" >&2
+        fi
+    done
+}
+
+case ${1:-} in
+start)
+    set_handler dell-pc "${2:?dell-pc profile}"
+    set_handler "SoC Power Slider" "${3:?soc profile}"
+    ;;
+stop)
+    # Nothing: the next profile's start sets both handlers. Resetting here
+    # would briefly make the legacy platform_profile read "balanced".
+    ;;
+esac
+exit 0

@@ -1,0 +1,49 @@
+#!/usr/bin/python3
+"""Point tuned-ppd's power profiles at the xps-ptl-* tuned profiles, or back
+to Fedora's defaults. tuned-ppd only reads /etc/tuned/ppd.conf (owned by
+tuned-ppd, %config(noreplace)), so the two mappings are edited in place.
+
+Usage: ppd-mapping xps|default
+"""
+import configparser, shutil, sys, os
+
+CONF = "/etc/tuned/ppd.conf"
+MAPS = {
+    "xps": {
+        # tuned-ppd treats legacy platform_profile changes it didn't make as
+        # a firmware hotkey and switches back to match them. On this machine
+        # the legacy file can't represent our modes (dell-pc and the SoC
+        # slider differ), so the monitor undoes every power-saver switch.
+        "main": {"sysfs_acpi_monitor": "false"},
+        "profiles": {"power-saver": "xps-ptl-powersave",
+                     "balanced": "xps-ptl-balanced",
+                     "performance": "xps-ptl-performance"},
+        "battery": {"balanced": "xps-ptl-balanced-battery"},
+    },
+    "default": {
+        "main": {"sysfs_acpi_monitor": "true"},
+        "profiles": {"power-saver": "powersave",
+                     "balanced": "balanced",
+                     "performance": "throughput-performance"},
+        "battery": {"balanced": "balanced-battery"},
+    },
+}
+
+mode = sys.argv[1] if len(sys.argv) > 1 else ""
+if mode not in MAPS or not os.path.exists(CONF):
+    sys.exit(0)
+if mode == "xps" and not os.path.exists(CONF + ".dell-xps-ptl.orig"):
+    shutil.copy2(CONF, CONF + ".dell-xps-ptl.orig")
+
+cp = configparser.ConfigParser(interpolation=None)
+cp.optionxform = str  # keep "power-saver" etc. as written
+cp.read(CONF)
+for section, values in MAPS[mode].items():
+    if not cp.has_section(section):
+        cp.add_section(section)
+    for k, v in values.items():
+        cp.set(section, k, v)
+with open(CONF, "w") as f:
+    f.write("# Edited by dell-xps-ptl-config (ppd-mapping %s); original: %s.dell-xps-ptl.orig\n"
+            % (mode, CONF))
+    cp.write(f)

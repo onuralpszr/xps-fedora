@@ -1,0 +1,139 @@
+name: Upstream watch
+
+# Every day, look for Fedora updates that would replace or break our COPR
+# packages, and rebuild them:
+# - a new Fedora 45 kernel in Bodhi: rebuild the .dellptl kernel on top of it
+#   and open a pull request that moves packages/kernel/fedora-base forward;
+#   if the patches no longer apply, open an issue instead
+# - a newer Fedora or RPM Fusion build of a package we rebuilt against our
+#   onnxruntime: rebuild it in the intel-ai-stack COPR
+# Needs the COPR_CONFIG secret (see docs/ci.md). Without it, it only reports.
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: upstream-watch
+
+jobs:
+  kernel:
+    name: Fedora kernel
+    runs-on: ubuntu-latest
+    container: registry.fedoraproject.org/fedora:45
+    steps:
+      - name: Install tools
+        run: dnf -y install git fedpkg rpm-build rpmdevtools dnf-plugins-core copr-cli gh python3
+
+      - uses: actions/checkout@v7
+
+      - name: Check Bodhi
+        id: watch
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          scripts/upstream-watch.sh kernel
+
+      - name: Move fedora-base to the new kernel
+        if: steps.watch.outputs.new == 'true'
+        env:
+          NVR: ${{ steps.watch.outputs.latest }}
+          REF: ${{ steps.watch.outputs.ref }}
+        run: scripts/upstream-watch.sh bump-kernel "$NVR" "$REF"
+
+      - name: Apply the patches
+        id: prep
+        if: steps.watch.outputs.new == 'true'
+        env:
+          NVR: ${{ steps.watch.outputs.latest }}
+        run: |
+          scripts/build-kernel.sh srpm
+          cd "work/kernel-${NVR#kernel-}.1"
+          dnf -y builddep kernel.spec
+          rpmbuild -bp --target x86_64 --define "_sourcedir $PWD" \
+            --define "_builddir $PWD/build" kernel.spec > ../prep.log 2>&1 || {
+              tail -100 ../prep.log; exit 1; }
+
+      - name: Build in COPR
+        if: steps.prep.outcome == 'success'
+        env:
+          COPR_CONFIG: ${{ secrets.COPR_CONFIG }}
+        run: |
+          if [ -z "$COPR_CONFIG" ]; then
+            echo "::warning::COPR_CONFIG is not set, skipping the COPR build"
+            exit 0
+          fi
+          mkdir -p ~/.config
+          printf '%s\n' "$COPR_CONFIG" > ~/.config/copr
+          copr-cli build thunderbirdtr/xps-fedora output/srpm/kernel/*.src.rpm --nowait
+
+      - name: Open a pull request
+        if: steps.prep.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NVR: ${{ steps.watch.outputs.latest }}
+        run: |
+          branch=watch/$NVR
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -s -m "Rebuild the kernel on Fedora $NVR" packages/kernel/fedora-base
+          git push -f origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "Rebuild the kernel on Fedora $NVR" \
+            --body "The patches apply on $NVR and a COPR build has started." || true
+
+      - name: Open an issue when the patches do not apply
+        if: failure() && steps.watch.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NVR: ${{ steps.watch.outputs.latest }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Kernel patches do not apply on $NVR"
+          if ! gh issue list --state open --search "\"$title\" in:title" --json number -q '.[].number' | grep -q .; then
+            gh issue create --title "$title" --body "Fedora shipped $NVR and the .dellptl rebuild failed, see $RUN"
+          fi
+
+  rebuilds:
+    name: Rebuilt Fedora packages
+    runs-on: ubuntu-latest
+    container: registry.fedoraproject.org/fedora:45
+    steps:
+      - name: Install tools
+        run: |
+          dnf -y install git fedpkg rpm-build rpmdevtools rpmautospec copr-cli cpio dnf-plugins-core
+          dnf -y install \
+            https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-45.noarch.rpm \
+            https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-45.noarch.rpm
+          dnf config-manager setopt updates-testing.enabled=1 \
+            rpmfusion-free-updates-testing.enabled=1 rpmfusion-nonfree-updates-testing.enabled=1
+
+      - uses: actions/checkout@v7
+
+      - name: Compare with Fedora and RPM Fusion
+        id: watch
+        run: scripts/upstream-watch.sh rebuilds
+
+      - name: Rebuild in COPR
+        if: steps.watch.outputs.stale != ''
+        env:
+          COPR_CONFIG: ${{ secrets.COPR_CONFIG }}
+          STALE: ${{ steps.watch.outputs.stale }}
+        run: |
+          if [ -z "$COPR_CONFIG" ]; then
+            echo "::warning::COPR_CONFIG is not set, not rebuilding: $STALE"
+            exit 0
+          fi
+          mkdir -p ~/.config
+          printf '%s\n' "$COPR_CONFIG" > ~/.config/copr
+          for pkg in $STALE; do
+            scripts/fedora-rebuild.sh "$pkg"
+            copr-cli build thunderbirdtr/intel-ai-stack output/rebuild/f45/"$pkg"/*.src.rpm \
+              -r fedora-45-x86_64 --nowait
+          done

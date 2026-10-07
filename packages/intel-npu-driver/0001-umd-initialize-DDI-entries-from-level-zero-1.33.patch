@@ -1,0 +1,54 @@
+diff -ru a/umd/level_zero_driver/api/ze_cmdlist.cpp b/umd/level_zero_driver/api/ze_cmdlist.cpp
+--- a/umd/level_zero_driver/api/ze_cmdlist.cpp	2026-09-10 11:44:10.000000000 +0300
++++ b/umd/level_zero_driver/api/ze_cmdlist.cpp	2026-10-05 22:35:28.311105802 +0300
+@@ -792,7 +792,9 @@
+     .pfnEndGraphCaptureExt = nullptr,
+     .pfnGetGraphExt = nullptr,
+     .pfnAppendGraphExt = nullptr,
+-    .pfnAppendHostFunction = nullptr};
++    .pfnAppendHostFunction = nullptr,
++    .pfnAppendSignalEventWithParameters = nullptr,
++    .pfnAppendWaitOnEventsWithParameters = nullptr};
+ 
+ ze_command_list_exp_dditable_t zeCommandListExpDdiTable = {
+     .pfnCreateCloneExp = nullptr,
+diff -ru a/umd/level_zero_driver/api/ze_cmdqueue.cpp b/umd/level_zero_driver/api/ze_cmdqueue.cpp
+--- a/umd/level_zero_driver/api/ze_cmdqueue.cpp	2026-09-10 11:44:10.000000000 +0300
++++ b/umd/level_zero_driver/api/ze_cmdqueue.cpp	2026-10-05 22:35:28.313930679 +0300
+@@ -172,7 +172,8 @@
+                                                       .pfnGetIndex = zeCommandQueueGetIndex,
+                                                       .pfnGetFlags = zeCommandQueueGetFlags,
+                                                       .pfnGetMode = zeCommandQueueGetMode,
+-                                                      .pfnGetPriority = zeCommandQueueGetPriority};
++                                                      .pfnGetPriority = zeCommandQueueGetPriority,
++                                                      .pfnSetPriorityExt = nullptr};
+ } // namespace L0
+ 
+ extern "C" {
+diff -ru a/umd/level_zero_driver/api/ze_device.cpp b/umd/level_zero_driver/api/ze_device.cpp
+--- a/umd/level_zero_driver/api/ze_device.cpp	2026-09-10 11:44:10.000000000 +0300
++++ b/umd/level_zero_driver/api/ze_device.cpp	2026-10-05 22:35:28.307810850 +0300
+@@ -365,7 +365,8 @@
+     .pfnGetRuntimeRequirements = zeDeviceGetRuntimeRequirements,
+     .pfnGetRuntimeRequirementsKey = zeDeviceGetRuntimeRequirementsKey,
+     .pfnValidateRuntimeRequirements = zeDeviceValidateRuntimeRequirements,
+-    .pfnGetCounterBasedEventMaxValue = nullptr};
++    .pfnGetCounterBasedEventMaxValue = nullptr,
++    .pfnGetCompilerInfo = nullptr};
+ 
+ } // namespace L0
+ 
+diff -ru a/umd/level_zero_driver/api/zes_device.cpp b/umd/level_zero_driver/api/zes_device.cpp
+--- a/umd/level_zero_driver/api/zes_device.cpp	2026-09-10 11:44:10.000000000 +0300
++++ b/umd/level_zero_driver/api/zes_device.cpp	2026-10-05 22:35:28.315810831 +0300
+@@ -120,7 +120,9 @@
+                                            .pfnReadOverclockState = nullptr,
+                                            .pfnEnumOverclockDomains = nullptr,
+                                            .pfnResetExt = nullptr,
+-                                           .pfnPciLinkSpeedUpdateExt = nullptr};
++                                           .pfnPciLinkSpeedUpdateExt = nullptr,
++                                           .pfnGetHealthStatusExt = nullptr,
++                                           .pfnSetHealthStatusExt = nullptr};
+ 
+ } // namespace L0
+ 

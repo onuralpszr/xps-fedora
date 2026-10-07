@@ -1,0 +1,65 @@
+name: Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  packages:
+    name: Spec files and source RPMs
+    runs-on: ubuntu-latest
+    container: registry.fedoraproject.org/fedora:45
+    steps:
+      - name: Install tools
+        run: dnf -y install git rpmdevtools rpm-build rpmlint make python3
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find changed packages
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          base=$BASE_SHA
+          if git cat-file -e "$base" 2>/dev/null; then
+            pkgs=$(git diff --name-only "$base" HEAD -- packages | cut -d/ -f2 | sort -u)
+          else
+            pkgs=$(ls packages)
+          fi
+          echo "packages=$(echo $pkgs)" >> "$GITHUB_OUTPUT"
+          echo "Changed packages: ${pkgs:-none}"
+
+      - name: Check specs and build source RPMs
+        if: steps.changed.outputs.packages != ''
+        env:
+          PACKAGES: ${{ steps.changed.outputs.packages }}
+        run: |
+          status=0
+          for pkg in $PACKAGES; do
+            spec=packages/$pkg/$pkg.spec
+            [ -f "$spec" ] || continue
+            echo "::group::$pkg"
+            rpmspec -P "$spec" >/dev/null || status=1
+            rpmlint "$spec" || true
+            # the kernel spec lives in Fedora dist-git, not here
+            if [ "$pkg" != kernel ]; then
+              make -s -f .copr/Makefile srpm spec="$spec" outdir="$PWD/srpm" || status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $status
+
+  scripts:
+    name: Shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: shellcheck -S warning scripts/*.sh tools/build-host/*.sh

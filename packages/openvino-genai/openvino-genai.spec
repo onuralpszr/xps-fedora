@@ -44,9 +44,6 @@ Source8:        https://github.com/mlc-ai/xgrammar/archive/v%{xgrammar_ver}/xgra
 Source9:        https://github.com/dmlc/dlpack/archive/%{dlpack_commit}/dlpack-%{sub %{dlpack_commit} 1 7}.tar.gz
 Source10:       https://github.com/pybind/pybind11/archive/v%{pybind11_ver}/pybind11-%{pybind11_ver}.tar.gz
 
-# C++20 (GCC 16 default): non-aggregate guard needs a constructor
-Patch0:         0001-continuous-batching-guard-constructor.patch
-
 ExclusiveArch:  x86_64
 
 BuildRequires:  cmake
@@ -113,7 +110,7 @@ into OpenVINO models using the openvino-tokenizers extension.
 
 
 %prep
-%autosetup -p1 -n openvino.genai-%{version}
+%autosetup -n openvino.genai-%{version}
 
 tar xf %{SOURCE1}
 rmdir thirdparty/openvino_tokenizers
@@ -134,10 +131,13 @@ tar xf %{SOURCE10} -C deps
 
 
 %build
-# xgrammar builds with -Werror; GCC 16 reports a false -Warray-bounds in it
+# Upstream is written for C++17 (GCC 16 defaults to C++20, which changes
+# aggregate and u8 literal rules). xgrammar builds with -Werror and GCC 16
+# reports a false -Warray-bounds in it.
 export CXXFLAGS="%{optflags} -Wno-error"
 %cmake -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_STANDARD=17 \
     -DCMAKE_SKIP_INSTALL_RPATH=ON \
     -DCMAKE_INSTALL_LIBDIR=%{_lib} \
     -DCMAKE_INSTALL_INCLUDEDIR=include \
@@ -249,4 +249,4 @@ export PYTHONPATH=%{buildroot}%{python3_sitearch}:%{buildroot}%{python3_sitelib}
 %changelog
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2026.4.1.0-1
 - Initial package
-- Fix building with GCC 16 (C++20 aggregate rules)
+- Build as C++17 for GCC 16

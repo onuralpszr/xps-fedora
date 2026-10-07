@@ -1,0 +1,5 @@
+work/
+output/
+*.rpm
+*.tar.gz
+__pycache__/

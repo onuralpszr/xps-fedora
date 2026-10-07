@@ -77,7 +77,7 @@ sudo dnf install intel-npu-driver intel-npu-compiler
 sudo dnf install openvino libopenvino-intel-npu-plugin python3-openvino-genai python3-openvino-tokenizers
 sudo dnf install llama-cpp-vulkan llama-cpp-openvino
 sudo dnf install onnxruntime-openvino python3-onnxruntime-openvino
-sudo dnf install python3-optimum-intel python3-nncf python3-transformers
+sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3-torch python3-torchvision
 ```
 
 Useful tools from Fedora:

@@ -24,7 +24,7 @@ Do this once, after the repository is on GitHub.
    scripts/copr-setup.sh
    ```
 
-2. Add the COPR webhooks to the GitHub repository. For each project, open its COPR page, go to **Settings**, then **Integrations**, and copy the GitHub webhook URL. In the GitHub repository, open **Settings**, then **Webhooks**, then **Add webhook**: paste the URL, choose `application/json`, and keep **Just the push event**. Repeat for the second project.
+2. Add the COPR webhooks to the GitHub repositories (xps-fedora and plasma-sensord). For each project, open its COPR page, go to **Settings**, then **Integrations**, and copy the GitHub webhook URL. In the GitHub repository, open **Settings**, then **Webhooks**, then **Add webhook**: paste the URL, choose `application/json`, and keep **Just the push event**. Repeat for the second project.
 
 3. Give the manual workflow access to COPR. Create an API token at [copr.fedorainfracloud.org/api](https://copr.fedorainfracloud.org/api/) and store the whole configuration as a repository secret:
 

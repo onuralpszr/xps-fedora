@@ -44,3 +44,17 @@ for pkg in "${!project[@]}"; do
     echo "registered $proj $pkg"
   fi
 done
+
+# plasma-sensord lives in its own repository with its own .copr/Makefile
+proj=$owner/xps-fedora
+args=(--name plasma-sensord
+      --clone-url "${SENSORD_URL:-https://github.com/onuralpszr/plasma-sensord.git}"
+      --commit "$branch" --spec packaging/plasma-sensord.spec
+      --method make_srpm --webhook-rebuild on)
+if copr-cli get-package "$proj" --name plasma-sensord >/dev/null 2>&1; then
+  copr-cli edit-package-scm "$proj" "${args[@]}" >/dev/null
+  echo "updated    $proj plasma-sensord"
+else
+  copr-cli add-package-scm "$proj" "${args[@]}" >/dev/null
+  echo "registered $proj plasma-sensord"
+fi

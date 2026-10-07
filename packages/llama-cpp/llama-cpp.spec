@@ -272,7 +272,7 @@ export HIPCC_COMPILE_FLAGS_APPEND="--offload-compress"
     -DGGML_HIP=%{build_hip} \
     -DGGML_VULKAN=%{build_vulkan} \
     -DGGML_OPENVINO=%{?with_openvino:ON}%{!?with_openvino:OFF} \
-    -DAMDGPU_TARGETS=%{rocm_gpu_list_default} \
+    -DAMDGPU_TARGETS="$(echo '%{rocm_gpu_list_default}' | sed -E 's/[;,]?gfx1250//g; s/^[;,]//')" \
     -DLLAMA_BUILD_EXAMPLES=%{build_examples} \
     -DLLAMA_BUILD_TESTS=%{build_test}
 
@@ -406,4 +406,5 @@ export LD_LIBRARY_PATH=$PWD/%{_vpath_builddir}/bin
 - Build backends as loadable modules in %{_libdir}/ggml with -vulkan,
   -openvino and -hip subpackages; enable Vulkan and OpenVINO
 - Build all x86-64 CPU variants, picked at runtime
+- Leave gfx1250 out of the HIP targets (needs newer llama.cpp HIP code)
 - Based on Fedora's llama-cpp b9840 packaging

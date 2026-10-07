@@ -56,7 +56,7 @@ NPU driver and the compiler the OpenVINO NPU plugin uses.
 
 ### onnxruntime dependents
 
-onnxruntime renames its symbol version every release (`VERS_1.26.0` ->
+onnxruntime renames its symbol version every release (`VERS_1.26.0` to
 `VERS_1.30.0`), so these Fedora/RPM Fusion packages must be rebuilt in the
 COPR or dnf refuses the update:
 

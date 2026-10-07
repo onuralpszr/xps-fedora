@@ -24,40 +24,257 @@ This repository holds the RPM packages, patches and notes that make Fedora 45 ru
 
 Most of it is not specific to this laptop. The camera, NPU and AI packages should help any Panther Lake or Lunar Lake machine, and the aim is to send as much as possible to Fedora and upstream projects.
 
+## Tested on
+
+| | Part | Details |
+| --- | --- | --- |
+| 💻 | **Model** | Dell XPS 16 DA16260, board `0VRKYR`, subsystem `1028:0dba`, BIOS 1.8.2 (2026-05-22) |
+| 🧠 | **CPU** | Intel Core Ultra X7 358H (Panther Lake H, 16 cores, up to 4.8 GHz) |
+| 🎮 | **Graphics** | Intel Arc B390 (`8086:b080`), `xe` driver, Mesa 26.2.4 |
+| ⚡ | **NPU** | Intel AI Boost (`8086:b03e`) |
+| 🖥️ | **Display** | LG OLED, 3200x2000, 20-120 Hz VRR |
+| 📷 | **Camera** | IPU7.5 (`8086:b05d`) with OV08X40 RGB and Himax HM1092 IR, behind the Synaptics SVP7500 vision chip (`06cb:0701`) |
+| 🧮 | **Memory** | 32 GB |
+| 💾 | **Storage** | SK hynix PVC10 NVMe, 1 TB |
+| 📶 | **Wireless** | Intel CNVi Wi-Fi (`8086:e440`) and Bluetooth |
+| 🔊 | **Audio** | Intel HD Audio with SOF SoundWire |
+| 🖱️ | **Touchpad** | `2C2F:0033` |
+| 🔌 | **Ports** | 3 USB-C with Thunderbolt 4 / USB4 |
+| 🔋 | **Battery** | BYD, 68.6 Wh |
+| 🐧 | **Software** | Fedora 45, KDE Plasma 6.7.5, kernel 7.2.9-300.2.dellptl |
+
+<details>
+<summary>📋 Full <code>lspci</code></summary>
+
+```text
+00:00.0 Host bridge: Intel Corporation Core Ultra Processors (Series 3) PTL-H12Xe (rev 04)
+00:02.0 VGA compatible controller: Intel Corporation Panther Lake [Arc B390] (rev 04)
+00:04.0 Signal processing controller: Intel Corporation Core Ultra Processors (Series 3) DTT (rev 04)
+00:05.0 Multimedia controller: Intel Corporation Core Ultra Processors (Series 3) IPU (rev 04)
+00:06.0 PCI bridge: Intel Corporation Core Ultra Processors (Series 3) PCIe Root Port #9 (rev 01)
+00:07.0 PCI bridge: Intel Corporation Core Ultra Processors (Series 3) USB Type-C Subsystem PCIe Root Port #21 (rev 01)
+00:07.1 PCI bridge: Intel Corporation Core Ultra Processors (Series 3) USB Type-C Subsystem PCIe Root Port #22 (rev 01)
+00:07.2 PCI bridge: Intel Corporation Core Ultra Processors (Series 3) USB Type-C Subsystem PCIe Root Port #23 (rev 01)
+00:0a.0 Signal processing controller: Intel Corporation Core Ultra Processors (Series 3) Crashlog and Telemetry (rev 04)
+00:0b.0 Processing accelerators: Intel Corporation Core Ultra Processors (Series 3) NPU (rev 04)
+00:0d.0 USB controller: Intel Corporation Core Ultra Processors (Series 3) Type-C Subsystem xHCI (rev 01)
+00:0d.2 USB controller: Intel Corporation Core Ultra Processors (Series 3) Thunderbolt DMA0 (rev 01)
+00:0d.3 USB controller: Intel Corporation Core Ultra Processors (Series 3) Thunderbolt DMA1 (rev 01)
+00:12.0 Serial controller: Intel Corporation Core Ultra Processors (Series 3) ISH (rev 01)
+00:13.0 Communication controller: Intel Corporation Core Ultra Processors (Series 3) CSME HECI #1 (rev 01)
+00:14.0 USB controller: Intel Corporation Core Ultra Processors (Series 3) Standalone xHCI Controller (rev 01)
+00:14.2 RAM memory: Intel Corporation Core Ultra Processors (Series 3) Shared SRAM (rev 01)
+00:14.3 Network controller: Intel Corporation Core Ultra Processors (Series 3) CNVi Wi-Fi (rev 01)
+00:14.7 Bluetooth: Intel Corporation Core Ultra Processors (Series 3) CNVi Bluetooth (rev 01)
+00:16.0 Communication controller: Intel Corporation Core Ultra Processors (Series 3) CSME HECI #1 (CSE) (rev 01)
+00:18.0 Communication controller: Intel Corporation Core Ultra Processors (Series 3) CSME HECI #1 (rev 01)
+00:19.0 Serial bus controller: Intel Corporation Core Ultra Processors (Series 3) I2C #4 (rev 01)
+00:19.1 Serial bus controller: Intel Corporation Core Ultra Processors (Series 3) I2C #5 (rev 01)
+00:1f.0 ISA bridge: Intel Corporation Core Ultra Processors (Series 3) eSPI (rev 01)
+00:1f.3 Audio device: Intel Corporation Core Ultra Processors (Series 3) HD Audio (rev 01)
+00:1f.4 SMBus: Intel Corporation Core Ultra Processors (Series 3) SMBus (rev 01)
+00:1f.5 Serial bus controller: Intel Corporation Core Ultra Processors (Series 3) SPI (flash) Controller (rev 01)
+01:00.0 Non-Volatile memory controller: SK hynix PVC10 NVMe Solid State Drive (DRAM-less)
+```
+
+</details>
+
+<details>
+<summary>📋 Full <code>lsusb</code></summary>
+
+```text
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 003 Device 002: ID 06cb:0701 Synaptics, Inc. SVP7500
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+```
+
+</details>
+
 ## Hardware status
 
-✅ working, ⚠️ partly working, ❌ not working, ⛔ blocked upstream
+![Working](https://img.shields.io/badge/working-15-2ea44f?style=for-the-badge) ![Blocked](https://img.shields.io/badge/blocked-2-cf222e?style=for-the-badge)
 
-| Component                                         | Stock Fedora 45              | With this repo | How                                                                                  |
-| ------------------------------------------------- | ---------------------------- | -------------- | ------------------------------------------------------------------------------------ |
-| Display, VRR 20-120 Hz                            | ❌ not detected              | ✅             | `kernel` patch, KDE VRR set to Automatic                                             |
-| Display, panel self refresh                       | ⚠️ glitches, link errors     | ✅ PSR1        | `kernel` ALPM quirk and `xe.enable_psr2_sel_fetch=0`                                 |
-| Camera (OV08X40 through IPU7)                     | ❌ raw nodes only            | ✅             | `intel-ipu7-kmod`, `intel-ipu7-camera`                                               |
-| NPU (Intel AI Boost)                              | ❌ no compiler               | ✅             | `intel-npu-driver` 1.38 with `intel-npu-compiler`                                    |
-| OpenVINO on CPU, GPU and NPU                      | ⚠️ no NPU plugin             | ✅             | `openvino` 2026.4.1 from the COPR                                                    |
-| llama.cpp on the Arc GPU                          | ⚠️ CPU only                  | ✅             | `llama-cpp-vulkan`, `llama-cpp-openvino`                                             |
-| Thermal (thermald, Dell DPTF)                     | ❌ stops after boot          | ✅             | `dell-xps-ptl-config`                                                                |
-| Power profiles and Dell thermal modes             | ❌ power saver never reached | ✅             | `dell-xps-ptl-config` tuned profiles                                                 |
-| Ambient light brightness                          | ❌ none                      | ✅             | [plasma-light-and-presence](https://github.com/onuralpszr/plasma-light-and-presence) |
-| Copilot key                                       | ❌ unknown key               | ✅             | input-remapper preset in `tools/copilot-key`                                         |
-| Video decode H.264 and HEVC                       | ⚠️ VP9 and AV1 only          | ✅             | RPM Fusion `intel-media-driver`                                                      |
-| External monitor through a USB-C dock             | ✅                           | ✅             | limited to 60 Hz by the dock's two DP lanes                                          |
-| Audio, Wi-Fi, Bluetooth, touchpad, keyboard light | ✅                           | ✅             | stock                                                                                |
-| IR camera (HM1092) and face login                 | ❌ no driver                 | ⛔             | the camera bridge does not pass IR frames yet                                        |
-| Presence sensor                                   | ❌ not usable                | ⛔             | camera based, needs vendor support, see [findings](docs/findings.md)                 |
-| Idle battery drain and sleep states               | ⚠️ not measured              | ⚠️             | measurement still to do                                                              |
+✅ working &nbsp; ⚠️ partly working &nbsp; ❌ not working &nbsp; ⛔ blocked upstream
+
+### 🐧 Kernel
+
+| Component | Stock Fedora 45 | With this repo | How |
+| --- | :---: | :---: | --- |
+| 🐧 **Fedora kernel 7.2.9 with Panther Lake fixes** | ⚠️ no display and PSR fixes | ✅ | `kernel` 7.2.9-300.2.dellptl from the COPR, Secure Boot stays on |
+
+### 🖥️ Display and graphics
+
+| Component | Stock Fedora 45 | With this repo | How |
+| --- | :---: | :---: | --- |
+| 🌈 **VRR 20-120 Hz** | ❌ not detected | ✅ | `kernel` patch, KDE VRR set to Automatic |
+| ✨ **Panel self refresh** | ⚠️ glitches, link errors | ✅ PSR1 | `kernel` ALPM quirk and `xe.enable_psr2_sel_fetch=0` |
+| 🎬 **Video decode H.264 and HEVC** | ⚠️ VP9 and AV1 only | ✅ | RPM Fusion `intel-media-driver` |
+| 🔌 **External monitor over USB-C** | ✅ | ✅ | works; the top refresh rate depends on the dock or adapter, see [findings](docs/findings.md) |
+
+### 📷 Camera
+
+| Component | Stock Fedora 45 | With this repo | How |
+| --- | :---: | :---: | --- |
+| 🎥 **Camera (OV08X40 through IPU7)** | ❌ raw nodes only | ✅ | `intel-ipu7-kmod`, `intel-ipu7-camera` |
+| 🙂 **IR camera (HM1092) and face login** | ❌ no driver | ⛔ | the camera bridge does not pass IR frames yet |
+
+### 🧠 AI and NPU
+
+| Component | Stock Fedora 45 | With this repo | How |
+| --- | :---: | :---: | --- |
+| ⚡ **NPU (Intel AI Boost)** | ❌ no compiler | ✅ | `intel-npu-driver` 1.38 with `intel-npu-compiler` |
+| 🧩 **OpenVINO on CPU, GPU and NPU** | ⚠️ no NPU plugin | ✅ | `openvino` 2026.4.1 from the COPR |
+| 🦙 **llama.cpp on the Arc GPU** | ⚠️ CPU only | ✅ | `llama-cpp-vulkan`, `llama-cpp-openvino` |
+
+### 🌡️ Power and thermal
+
+| Component | Stock Fedora 45 | With this repo | How |
+| --- | :---: | :---: | --- |
+| ❄️ **Thermal (thermald, Dell DPTF)** | ❌ stops after boot | ✅ | `dell-xps-ptl-config` |
+| 🎚️ **Power profiles and Dell thermal modes** | ❌ power saver never reached | ✅ | `dell-xps-ptl-config` tuned profiles |
+| 🔋 **Battery life** | ⚠️ not measured | ✅ 10-15 h | 10 to 15 hours in daily use so far; idle and sleep drain still to measure |
+
+### ⌨️ Input and sensors
+
+| Component | Stock Fedora 45 | With this repo | How |
+| --- | :---: | :---: | --- |
+| 💡 **Ambient light brightness** | ❌ none | ✅ | [plasma-light-and-presence](https://github.com/onuralpszr/plasma-light-and-presence) |
+| 🤖 **Copilot key** | ❌ unknown key | ✅ | input-remapper preset in `tools/copilot-key` |
+| 👤 **Presence sensor** | ❌ not usable | ⛔ | camera based, needs vendor support, see [findings](docs/findings.md) |
+| 🎧 **Audio, Wi-Fi, Bluetooth, touchpad, keyboard light** | ✅ | ✅ | stock |
 
 ## Installing
 
-The AI stack is in a COPR repository:
+Everything comes from three places: two COPR repositories for the open packages, RPM Fusion for codecs and the camera relay, and a GitHub release for the camera userspace, which contains Intel's closed libraries and therefore cannot live in COPR.
+
+| | Source | What it gives you |
+| --- | --- | --- |
+| 🧩 | [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | kernel, IPU7 camera drivers, system configuration, plasma-light-and-presence |
+| 🧠 | [thunderbirdtr/intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | NPU driver and compiler, OpenVINO, ONNX Runtime, llama.cpp, Python model tools |
+| 📦 | [RPM Fusion](https://rpmfusion.org/) free and nonfree | H.264 and HEVC decode, `v4l2-relayd`, `v4l2loopback` |
+| 📷 | [GitHub releases](https://github.com/onuralpszr/xps-fedora/releases) | `intel-ipu7-camera` (camera HAL and Intel imaging libraries) |
+
+### ⚡ One line
+
+Adds every repository, sets up the Secure Boot key and installs everything. `mokutil` asks for a one-time password; enroll the key in MOK Manager on the next boot.
+
+```bash
+sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf copr enable -y thunderbirdtr/xps-fedora && sudo dnf copr enable -y thunderbirdtr/intel-ai-stack && sudo dnf install -y akmods sbsigntools mokutil && sudo kmodgenca -a && sudo mokutil --import /etc/pki/akmods/certs/public_key.der && sudo dnf install -y dell-xps-ptl-config && sudo dnf install -y kernel akmod-intel-ipu7 plasma-light-and-presence https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm intel-npu-driver intel-npu-compiler openvino libopenvino-intel-npu-plugin python3-openvino-genai llama-cpp-vulkan llama-cpp-openvino && sudo dnf swap -y libva-intel-media-driver intel-media-driver --allowerasing && sudo reboot
+```
+
+### 🚀 Everything, step by step
+
+```bash
+# 1. Repositories
+sudo dnf install \
+  https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+  https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf copr enable thunderbirdtr/xps-fedora
+sudo dnf copr enable thunderbirdtr/intel-ai-stack
+
+# 2. Secure Boot key, once (reboot and enroll it in MOK Manager afterwards)
+sudo dnf install akmods sbsigntools mokutil
+sudo kmodgenca -a
+sudo mokutil --import /etc/pki/akmods/certs/public_key.der
+
+# 3. Laptop support (configuration first, so its signing hook is ready for the kernel)
+sudo dnf install dell-xps-ptl-config
+sudo dnf install kernel akmod-intel-ipu7 plasma-light-and-presence
+sudo dnf swap libva-intel-media-driver intel-media-driver --allowerasing
+
+# 4. Camera
+sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm
+
+# 5. NPU and AI stack
+sudo dnf install intel-npu-driver intel-npu-compiler openvino libopenvino-intel-npu-plugin \
+  python3-openvino-genai llama-cpp-vulkan llama-cpp-openvino
+
+sudo reboot
+```
+
+### 🧱 Or one set at a time
+
+<details>
+<summary>🐧 <b>Kernel and system configuration</b>: display fixes, thermald, power profiles, kernel signing</summary>
+
+`dell-xps-ptl-config` signs every new kernel with the akmods key, so set up the Secure Boot key first and install it before the kernel.
+
+```bash
+sudo dnf copr enable thunderbirdtr/xps-fedora
+sudo dnf install akmods sbsigntools mokutil
+sudo kmodgenca -a
+sudo mokutil --import /etc/pki/akmods/certs/public_key.der   # reboot and enroll
+sudo dnf install dell-xps-ptl-config
+sudo dnf install kernel
+```
+
+</details>
+
+<details>
+<summary>📷 <b>Camera</b>: IPU7 drivers, HAL and the relay that shows up as a normal webcam</summary>
+
+Needs RPM Fusion for `v4l2-relayd` and `v4l2loopback`. Remove RPM Fusion's IPU6 stack first if it is installed, its `libcamhal` and `icamerasrc` clash with the IPU7 ones.
+
+```bash
+sudo dnf remove akmod-intel-ipu6 'kmod-intel-ipu6*' ipu6-camera-hal ipu6-camera-bins gstreamer1-plugins-icamerasrc
+sudo dnf install akmod-intel-ipu7
+sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm
+```
+
+The camera appears as "Intel MIPI Camera" after a reboot.
+
+</details>
+
+<details>
+<summary>🎬 <b>Video decode</b>: H.264 and HEVC on the Arc GPU</summary>
+
+```bash
+sudo dnf swap libva-intel-media-driver intel-media-driver --allowerasing
+```
+
+</details>
+
+<details>
+<summary>💡 <b>Ambient light brightness</b>: plasma-light-and-presence</summary>
+
+```bash
+sudo dnf install plasma-light-and-presence
+systemctl --user enable --now plasma-light-and-presence
+```
+
+Settings are under System Settings, and a widget can be added to the panel.
+
+</details>
+
+<details>
+<summary>⚡ <b>NPU</b>: driver and Intel's compiler</summary>
 
 ```bash
 sudo dnf copr enable thunderbirdtr/intel-ai-stack
-sudo dnf install openvino libopenvino-intel-npu-plugin python3-openvino-genai \
-    llama-cpp-vulkan llama-cpp-openvino intel-npu-driver intel-npu-compiler
+sudo dnf install intel-npu-driver intel-npu-compiler
 ```
 
-The kernel, the IPU7 camera drivers, the system configuration and plasma-light-and-presence are in a second COPR repository, [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/). The camera userspace (`intel-ipu7-camera`) contains closed libraries, which COPR does not allow, so its RPMs are attached to [GitHub releases](https://github.com/onuralpszr/xps-fedora/releases) and can be installed with `sudo dnf install ./intel-ipu7-camera-*.x86_64.rpm`. [docs/install.md](docs/install.md) covers the Secure Boot key, the install order and how to check that everything works.
+</details>
+
+<details>
+<summary>🧠 <b>AI stack</b>: OpenVINO, GenAI, ONNX Runtime, llama.cpp and the Python model tools</summary>
+
+```bash
+# OpenVINO with the NPU plugin, GenAI and tokenizers
+sudo dnf install openvino libopenvino-intel-npu-plugin python3-openvino python3-openvino-genai python3-openvino-tokenizers
+# llama.cpp with the Arc GPU through Vulkan or OpenVINO
+sudo dnf install llama-cpp-vulkan llama-cpp-openvino
+# ONNX Runtime with the OpenVINO execution provider
+sudo dnf install onnxruntime-openvino python3-onnxruntime-openvino
+# Convert and compress your own models
+sudo dnf install python3-optimum-intel python3-nncf python3-transformers
+```
+
+</details>
+
+[docs/install.md](docs/install.md) has the details: the MOK enrollment screens, the install order and the commands to check that everything works after the reboot.
 
 ## Packages
 

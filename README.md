@@ -281,7 +281,7 @@ sudo dnf install llama-cpp-vulkan llama-cpp-openvino
 # ONNX Runtime with the OpenVINO execution provider
 sudo dnf install onnxruntime-openvino python3-onnxruntime-openvino
 # Convert and compress your own models
-sudo dnf install python3-optimum-intel python3-nncf python3-transformers
+sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3-torch python3-torchvision
 ```
 
 </details>

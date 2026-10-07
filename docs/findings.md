@@ -111,16 +111,16 @@ Result on `300.2` (2026-10-06):
 
 ## Auto-brightness
 
-- Sensors: ISH ALS via iio-sensor-proxy (`HasAmbientLight`, lux); readings only update while a client holds `ClaimLight`. PowerDevil 6.7.5 has no ambient-light support, so `xps-ptl-tools` adds a user service.
+- Sensors: ISH ALS via iio-sensor-proxy (`HasAmbientLight`, lux); readings only update while a client holds `ClaimLight`. PowerDevil 6.7.5 has no ambient-light support, so [plasma-light-and-presence](https://github.com/onuralpszr/plasma-light-and-presence) adds a user service.
 - Control path: KDE `org.kde.ScreenBrightness/display0` (0-10000), `SetBrightness(value, flags)`; flag 0x1 suppresses the OSD. KDE sends `BrightnessChanged` on the root object plus `PropertiesChanged` on the display, and re-announces unchanged values (must not count as user changes).
 - Pitfalls hit while building it:
   - iio-sensor-proxy only signals changes: poll `LightLevel` every tick, or a smoothed value gets stuck when the room is steady.
-  - Don't adopt the session's start brightness as the preference; persist the learned offset instead (`~/.local/state/xps-ptl/autobrightness`).
+  - Don't adopt the session's start brightness as the preference; persist the learned offset instead (`~/.local/state/plasma-light-and-presence/state`).
   - The ALS reports **bursts of impossible values**: median 1 lx in a dark room, but 15 338 and 114 697 lx for 0.5-1.5 s at a time (both ALS devices; not the screen's own light, which moves it only 0 to 1 lx from 10 % to 90 %). Fix: 0.5 s sampling, drop > 40 000 lx, 30th percentile of a 6 s window, then smoothing.
   - Wayland KDE has no `GetSessionIdleTime` and no logind IdleHint, so idle dimming is detected as a sharp drop (≤ 50 %) and waits for the restore.
-- Widget (`org.xpsptl.autobrightness`): `org.kde.plasma.workspace.dbus` (`Properties` for live values, `SessionBus.asyncCall` for methods). Its `DBusServiceWatcher.registered` only changes on events, so check `NameHasOwner` too. Popups need `Layout.minimumHeight`/`preferredHeight` in the panel or they collapse to the header.
-- Packaging: no systemd preset (a preset enables the unit globally for every user); users run `systemctl --user enable --now xps-ptl-autobrightness`.
-- Icons are original (screen + sensor + light rays), not Dell trademarks.
+- Widget (`io.github.onuralpszr.lightandpresence`): `org.kde.plasma.workspace.dbus` (`Properties` for live values, `SessionBus.asyncCall` for methods). Its `DBusServiceWatcher.registered` only changes on events, so check `NameHasOwner` too. Popups need `Layout.minimumHeight`/`preferredHeight` in the panel or they collapse to the header.
+- Packaging: no systemd preset (a preset enables the unit globally for every user); users run `systemctl --user enable --now plasma-light-and-presence`.
+- Icons are original (screen + sensor + light rays), not Dell trademarks. They are named after the app id: KDE shortens unknown icon names at each dash inside Breeze first, so a `plasma-...` name resolves to the Plasma logo.
 
 ## Copilot key
 

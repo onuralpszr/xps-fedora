@@ -142,7 +142,7 @@ Result on `300.2` (2026-10-06):
 
 ## Human presence sensor
 
-Intel "Human Presence v2" (HID 0x200011, model `HuP v2`, detection type _facial_) behind the ISH (`ish_ptl_39ceeaf8.bin`, FW 5.8.1.7783). It is camera based: the Synaptics SVP7xxx CVS (06CB:0701) runs the vision model on frames from the RGB sensor (ov08x40). Linux exposes it as iio `prox` (`hid-sensor-prox`); the sensor's own state field is only visible in the raw HID reports (`plasma-sensord/tools/hpd-diag.py`).
+Intel "Human Presence v2" (HID 0x200011, model `HuP v2`, detection type _facial_) behind the ISH (`ish_ptl_39ceeaf8.bin`, FW 5.8.1.7783). It is camera based: the Synaptics SVP7xxx CVS (06CB:0701) runs the vision model on frames from the RGB sensor (ov08x40). Linux exposes it as iio `prox` (`hid-sensor-prox`); the sensor's own state field is only visible in the raw HID reports (`plasma-light-and-presence/tools/hpd-diag.py`).
 
 Result: **not usable on Linux** (BIOS 1.8.2, kernel 7.2.9).
 

@@ -128,7 +128,7 @@ nodes only. No PSYS (the image processor) and no HAL.
 - Firmware: Fedora's `intel-npu-firmware` works; Intel's newer
   `vpu_50xx_v1.bin` is not needed.
 
-## Display: DSB poll errors → FIFO underrun → PSR stuck (open)
+## Display: DSB poll errors, FIFO underruns and a stuck PSR (open)
 
 - Seen on `300.1` (and DSB poll errors already on `300`: 187 in one boot).
   Opening Spectacle's screenshot overlay was followed within 0.6 s by
@@ -206,7 +206,7 @@ Result on `300.2` (2026-10-06):
 ### Upstream state (checked 2026-10-06)
 
 - `ipu-bridge: Add Himax HM1092 IR sensor` (Jake Steinman, v2): **accepted**,
-  in media.git/next (→ 7.3). Its two link frequencies are 180.48 MHz for Dell
+  in media.git/next (for 7.3). Its two link frequencies are 180.48 MHz for Dell
   (19.2 MHz EXTCLK) and 180 MHz for ASUS (24 MHz).
 - Two competing sensor drivers, neither reviewed by the maintainers yet:
   - Ramshouriesh R v6 (2026-08-01): DT-only, 24 MHz only, tested on ASUS
@@ -233,7 +233,7 @@ Result on `300.2` (2026-10-06):
 
 - Not Howdy: last stable release 2020, 3.0 beta unreleased for years, forks
   early WIP. Plan: **Gaze** (GunduLabs, Rust, SCRFD + ArcFace + liveness,
-  PAM → `gazed` over D-Bus, TPM-sealed templates, Fedora 45 COPR, `gaze-kde`,
+  PAM to `gazed` over D-Bus, TPM-sealed templates, Fedora 45 COPR, `gaze-kde`,
   OpenVINO/NPU).
 - IR face login is blocked in hardware support, not by the face-login tool:
   no IR frames reach Linux until the CVS bridge passes the IR stream (see
@@ -285,7 +285,7 @@ Result on `300.2` (2026-10-06):
     learned offset instead (`~/.local/state/xps-ptl/autobrightness`).
   - The ALS reports **bursts of impossible values**: median 1 lx in a dark
     room, but 15 338 and 114 697 lx for 0.5-1.5 s at a time (both ALS
-    devices; not the screen's own light, which moves it only 0 → 1 lx from
+    devices; not the screen's own light, which moves it only 0 to 1 lx from
     10 % to 90 %). Fix: 0.5 s sampling, drop > 40 000 lx, 30th percentile of
     a 6 s window, then smoothing.
   - Wayland KDE has no `GetSessionIdleTime` and no logind IdleHint, so idle
@@ -305,7 +305,7 @@ Result on `300.2` (2026-10-06):
   Shift+Super+`<FK23>` to `XF86Assistant` (`PC_SHIFT_SUPER_LEVEL2`), and Qt 6.11
   has no key for it, so KDE can't bind it.
 - `fkeys:basic_13-24` would fix it but also turns F20 (MicMute) and F21/F22
-  (touchpad) into plain F-keys. Instead input-remapper maps F23 → F19 and KDE
+  (touchpad) into plain F-keys. Instead input-remapper maps F23 to F19 and KDE
   binds Meta+Shift+F19 (`tools/copilot-key`).
 - Upstream: Qt has no `Key_Assistant` for `XF86Assistant`.
 

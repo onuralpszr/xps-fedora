@@ -19,10 +19,10 @@ Results of dry-running our patches on the latest upstream:
 
 | Patch | On latest upstream |
 |---|---|
-| drivers 0004 PSYS register device bus | merged upstream (`ipu7_psys_bus` + `bus_register`) → drop |
-| drivers 0005 harden userptr pinning | **not upstream** (`FOLL_FORCE` still there, no `MAX_RW_COUNT` check) and no longer applies → needs a rebase; security fix |
+| drivers 0004 PSYS register device bus | merged upstream (`ipu7_psys_bus` + `bus_register`), drop it |
+| drivers 0005 harden userptr pinning | **not upstream** (`FOLL_FORCE` still there, no `MAX_RW_COUNT` check) and no longer applies, so it needs a rebase (security fix) |
 | drivers 0101 hide LT6911 | applies |
-| hal 0005 route through Intel CVS bridge | conflicts with upstream `f167239` "Enable ov08x40 CVS for upstream cvs driver" (configured for ipu8 only) → needs checking whether upstream's version covers ipu75xa |
+| hal 0005 route through Intel CVS bridge | conflicts with upstream `f167239` "Enable ov08x40 CVS for upstream cvs driver" (configured for ipu8 only), so check whether upstream's version covers ipu75xa |
 | hal 0006, 0008, 0010, 0011, 0012 | apply |
 
 Bumping means rebasing a security patch and re-testing the camera. Omarchy

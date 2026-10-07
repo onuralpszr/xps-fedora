@@ -6,6 +6,7 @@ Two COPR projects build the packages in this repository:
 | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [thunderbirdtr/intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | onnx, openvino, openvino-genai, onnxruntime, llama-cpp, intel-npu-driver and the Python packages |
 | [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/)         | dell-xps-ptl-config, intel-ipu7-kmod, kernel, plasma-sensord                                     |
+| [thunderbirdtr/plasma-sensord](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-sensord/) | plasma-sensord (from its own repository)                                                         |
 
 ## How it fits together
 

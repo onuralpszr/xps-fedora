@@ -2,11 +2,11 @@
 
 Two COPR projects build the packages in this repository:
 
-| Project                                                                                               | Packages                                                                                         |
-| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [thunderbirdtr/intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | onnx, openvino, openvino-genai, onnxruntime, llama-cpp, intel-npu-driver and the Python packages |
-| [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/)         | dell-xps-ptl-config, intel-ipu7-kmod, kernel, plasma-sensord                                     |
-| [thunderbirdtr/plasma-sensord](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-sensord/) | plasma-sensord (from its own repository)                                                         |
+| Project                                                                                                                     | Packages                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [thunderbirdtr/intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/)                       | onnx, openvino, openvino-genai, onnxruntime, llama-cpp, intel-npu-driver and the Python packages |
+| [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/)                               | dell-xps-ptl-config, intel-ipu7-kmod, kernel, plasma-light-and-presence                          |
+| [thunderbirdtr/plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/) | plasma-light-and-presence (from its own repository)                                              |
 
 ## How it fits together
 
@@ -25,7 +25,7 @@ Do this once, after the repository is on GitHub.
    scripts/copr-setup.sh
    ```
 
-2. Add the COPR webhooks to the GitHub repositories (xps-fedora and plasma-sensord). For each project, open its COPR page, go to **Settings**, then **Integrations**, and copy the GitHub webhook URL. In the GitHub repository, open **Settings**, then **Webhooks**, then **Add webhook**: paste the URL, choose `application/json`, and keep **Just the push event**. Repeat for the second project.
+2. Add the COPR webhooks to the GitHub repositories (xps-fedora and plasma-light-and-presence). For each project, open its COPR page, go to **Settings**, then **Integrations**, and copy the GitHub webhook URL. In the GitHub repository, open **Settings**, then **Webhooks**, then **Add webhook**: paste the URL, choose `application/json`, and keep **Just the push event**. Repeat for the second project.
 
 3. Give the manual workflow access to COPR. Create an API token at [copr.fedorainfracloud.org/api](https://copr.fedorainfracloud.org/api/) and store the whole configuration as a repository secret:
 

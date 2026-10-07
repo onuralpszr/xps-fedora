@@ -1,0 +1,30 @@
+name: Package problem
+description: A package fails to build, install or run.
+labels: [packaging]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      placeholder: openvino
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version and Fedora release
+      description: Output of `rpm -q <package>`.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: A link to the COPR build log or the error output.
+      render: text

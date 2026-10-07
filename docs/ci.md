@@ -2,17 +2,17 @@
 
 Two COPR projects build the packages in this repository:
 
-| Project | Packages |
-|---|---|
+| Project                                                                                               | Packages                                                                                         |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [thunderbirdtr/intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | onnx, openvino, openvino-genai, onnxruntime, llama-cpp, intel-npu-driver and the Python packages |
-| [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | dell-xps-ptl-config, intel-ipu7-kmod, kernel, plasma-sensord |
+| [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/)         | dell-xps-ptl-config, intel-ipu7-kmod, kernel, plasma-sensord                                     |
 
 ## How it fits together
 
-* **On every pull request and push**, the [Check](../.github/workflows/check.yml) workflow parses the spec of each changed package, runs rpmlint and builds its source RPM, and runs shellcheck on the scripts.
-* **On every push to main**, GitHub calls the COPR webhook. COPR rebuilds only the packages whose `packages/<name>/` directory changed. It builds the source RPM itself with [.copr/Makefile](../.copr/Makefile).
-* **By hand**, the [COPR build](../.github/workflows/copr.yml) workflow in the Actions tab starts a build of any package, optionally for one chroot.
-* **The kernel** builds from Fedora dist-git, so it is not part of the webhook. Build its source RPM with `scripts/build-kernel.sh srpm` and upload it with `copr-cli build thunderbirdtr/xps-fedora output/srpm/kernel/*.src.rpm`.
+- **On every pull request and push**, the [Check](../.github/workflows/check.yml) workflow parses the spec of each changed package, runs rpmlint and builds its source RPM, and runs shellcheck on the scripts.
+- **On every push to main**, GitHub calls the COPR webhook. COPR rebuilds only the packages whose `packages/<name>/` directory changed. It builds the source RPM itself with [.copr/Makefile](../.copr/Makefile).
+- **By hand**, the [COPR build](../.github/workflows/copr.yml) workflow in the Actions tab starts a build of any package, optionally for one chroot.
+- **The kernel** builds from Fedora dist-git, so it is not part of the webhook. Build its source RPM with `scripts/build-kernel.sh srpm` and upload it with `copr-cli build thunderbirdtr/xps-fedora output/srpm/kernel/*.src.rpm`.
 
 ## Turning it on
 

@@ -5,7 +5,7 @@ Version:        0.5
 Release:        1%{?dist}
 Summary:        Desktop tools for Dell XPS on Intel Panther Lake
 License:        MIT
-URL:            https://github.com/omacom-io/omarchy-pkgs
+URL:            https://github.com/onuralpszr/xps-fedora
 BuildArch:      noarch
 
 Source0:        xps-ptl-autobrightness

@@ -9,7 +9,7 @@
 
 Name:           dell-xps-ptl-config
 Version:        1.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Fedora configuration for Dell XPS on Intel Panther Lake
 License:        MIT
 URL:            https://github.com/onuralpszr/xps-fedora
@@ -20,7 +20,10 @@ Source1:        10-sign-dellptl.install
 Source2:        xe-psr.conf
 Source3:        platform-profile
 Source4:        ppd-mapping
-Source5:        tuned
+Source5:        tuned-xps-ptl-powersave.conf
+Source6:        tuned-xps-ptl-balanced.conf
+Source7:        tuned-xps-ptl-balanced-battery.conf
+Source8:        tuned-xps-ptl-performance.conf
 
 BuildRequires:  systemd-rpm-macros
 Requires:       thermald
@@ -52,11 +55,19 @@ install -Dm755 %{SOURCE1} %{buildroot}%{_prefix}/lib/kernel/install.d/10-sign-de
 install -Dm644 %{SOURCE2} %{buildroot}%{_modprobedir}/dell-xps-ptl-xe.conf
 install -Dm755 %{SOURCE3} %{buildroot}%{_libexecdir}/dell-xps-ptl/platform-profile
 install -Dm755 %{SOURCE4} %{buildroot}%{_libexecdir}/dell-xps-ptl/ppd-mapping
-for p in %{SOURCE5}/xps-ptl-*; do
-    n=$(basename $p)
-    install -Dm644 $p/tuned.conf %{buildroot}%{_prefix}/lib/tuned/profiles/$n/tuned.conf
-    install -Dm755 $p/platform.sh %{buildroot}%{_prefix}/lib/tuned/profiles/$n/platform.sh
-done
+# profile, Dell thermal mode, SoC power slider
+while read -r name dell soc; do
+    d=%{buildroot}%{_prefix}/lib/tuned/profiles/xps-ptl-$name
+    install -Dm644 %{_sourcedir}/tuned-xps-ptl-$name.conf $d/tuned.conf
+    printf '#!/bin/bash\nexec %{_libexecdir}/dell-xps-ptl/platform-profile "$1" %s %s\n' \
+        "$dell" "$soc" > $d/platform.sh
+    chmod 0755 $d/platform.sh
+done <<EOF
+powersave quiet low-power
+balanced balanced balanced
+balanced-battery balanced balanced
+performance performance performance
+EOF
 
 %post
 systemctl daemon-reload || :
@@ -86,6 +97,10 @@ fi
 %{_prefix}/lib/tuned/profiles/xps-ptl-*/
 
 %changelog
+* Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.3-2
+- Ship the tuned profiles as flat source files and generate their
+  platform scripts, so the package builds in COPR
+
 * Tue Oct 06 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.3-1
 - tuned-ppd: sysfs_acpi_monitor=false; its hotkey detection read the legacy
   platform_profile as "balanced" and undid every power-saver switch

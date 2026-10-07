@@ -63,6 +63,9 @@ COPR or dnf refuses the update:
 calibre, crow-translate, gstreamer1-plugins-bad-free, monado, pipewire,
 vcmi (RPM Fusion; the COPR needs RPM Fusion free as an external repo).
 
+On rawhide, python-torch links the system onnx, so it is rebuilt too
+(Fedora 45 torch carries its own onnx copy and is not affected).
+
 `scripts/fedora-rebuild.sh <pkg>` makes the SRPM: Fedora's spec unchanged,
 release `<fedora release>.1.ovstack`, one changelog line. Upload those SRPMs
 to COPR (`copr-cli build <project> output/rebuild/<pkg>/*.src.rpm`). When

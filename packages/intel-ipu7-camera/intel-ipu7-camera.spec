@@ -13,7 +13,7 @@
 
 Name:           intel-ipu7-camera
 Version:        1.0.6
-Release:        3.dellptl%{?dist}
+Release:        4.dellptl%{?dist}
 Summary:        Intel IPU7 MIPI camera stack (OV08X40 + hardware ISP)
 License:        GPL-2.0-or-later AND Apache-2.0 AND LGPL-2.1-or-later AND LicenseRef-Intel-Proprietary
 URL:            https://github.com/intel/ipu7-camera-hal
@@ -91,6 +91,10 @@ exposes the Dell XPS 14/16 OV08X40 camera as a regular webcam.
 mv ipu7-camera-bins-%{bins_commit} ipu7-camera-bins
 mv ipu7-camera-hal-%{hal_commit} ipu7-camera-hal
 mv icamerasrc-%{icsrc_commit} icamerasrc
+# Each component keeps its own license text
+cp -p ipu7-camera-bins/LICENSE LICENSE.ipu7-camera-bins
+cp -p ipu7-camera-hal/LICENSE LICENSE.ipu7-camera-hal
+cp -p icamerasrc/LICENSE LICENSE.icamerasrc
 
 pushd ipu7-camera-hal
 %patch -P10 -p1
@@ -216,7 +220,7 @@ fi
 systemctl daemon-reload || :
 
 %files
-%license ipu7-camera-hal/LICENSE
+%license LICENSE.ipu7-camera-bins LICENSE.ipu7-camera-hal LICENSE.icamerasrc
 %{_libdir}/lib*.so*
 %{_libdir}/libcamhal/
 %{_libdir}/pkgconfig/ia_imaging-*.pc
@@ -244,6 +248,9 @@ systemctl daemon-reload || :
 %{_prefix}/lib/systemd/system-sleep/ipu7-camera
 
 %changelog
+* Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-4.dellptl
+- Ship the license of each component, including the Intel camera binaries
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-3.dellptl
 - dracut: omit the IPU7 drivers from the initramfs; host-only dracut pulled
   them in without ipu7ptl_fw.bin and the probe failed with -ENOENT at boot

@@ -57,7 +57,7 @@ sudo dnf install openvino libopenvino-intel-npu-plugin python3-openvino-genai \
     llama-cpp-vulkan llama-cpp-openvino intel-npu-driver intel-npu-compiler
 ```
 
-The kernel, the IPU7 camera drivers, the system configuration and plasma-light-and-presence are in a second COPR repository, [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/). The camera userspace (`intel-ipu7-camera`) contains closed libraries, which COPR does not allow, so it is built from this repository. [docs/install.md](docs/install.md) covers the Secure Boot key, the install order and how to check that everything works.
+The kernel, the IPU7 camera drivers, the system configuration and plasma-light-and-presence are in a second COPR repository, [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/). The camera userspace (`intel-ipu7-camera`) contains closed libraries, which COPR does not allow, so its RPMs are attached to [GitHub releases](https://github.com/onuralpszr/xps-fedora/releases) and can be installed with `sudo dnf install ./intel-ipu7-camera-*.x86_64.rpm`. [docs/install.md](docs/install.md) covers the Secure Boot key, the install order and how to check that everything works.
 
 ## Packages
 
@@ -91,6 +91,7 @@ Live status of the last COPR build of each package.
 | --- | --- | --- | --- |
 | `kernel` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![kernel](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/kernel/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/kernel/) | Fedora kernel with the XPS 16 patches |
 | `intel-ipu7-kmod` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![intel-ipu7-kmod](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/intel-ipu7-kmod/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/intel-ipu7-kmod/) | IPU7 camera drivers (akmod) |
+| `intel-ipu7-camera` | [GitHub release](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-4.dellptl) | [![intel-ipu7-camera](https://img.shields.io/github/v/release/onuralpszr/xps-fedora?filter=intel-ipu7-camera-*&label=release)](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-4.dellptl) | IPU7 camera HAL, firmware and relay service |
 | `dell-xps-ptl-config` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![dell-xps-ptl-config](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/) | thermald, power profiles, kernel signing |
 | `plasma-light-and-presence` | [plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/) | [![plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/package/plasma-light-and-presence/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/package/plasma-light-and-presence/) | ambient light brightness for Plasma |
 | `intel-npu-driver` | [intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | [![intel-npu-driver](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/intel-npu-driver/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/intel-npu-driver/) | NPU driver and compiler |
@@ -105,7 +106,7 @@ Live status of the last COPR build of each package.
 | `python-nncf` | [intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | [![python-nncf](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/python-nncf/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/python-nncf/) | NNCF |
 | `python-openvino-telemetry` | [intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | [![python-openvino-telemetry](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/python-openvino-telemetry/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/python-openvino-telemetry/) | OpenVINO telemetry |
 
-`intel-ipu7-camera` contains closed libraries, so it is built from this repository and not published in COPR.
+`intel-ipu7-camera` contains closed Intel libraries, which COPR does not allow. Test builds are attached to [GitHub releases](https://github.com/onuralpszr/xps-fedora/releases), and a submission to RPM Fusion nonfree is planned.
 
 ## Building
 

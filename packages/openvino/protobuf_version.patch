@@ -1,0 +1,13 @@
+diff --git a/thirdparty/dependencies.cmake b/thirdparty/dependencies.cmake
+index ac5ebe105c..36542e8fe5 100644
+--- a/thirdparty/dependencies.cmake
++++ b/thirdparty/dependencies.cmake
+@@ -376,7 +376,7 @@
+         # try to find newer version first (major is changed)
+         # see https://protobuf.dev/support/version-support/ and
+         # https://github.com/protocolbuffers/protobuf/commit/d61f75ff6db36b4f9c0765f131f8edc2f86310fa
+-        find_package(Protobuf 5.26.0 QUIET CONFIG)
++        find_package(Protobuf CONFIG)
+         if(NOT Protobuf_FOUND)
+             find_package(Protobuf 5.26.0 QUIET CONFIG)
+         endif()

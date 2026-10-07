@@ -1,0 +1,19 @@
+From: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+Subject: [PATCH] npu: only depend on prepare_ze_headers when it exists
+
+With ENABLE_SYSTEM_LEVEL_ZERO=ON the bundled Level Zero is not added and the
+prepare_ze_headers target does not exist, so configuring the NPU plugin fails
+with 'The dependency target "prepare_ze_headers" of target
+"openvino_npu_vm_utils" does not exist'. Guard it the same way
+thirdparty/dependencies.cmake does.
+
+--- a/src/plugins/intel_npu/src/utils/src/vm/CMakeLists.txt
++++ b/src/plugins/intel_npu/src/utils/src/vm/CMakeLists.txt
+@@ -40,4 +40,6 @@
+ # headers are copied into the build directory by prepare_ze_headers; without
+ # this explicit dependency a parallel build may compile ${TARGET_NAME} before
+ # the headers are copied, causing a missing-header error
+-add_dependencies(${TARGET_NAME} prepare_ze_headers)
++if(TARGET prepare_ze_headers)
++    add_dependencies(${TARGET_NAME} prepare_ze_headers)
++endif()

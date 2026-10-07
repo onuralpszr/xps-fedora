@@ -1,0 +1,61 @@
+diff --git a/thirdparty/dependencies.cmake b/thirdparty/dependencies.cmake
+index 053006c031..18d14ca390 100644
+--- a/thirdparty/dependencies.cmake
++++ b/thirdparty/dependencies.cmake
+@@ -63,6 +63,16 @@
+     find_package(xbyak QUIET)
+     if(xbyak_FOUND)
+         # conan creates alias xbyak::xbyak, no extra steps are required
++        # Fedora: xbyak cmake config sets INTERFACE_INCLUDE_DIRECTORIES=/usr/include
++        # and INTERFACE_SYSTEM_INCLUDE_DIRECTORIES=/usr/include/xbyak, resulting in
++        # both -isystem /usr/include and -isystem /usr/include/xbyak on the command
++        # line. GCC 16 deduplicates system paths and drops implicit /usr/include,
++        # breaking #include_next <stdlib.h> in libstdc++ headers.
++        if(TARGET xbyak::xbyak)
++            set_target_properties(xbyak::xbyak PROPERTIES
++                INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ""
++                INTERFACE_INCLUDE_DIRECTORIES "/usr/include/xbyak")
++        endif()
+     else()
+         add_subdirectory(thirdparty/xbyak EXCLUDE_FROM_ALL)
+     endif()
+@@ -179,7 +189,15 @@
+ #
+ 
+ if(ENABLE_SAMPLES OR ENABLE_TESTS)
+-    add_subdirectory(thirdparty/zlib EXCLUDE_FROM_ALL)
++    find_package(ZLIB QUIET)
++    if(ZLIB_FOUND)
++        add_library(openvino_zlib INTERFACE IMPORTED GLOBAL)
++        target_link_libraries(openvino_zlib INTERFACE ZLIB::ZLIB)
++        target_include_directories(openvino_zlib INTERFACE ${ZLIB_INCLUDE_DIRS})
++        add_library(openvino::zlib ALIAS openvino_zlib)
++    else()
++        add_subdirectory(thirdparty/zlib EXCLUDE_FROM_ALL)
++    endif()
+ endif()
+ 
+ #
+@@ -323,11 +341,17 @@
+ #
+ 
+ if(ENABLE_SAMPLES OR ENABLE_TESTS OR ENABLE_INTEL_NPU_INTERNAL)
+-    add_subdirectory(thirdparty/gflags EXCLUDE_FROM_ALL)
+-    ov_developer_package_export_targets(
+-        TARGET gflags
+-        INSTALL_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/thirdparty/gflags/gflags/include/gflags"
+-        INSTALL_DESTIONATION "developer_package/include/gflags")
++    # Prefer system gflags if available (Fedora provides gflags-devel)
++    find_package(gflags QUIET)
++    if(gflags_FOUND AND TARGET gflags)
++        message(STATUS "Using system gflags")
++    else()
++        add_subdirectory(thirdparty/gflags EXCLUDE_FROM_ALL)
++        ov_developer_package_export_targets(
++            TARGET gflags
++            INSTALL_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/thirdparty/gflags/gflags/include/gflags"
++            INSTALL_DESTIONATION "developer_package/include/gflags")
++    endif()
+ endif()
+ 
+ #

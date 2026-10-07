@@ -1,0 +1,28 @@
+diff --git a/samples/cpp/CMakeLists.txt b/samples/cpp/CMakeLists.txt
+index 25d85ba213..204ce3f941 100644
+--- a/samples/cpp/CMakeLists.txt
++++ b/samples/cpp/CMakeLists.txt
+@@ -112,6 +112,10 @@
+     set(gflags_required ON)
+ endif()
+ 
++if(NOT TARGET gflags)
++    find_package(gflags QUIET)
++endif()
++
+ if(TARGET gflags)
+     set(GFLAGS_TARGET gflags)
+ elseif(gflags_required)
+--- a/samples/cpp/benchmark_app/CMakeLists.txt
++++ b/samples/cpp/benchmark_app/CMakeLists.txt
+@@ -28,6 +28,10 @@
+ # Required nlohmann_json dependency
+ 
+ if(NOT TARGET nlohmann_json::nlohmann_json)
++    find_package(nlohmann_json QUIET)
++endif()
++
++if(NOT TARGET nlohmann_json::nlohmann_json)
+     if(EXISTS "${Samples_SOURCE_DIR}/thirdparty/nlohmann_json")
+         # OpenVINO package puts thirdparty to samples dir
+         # suppress shadowing names warning

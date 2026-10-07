@@ -2,9 +2,10 @@
 # Fedora kernel + packages/kernel patches, built into output/RPMS.
 #
 # The spec is Fedora's own (src.fedoraproject.org/rpms/kernel), so it is not
-# kept here. This clones Fedora dist-git into work/kernel, checks out the
-# pinned f45 commit on a local "dell-ptl" branch, applies kernel.spec.diff
-# (buildid .dellptl + Patch1001-1003) and copies the patches next to it.
+# kept here. This clones Fedora dist-git into work/kernel-<release>, checks
+# out the f45 commit from packages/kernel/fedora-base and runs
+# scripts/kernel-apply.sh on it (buildid .dellptl, release, the patches from
+# packages/kernel/series and kernel-local). Nothing is committed there.
 #
 # Usage: scripts/build-kernel.sh [prep|srpm]
 #   prep  only prepare and run %prep
@@ -14,28 +15,28 @@ set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 pkg=$root/packages/kernel
-work=$root/work/kernel
 out=$root/output
-# f45 commit of the Fedora build the patches sit on (kernel-7.2.9-300);
-# bump together with kernel.spec.diff
-fedora_ref=45fb77a73
+
+fedora_ref=$(sed -n 's/^fedora_ref=//p' "$pkg/fedora-base")
+fedora_nvr=$(sed -n 's/^fedora_nvr=//p' "$pkg/fedora-base")
+local_release=$(sed -n 's/^local_release=//p' "$pkg/fedora-base")
+# one work tree per Fedora base and local release, left uncommitted
+work=${KERNEL_WORK:-$root/work/kernel-${fedora_nvr#kernel-}.$local_release}
 
 mkdir -p "$out/RPMS" "$out/logs"
 
-if [[ ! -d $work/.git ]]; then
-  fedpkg clone -a kernel "$work"
+if [[ ! -e $work/.dellptl-applied ]]; then
+  rm -rf "$work"
+  git clone -q --depth 50 -b f45 https://src.fedoraproject.org/rpms/kernel.git "$work"
+  cd "$work"
+  if ! git cat-file -e "$fedora_ref^{commit}" 2>/dev/null; then
+    git fetch -q --unshallow origin
+  fi
+  git checkout -q -B dellptl "$fedora_ref"
+  "$root/scripts/kernel-apply.sh" "$work"
+  touch .dellptl-applied
 fi
 cd "$work"
-git fetch -q origin
-if ! git rev-parse -q --verify dell-ptl >/dev/null; then
-  git checkout -q -b dell-ptl "$fedora_ref"
-  git apply "$pkg/kernel.spec.diff"
-  cp "$pkg"/*.patch .
-  git add kernel.spec kernel-local ./*.patch
-  git commit -q -s -m "Add Dell XPS Panther Lake patches with buildid dellptl."
-else
-  git checkout -q dell-ptl
-fi
 fedpkg sources >/dev/null
 
 without=(debug debuginfo realtime perf libperf tools ynl selftests kabichk

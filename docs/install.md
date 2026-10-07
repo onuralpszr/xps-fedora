@@ -109,6 +109,17 @@ sudo rm -f /etc/systemd/system/thermald.service.d/ptl-adaptive.conf \
 sudo systemctl daemon-reload
 ```
 
+## Going back to the .dellptl kernel
+
+If Fedora ships a newer kernel before the COPR rebuild is ready, the newest kernel boots by default and the display fixes are missing. Make the newest `.dellptl` kernel the default again:
+
+```bash
+k=$(rpm -q --qf '%{version}-%{release}.%{arch}\n' kernel-core | grep dellptl | sort -V | tail -1)
+sudo grubby --set-default "/boot/vmlinuz-$k"
+```
+
+When the rebuilt `.dellptl` kernel installs, Fedora makes it the default on its own.
+
 ## 🧪 Trying the NPU
 
 Run a model on the NPU, the GPU and the CPU with OpenVINO GenAI. Channel-wise INT4 models (`*-int4-cw-ov`) work best on the NPU.

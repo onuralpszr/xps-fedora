@@ -101,7 +101,7 @@ COPR kernels are unsigned for shim. Each user runs `kmodgenca` + `mokutil --impo
 
 ```
 packages/<name>/        spec + patches (one COPR package each)
-packages/kernel/        patches + kernel.spec.diff on Fedora dist-git
+packages/kernel/        patches, series, fedora-base and kernel-local on Fedora dist-git
 tools/                  xps-ptl-doctor, power-mode bridge, presence daemon
 scripts/                local builds (build-rpm.sh, build-kernel.sh)
 .packit.yaml            COPR builds from git
@@ -112,7 +112,7 @@ docs/                   install, findings, upstreaming, versions, roadmap
 ### Automation
 
 - **Packit** (`.packit.yaml`): on push to `main`, build changed packages in COPR.
-- **Kernel tracking**: scheduled job compares Fedora f45 `kernel` with our `fedora_ref`; on a new build, rebases `kernel.spec.diff`, test-applies the patches (`build-kernel.sh prep`), opens a PR.
+- ✅ **Kernel tracking**: the daily [Upstream watch](../.github/workflows/upstream-watch.yml) compares Fedora's f45 kernel in Bodhi with `fedora-base`; on a new build it test-applies the patches, starts the COPR build and opens a PR. It also rebuilds the Fedora packages that link our onnxruntime.
 - **Upstream watch**: NPU driver releases, OpenVINO releases, ipu7-* repos, linux-media / intel-gfx patchwork for HM1092, CVS, ALPM, PSR, like omarchy-pkgs' upstream-watch.
 - **Checks**: rpmlint, `rpmspec -P`, mock build per package; on-device `xps-ptl-doctor` after updates.
 

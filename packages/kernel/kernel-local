@@ -1,0 +1,2 @@
+# Himax HM1092 IR camera (Dell XPS 14/16)
+CONFIG_VIDEO_HM1092=m

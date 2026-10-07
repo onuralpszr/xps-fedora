@@ -288,6 +288,16 @@ sudo dnf install python3-optimum-intel python3-nncf python3-transformers
 
 [docs/install.md](docs/install.md) has the details: the MOK enrollment screens, the install order and the commands to check that everything works after the reboot.
 
+## Good to know
+
+| | Topic | What to expect |
+| --- | --- | --- |
+| 🐧 | **Fedora kernel updates** | The `.dellptl` kernel is Fedora's kernel with a few patches. When Fedora ships a newer kernel, a daily [watch](.github/workflows/upstream-watch.yml) rebuilds ours on top of it, usually the same day. If Fedora's kernel lands first, the display fixes are missing until the rebuild arrives; pick the `.dellptl` entry in the boot menu, or make it the default as shown in the [install guide](docs/install.md#going-back-to-the-dellptl-kernel). |
+| 🔁 | **Rebuilt Fedora packages** | pipewire, calibre, monado, crow-translate, gstreamer1-plugins-bad-free and vcmi are rebuilt in the intel-ai-stack COPR against onnxruntime 1.30. When Fedora updates one of them, dnf may hold the update back or offer to swap onnxruntime until the same daily watch rebuilds it. Answer no to a swap that removes `onnxruntime` 1.30 and try again a day later. |
+| 📷 | **Camera updates** | `intel-ipu7-camera` comes from a GitHub release, not a repository, so `dnf upgrade` does not see new versions. Watch the [releases](https://github.com/onuralpszr/xps-fedora/releases) or the camera badge at the top. It moves to RPM Fusion once it is accepted there. |
+| 🔐 | **Secure Boot** | Every new `.dellptl` kernel and every IPU7 module rebuild is signed with your akmods key automatically. If the camera disappears after a kernel update, run `sudo akmods --force` and reboot. |
+| 🦙 | **llama.cpp and ollama** | The COPR's llama.cpp ships a newer `libggml` than Fedora's ollama expects, so the two may conflict; do not install both from these repositories yet. Install the backend you want explicitly (`llama-cpp-vulkan` or `llama-cpp-openvino`); plain `llama-cpp` is CPU only. |
+
 ## Packages
 
 **Laptop support**

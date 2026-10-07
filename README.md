@@ -108,6 +108,20 @@ Live status of the last COPR build of each package.
 
 `intel-ipu7-camera` contains closed Intel libraries, which COPR does not allow. Test builds are attached to [GitHub releases](https://github.com/onuralpszr/xps-fedora/releases), and a submission to RPM Fusion nonfree is planned.
 
+### Rebuilt Fedora packages
+
+The newer onnx and onnxruntime change their library versions, so these Fedora and RPM Fusion packages are rebuilt unchanged in `intel-ai-stack`, with a `.ovstack` release suffix.
+
+| Package                       | Chroots            | Why                            | Status                                                                                                                                                                                                                                                                            |
+| ----------------------------- | ------------------ | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `calibre`                     | Fedora 45, rawhide | links onnxruntime              | [![calibre](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/calibre/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/calibre/)                                                             |
+| `crow-translate`              | Fedora 45, rawhide | links onnxruntime              | [![crow-translate](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/crow-translate/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/crow-translate/)                                        |
+| `gstreamer1-plugins-bad-free` | Fedora 45, rawhide | links onnxruntime              | [![gstreamer1-plugins-bad-free](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/gstreamer1-plugins-bad-free/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/gstreamer1-plugins-bad-free/) |
+| `monado`                      | Fedora 45, rawhide | links onnxruntime              | [![monado](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/monado/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/monado/)                                                                |
+| `pipewire`                    | Fedora 45, rawhide | links onnxruntime              | [![pipewire](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/pipewire/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/pipewire/)                                                          |
+| `vcmi`                        | Fedora 45, rawhide | links onnxruntime (RPM Fusion) | [![vcmi](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/vcmi/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/vcmi/)                                                                      |
+| `python-torch`                | rawhide            | links onnx                     | [![python-torch](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/python-torch/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/python-torch/)                                              |
+
 ## Building
 
 ```bash

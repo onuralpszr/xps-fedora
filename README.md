@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo.png" alt="xps-fedora logo" width="420">
+  <img src="docs/assets/logo.png" alt="xps-fedora logo" width="256">
 </p>
 
 <h1 align="center">xps-fedora</h1>
@@ -11,7 +11,9 @@
 <p align="center">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache%202.0-blue.svg"></a>
   <a href="https://fedoraproject.org"><img alt="Fedora 45" src="https://img.shields.io/badge/Fedora-45-51A2DA?logo=fedora&amp;logoColor=white"></a>
+  <a href="https://github.com/onuralpszr/xps-fedora/actions/workflows/check.yml"><img alt="Check" src="https://github.com/onuralpszr/xps-fedora/actions/workflows/check.yml/badge.svg"></a>
   <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/"><img alt="COPR intel-ai-stack" src="https://img.shields.io/badge/COPR-intel--ai--stack-294172?logo=fedora&amp;logoColor=white"></a>
+  <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/"><img alt="COPR xps-fedora" src="https://img.shields.io/badge/COPR-xps--fedora-294172?logo=fedora&amp;logoColor=white"></a>
   <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/"><img alt="OpenVINO build status" src="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/status_image/last_build.png"></a>
   <img alt="Secure Boot" src="https://img.shields.io/badge/Secure%20Boot-on-2ea44f">
 </p>
@@ -55,7 +57,7 @@ sudo dnf install openvino libopenvino-intel-npu-plugin python3-openvino-genai \
     llama-cpp-vulkan llama-cpp-openvino intel-npu-driver intel-npu-compiler
 ```
 
-The kernel, camera and system packages are built from this repository for now. [docs/install.md](docs/install.md) covers the Secure Boot key, the install order and how to check that everything works.
+The kernel, the IPU7 camera drivers, the system configuration and plasma-sensord are in a second COPR repository, [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/). The camera userspace (`intel-ipu7-camera`) contains closed libraries, which COPR does not allow, so it is built from this repository. [docs/install.md](docs/install.md) covers the Secure Boot key, the install order and how to check that everything works.
 
 ## Packages
 
@@ -100,19 +102,33 @@ scripts/fedora-rebuild.sh <package>     # rebuild a Fedora package for the COPR
 * [Roadmap](docs/roadmap.md)
 * [Upstreaming](docs/upstreaming.md): what can go to Fedora, RPM Fusion and upstream
 * [COPR](docs/copr.md): build order and project settings
+* [CI and automatic builds](docs/ci.md): how pushes reach COPR
 * [Versions](docs/versions.md): what is pinned and why
 
 ## Credits
 
-This work stands on the shoulders of many people.
+This project builds on the work of many people. Thank you all.
 
-* The Fedora packagers of the kernel, `openvino`, `onnx`, `onnxruntime`, `llama-cpp` and `intel-npu-driver`, whose specs these packages start from.
-* The [Omarchy](https://github.com/omacom/omarchy-pkgs) project, whose Panther Lake kernel and camera packages showed the way.
-* Intel, for the IPU7 drivers and camera HAL, the NPU driver and compiler, OpenVINO and OpenVINO GenAI.
-* Jake Steinman and the linux-media and intel-gfx developers, for the HM1092, Intel CVS and ALPM work on these laptops.
-* The [llama.cpp](https://github.com/ggml-org/llama.cpp), [ONNX](https://github.com/onnx/onnx) and [ONNX Runtime](https://github.com/microsoft/onnxruntime) projects.
-* [RPM Fusion](https://rpmfusion.org), for the media driver and codecs.
-* The logo is by Onuralp SEZER.
+**Fedora**
+
+* The packagers of [kernel](https://src.fedoraproject.org/rpms/kernel), [openvino](https://src.fedoraproject.org/rpms/openvino), [onnx](https://src.fedoraproject.org/rpms/onnx), [onnxruntime](https://src.fedoraproject.org/rpms/onnxruntime), [llama-cpp](https://src.fedoraproject.org/rpms/llama-cpp) and [intel-npu-driver](https://src.fedoraproject.org/rpms/intel-npu-driver), whose specs the packages here start from.
+* [COPR](https://copr.fedorainfracloud.org), [Packit](https://packit.dev) and [mock](https://github.com/rpm-software-management/mock), which build and publish everything.
+* [RPM Fusion](https://rpmfusion.org), for `intel-media-driver`, the codecs and `kmodtool`.
+
+**Hardware enablement**
+
+* [Omarchy](https://github.com/omacom/omarchy-pkgs), whose Panther Lake kernel and camera packages showed the way on this laptop.
+* Jake Steinman and the [linux-media](https://lore.kernel.org/linux-media/) and [intel-gfx](https://lore.kernel.org/intel-gfx/) developers, for the HM1092 camera driver, the Intel CVS bridge and the ALPM fast wake quirk.
+* Intel, for the [IPU7 drivers](https://github.com/intel/ipu7-drivers), [camera HAL](https://github.com/intel/ipu7-camera-hal), [camera binaries](https://github.com/intel/ipu7-camera-bins), [icamerasrc](https://github.com/intel/icamerasrc), the [NPU driver](https://github.com/intel/linux-npu-driver) and [thermald](https://github.com/intel/thermal_daemon).
+* [tuned](https://github.com/redhat-performance/tuned), [iio-sensor-proxy](https://gitlab.freedesktop.org/hadess/iio-sensor-proxy) and [input-remapper](https://github.com/sezanzeb/input-remapper).
+
+**AI stack**
+
+* [OpenVINO](https://github.com/openvinotoolkit/openvino), [OpenVINO GenAI](https://github.com/openvinotoolkit/openvino.genai), [OpenVINO Tokenizers](https://github.com/openvinotoolkit/openvino_tokenizers) and [NNCF](https://github.com/openvinotoolkit/nncf).
+* [llama.cpp](https://github.com/ggml-org/llama.cpp), [ONNX](https://github.com/onnx/onnx) and [ONNX Runtime](https://github.com/microsoft/onnxruntime).
+* Hugging Face, for [Transformers](https://github.com/huggingface/transformers), [Optimum](https://github.com/huggingface/optimum) and [Optimum Intel](https://github.com/huggingface/optimum-intel).
+
+The logo is by [Onuralp SEZER](https://github.com/onuralpszr).
 
 ## License
 

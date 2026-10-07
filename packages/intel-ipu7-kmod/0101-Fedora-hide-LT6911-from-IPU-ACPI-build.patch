@@ -1,0 +1,27 @@
+diff -urN a/include/fedora-compat.h b/include/fedora-compat.h
+--- a/include/fedora-compat.h	1970-01-01 02:00:00.000000000 +0200
++++ b/include/fedora-compat.h	2026-10-05 21:38:59.920966025 +0300
+@@ -0,0 +1,12 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Fedora enables the mainline lt6911uxe HDMI bridge driver, which makes the
++ * IPU ACPI pdata code pull in Intel's out-of-tree lt6911 header and LT6911
++ * code paths that don't build against mainline. No LT6911 device is behind
++ * the IPU on the XPS, so hide those options from this module build.
++ * Force-included after the kernel's kconfig.h (see Makefile).
++ */
++#undef CONFIG_VIDEO_LT6911UXE
++#undef CONFIG_VIDEO_LT6911UXE_MODULE
++#undef CONFIG_VIDEO_LT6911UXC
++#undef CONFIG_VIDEO_LT6911UXC_MODULE
+diff -urN a/Makefile b/Makefile
+--- a/Makefile	2026-10-05 22:46:21.877462660 +0300
++++ b/Makefile	2026-10-05 21:38:59.923794413 +0300
+@@ -21,6 +21,7 @@
+ endif
+ 
+ subdir-ccflags-y += -I$(src)/include
++subdir-ccflags-y += -include $(src)/include/fedora-compat.h
+ 
+ subdir-ccflags-$(CONFIG_IPU_BRIDGE) += \
+ 	-DCONFIG_IPU_BRIDGE

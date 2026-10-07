@@ -2,7 +2,7 @@
 # 1.22 and OpenVINO 2026.4 (OpenVINO execution provider for Intel CPU, GPU
 # and NPU). Fedora's patches, rebased on 1.30 where needed.
 #
-# Every release renames the library's symbol version (VERS_1.26.0 ->
+# Every release renames the library's symbol version (VERS_1.26.0 to
 # VERS_1.30.0), so packages linking libonnxruntime are rebuilt with it.
 
 # Do not check .so files from python or rocm packages

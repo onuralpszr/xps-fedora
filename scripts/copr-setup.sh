@@ -12,7 +12,7 @@ repo=${REPO_URL:-https://github.com/onuralpszr/xps-fedora.git}
 branch=${REPO_BRANCH:-main}
 owner=${COPR_OWNER:-thunderbirdtr}
 
-# package -> COPR project
+# COPR project for each package
 declare -A project=(
   [onnx]=intel-ai-stack
   [openvino]=intel-ai-stack

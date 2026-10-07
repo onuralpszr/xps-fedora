@@ -28,24 +28,24 @@ Most of it is not specific to this laptop. The camera, NPU and AI packages shoul
 
 ✅ working, ⚠️ partly working, ❌ not working, ⛔ blocked upstream
 
-| Component                                         | Stock Fedora 45              | With this repo | How                                                                                                             |
-| ------------------------------------------------- | ---------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
-| Display, VRR 20-120 Hz                            | ❌ not detected              | ✅             | `kernel` patch, KDE VRR set to Automatic                                                                        |
-| Display, panel self refresh                       | ⚠️ glitches, link errors     | ✅ PSR1        | `kernel` ALPM quirk and `xe.enable_psr2_sel_fetch=0`                                                            |
-| Camera (OV08X40 through IPU7)                     | ❌ raw nodes only            | ✅             | `intel-ipu7-kmod`, `intel-ipu7-camera`                                                                          |
-| NPU (Intel AI Boost)                              | ❌ no compiler               | ✅             | `intel-npu-driver` 1.38 with `intel-npu-compiler`                                                               |
-| OpenVINO on CPU, GPU and NPU                      | ⚠️ no NPU plugin             | ✅             | `openvino` 2026.4.1 from the COPR                                                                               |
-| llama.cpp on the Arc GPU                          | ⚠️ CPU only                  | ✅             | `llama-cpp-vulkan`, `llama-cpp-openvino`                                                                        |
-| Thermal (thermald, Dell DPTF)                     | ❌ stops after boot          | ✅             | `dell-xps-ptl-config`                                                                                           |
-| Power profiles and Dell thermal modes             | ❌ power saver never reached | ✅             | `dell-xps-ptl-config` tuned profiles                                                                            |
-| Ambient light brightness                          | ❌ none                      | ✅             | `xps-ptl-tools`, moving to [plasma-light-and-presence](https://github.com/onuralpszr/plasma-light-and-presence) |
-| Copilot key                                       | ❌ unknown key               | ✅             | input-remapper preset in `tools/copilot-key`                                                                    |
-| Video decode H.264 and HEVC                       | ⚠️ VP9 and AV1 only          | ✅             | RPM Fusion `intel-media-driver`                                                                                 |
-| External monitor through a USB-C dock             | ✅                           | ✅             | limited to 60 Hz by the dock's two DP lanes                                                                     |
-| Audio, Wi-Fi, Bluetooth, touchpad, keyboard light | ✅                           | ✅             | stock                                                                                                           |
-| IR camera (HM1092) and face login                 | ❌ no driver                 | ⛔             | the camera bridge does not pass IR frames yet                                                                   |
-| Presence sensor                                   | ❌ not usable                | ⛔             | camera based, needs vendor support, see [findings](docs/findings.md)                                            |
-| Idle battery drain and sleep states               | ⚠️ not measured              | ⚠️             | measurement still to do                                                                                         |
+| Component                                         | Stock Fedora 45              | With this repo | How                                                                                  |
+| ------------------------------------------------- | ---------------------------- | -------------- | ------------------------------------------------------------------------------------ |
+| Display, VRR 20-120 Hz                            | ❌ not detected              | ✅             | `kernel` patch, KDE VRR set to Automatic                                             |
+| Display, panel self refresh                       | ⚠️ glitches, link errors     | ✅ PSR1        | `kernel` ALPM quirk and `xe.enable_psr2_sel_fetch=0`                                 |
+| Camera (OV08X40 through IPU7)                     | ❌ raw nodes only            | ✅             | `intel-ipu7-kmod`, `intel-ipu7-camera`                                               |
+| NPU (Intel AI Boost)                              | ❌ no compiler               | ✅             | `intel-npu-driver` 1.38 with `intel-npu-compiler`                                    |
+| OpenVINO on CPU, GPU and NPU                      | ⚠️ no NPU plugin             | ✅             | `openvino` 2026.4.1 from the COPR                                                    |
+| llama.cpp on the Arc GPU                          | ⚠️ CPU only                  | ✅             | `llama-cpp-vulkan`, `llama-cpp-openvino`                                             |
+| Thermal (thermald, Dell DPTF)                     | ❌ stops after boot          | ✅             | `dell-xps-ptl-config`                                                                |
+| Power profiles and Dell thermal modes             | ❌ power saver never reached | ✅             | `dell-xps-ptl-config` tuned profiles                                                 |
+| Ambient light brightness                          | ❌ none                      | ✅             | [plasma-light-and-presence](https://github.com/onuralpszr/plasma-light-and-presence) |
+| Copilot key                                       | ❌ unknown key               | ✅             | input-remapper preset in `tools/copilot-key`                                         |
+| Video decode H.264 and HEVC                       | ⚠️ VP9 and AV1 only          | ✅             | RPM Fusion `intel-media-driver`                                                      |
+| External monitor through a USB-C dock             | ✅                           | ✅             | limited to 60 Hz by the dock's two DP lanes                                          |
+| Audio, Wi-Fi, Bluetooth, touchpad, keyboard light | ✅                           | ✅             | stock                                                                                |
+| IR camera (HM1092) and face login                 | ❌ no driver                 | ⛔             | the camera bridge does not pass IR frames yet                                        |
+| Presence sensor                                   | ❌ not usable                | ⛔             | camera based, needs vendor support, see [findings](docs/findings.md)                 |
+| Idle battery drain and sleep states               | ⚠️ not measured              | ⚠️             | measurement still to do                                                              |
 
 ## Installing
 
@@ -63,14 +63,14 @@ The kernel, the IPU7 camera drivers, the system configuration and plasma-light-a
 
 **Laptop support**
 
-| Package                                               | What it does                                                                     |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------- |
-| [`kernel`](packages/kernel)                           | Fedora kernel with the VRR, ALPM and HM1092 patches, built as `kernel-*.dellptl` |
-| [`intel-ipu7-kmod`](packages/intel-ipu7-kmod)         | IPU7 camera drivers as an akmod                                                  |
-| [`intel-ipu7-camera`](packages/intel-ipu7-camera)     | Camera HAL, firmware, GStreamer source and the relay service for apps            |
-| [`intel-npu-driver`](packages/intel-npu-driver)       | NPU driver 1.38 and Intel's NPU compiler                                         |
-| [`dell-xps-ptl-config`](packages/dell-xps-ptl-config) | thermald fix, kernel signing hook, display option and power profiles             |
-| [`xps-ptl-tools`](packages/xps-ptl-tools)             | Auto brightness service and Plasma widget                                        |
+| Package                                                                                | What it does                                                                              |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`kernel`](packages/kernel)                                                            | Fedora kernel with the VRR, ALPM and HM1092 patches, built as `kernel-*.dellptl`          |
+| [`intel-ipu7-kmod`](packages/intel-ipu7-kmod)                                          | IPU7 camera drivers as an akmod                                                           |
+| [`intel-ipu7-camera`](packages/intel-ipu7-camera)                                      | Camera HAL, firmware, GStreamer source and the relay service for apps                     |
+| [`intel-npu-driver`](packages/intel-npu-driver)                                        | NPU driver 1.38 and Intel's NPU compiler                                                  |
+| [`dell-xps-ptl-config`](packages/dell-xps-ptl-config)                                  | thermald fix, kernel signing hook, display option and power profiles                      |
+| [`plasma-light-and-presence`](https://github.com/onuralpszr/plasma-light-and-presence) | Ambient light brightness with a System Settings page and a Plasma widget (own repository) |
 
 **AI stack** (published in the COPR)
 

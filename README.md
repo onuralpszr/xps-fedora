@@ -101,6 +101,7 @@ scripts/fedora-rebuild.sh <package>     # rebuild a Fedora package for the COPR
 - [Hardware findings](docs/findings.md): what was broken and how it was fixed
 - [Roadmap](docs/roadmap.md)
 - [Upstreaming](docs/upstreaming.md): what can go to Fedora, RPM Fusion and upstream
+- [Fedora to-do](docs/fedora-todo.md): the steps to get the packages into Fedora
 - [COPR](docs/copr.md): build order and project settings
 - [CI and automatic builds](docs/ci.md): how pushes reach COPR
 - [Versions](docs/versions.md): what is pinned and why

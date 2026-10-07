@@ -49,10 +49,11 @@ if [[ ${1:-} == srpm ]]; then
   find . -maxdepth 1 -type f -not -name '.*' -exec cp -l {} "$stage"/ \;
   find "$stage" -maxdepth 1 -type f -empty -exec sh -c 'rm "$1" && echo > "$1"' _ {} \;
   { for w in "${without[@]}"; do echo "%define _without_$w 1"; done
-    cat kernel.spec; } > "$stage/kernel-copr.spec"
+    cat kernel.spec; } > "$stage/kernel.spec.new"
+  mv "$stage/kernel.spec.new" "$stage/kernel.spec"
   rm -f "$out"/srpm/kernel/*.src.rpm
   rpmbuild -bs --define "_sourcedir $stage" --define "_srcrpmdir $out/srpm/kernel" \
-    "$stage/kernel-copr.spec"
+    "$stage/kernel.spec"
   rm -rf "$stage"
   exit 0
 fi

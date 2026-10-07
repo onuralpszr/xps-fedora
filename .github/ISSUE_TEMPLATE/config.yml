@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Package builds
+    url: https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/builds/
+    about: Check the latest COPR builds before reporting a build failure.

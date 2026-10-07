@@ -1,0 +1,20 @@
+From: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+Subject: [PATCH] continuous_batching: give BorrowedLinearAttentionRowsGuard a constructor
+
+The guard declares (deleted) copy operations, so under C++20 it is no longer
+an aggregate and `BorrowedLinearAttentionRowsGuard guard{*this, output};`
+fails with "no matching function for call" (GCC 16 defaults to C++20).
+Add the constructor the brace initialization expects.
+
+--- a/src/cpp/src/continuous_batching/pipeline_impl.cpp
++++ b/src/cpp/src/continuous_batching/pipeline_impl.cpp
+@@ -529,6 +529,9 @@
+         const Scheduler::Output& m_scheduler_output;
+         bool m_armed = true;
+ 
++        BorrowedLinearAttentionRowsGuard(ContinuousBatchingImpl& impl, const Scheduler::Output& scheduler_output)
++            : m_impl(impl),
++              m_scheduler_output(scheduler_output) {}
+         ~BorrowedLinearAttentionRowsGuard() {
+             if (m_armed) {
+                 m_impl._release_linear_attention_borrowed_rows(m_scheduler_output);

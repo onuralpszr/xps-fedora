@@ -1,0 +1,62 @@
+name: COPR build
+
+# Start a COPR build by hand from the Actions tab. Pushes to main also build
+# automatically through the COPR webhook (see docs/ci.md).
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to build
+        required: true
+        type: choice
+        options:
+          - onnx
+          - openvino
+          - openvino-genai
+          - onnxruntime
+          - llama-cpp
+          - intel-npu-driver
+          - python-openvino-telemetry
+          - python-transformers
+          - python-nncf
+          - python-optimum
+          - python-optimum-intel
+          - dell-xps-ptl-config
+          - intel-ipu7-kmod
+      chroot:
+        description: Build only for this chroot (empty builds all)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: registry.fedoraproject.org/fedora:45
+    steps:
+      - name: Install copr-cli
+        run: dnf -y install copr-cli
+
+      - name: Write the COPR configuration
+        env:
+          COPR_CONFIG: ${{ secrets.COPR_CONFIG }}
+        run: |
+          mkdir -p ~/.config
+          printf '%s\n' "$COPR_CONFIG" > ~/.config/copr
+          chmod 600 ~/.config/copr
+
+      - name: Build
+        env:
+          PACKAGE: ${{ inputs.package }}
+          CHROOT: ${{ inputs.chroot }}
+        run: |
+          case "$PACKAGE" in
+            dell-xps-ptl-config|intel-ipu7-kmod) project=thunderbirdtr/xps-fedora ;;
+            *) project=thunderbirdtr/intel-ai-stack ;;
+          esac
+          args=()
+          [ -n "$CHROOT" ] && args+=(-r "$CHROOT")
+          copr-cli build-package "$project" --name "$PACKAGE" --nowait "${args[@]}"

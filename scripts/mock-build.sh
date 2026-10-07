@@ -2,7 +2,7 @@
 # Build one package from packages/<name>/ in a clean mock chroot, the way
 # COPR builds it. Results land in output/mock/<name>/ and are added to the
 # local repo output/repo/, which later mock builds use, so packages that
-# depend on each other (openvino -> openvino-tokenizers -> openvino-genai)
+# depend on each other (openvino, then openvino-tokenizers, then openvino-genai)
 # can be chained before they exist in COPR.
 #
 # Usage: scripts/mock-build.sh <package> [extra mock args...]

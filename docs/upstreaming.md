@@ -10,7 +10,7 @@ so this repo only bridges the gap. Grouped by where each piece belongs.
 | Patches 0020, 0028, 0029 | `drm-intel` / `dri-devel` | Intel (Gaggery Tsai) and Dell (Spencer Bull) authored, already headed upstream. 0028 refs drm/xe work item 7521. |
 | thermald boot race | intel/thermal_daemon | adaptive-only CPUs should wait for/retry the PSVT sensors instead of writing `ignore_adaptive` and exiting; the non-adaptive fallback then refuses the CPU |
 | LT6911 vs ACPI build (patch 0101) | intel/ipu7-drivers | fix the `set_csi2()` call in `populate_dummy()` and don't depend on an lt6911uxe header mainline doesn't have |
-| PSYS driver | intel/ipu7-drivers → mainline | once PSYS is in mainline the akmod can go |
+| PSYS driver | intel/ipu7-drivers, then mainline | once PSYS is in mainline the akmod can go |
 | HM1092 ACPI support (patch 0033) | linux-media, as a reply to the v6 series | ACPI match `HIMX1092` + `-EPROBE_DEFER`; needed for every Intel laptop with this sensor |
 | `plane 5A fault` | drm/xe issues | include dmesg, Panther Lake / Arc B390, XPS 16, KWin, "camera/video window opens" |
 | depmod `override` ignored | kmod | confirm with a minimal repro first |

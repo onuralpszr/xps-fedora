@@ -54,12 +54,16 @@ fi
 
 mode=-bb
 [[ ${1:-} == prep ]] && mode=-bp
+without_flags=()
+for w in "${without[@]}"; do without_flags+=(--without "$w"); done
 
 rpmbuild $mode \
   --define "_sourcedir $work" --define "_specdir $work" \
   --define "_builddir $work/build" --define "_rpmdir $out/RPMS" \
   --target x86_64 \
-  $(printf -- '--without %s ' "${without[@]}") \
+  "${without_flags[@]}" \
   kernel.spec 2>&1 | tee "$out/logs/kernel.log"
 
-ls -1 "$out/RPMS/x86_64/" | grep '^kernel' || true
+for f in "$out"/RPMS/x86_64/kernel*; do
+  if [[ -e $f ]]; then basename "$f"; fi
+done

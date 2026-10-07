@@ -42,13 +42,18 @@ without=(debug debuginfo realtime perf libperf tools ynl selftests kabichk
          zfcpdump cross_headers efiuki)
 
 if [[ ${1:-} == srpm ]]; then
-  mkdir -p "$out/srpm/kernel"
-  rm -f "$out"/srpm/kernel/*.src.rpm
+  # COPR's import cannot serve empty source files (the Module.kabi_* lists,
+  # unused with kabichk off), so stage a copy where they hold a newline
+  stage=$root/work/kernel-srpm
+  rm -rf "$stage" && mkdir -p "$stage" "$out/srpm/kernel"
+  find . -maxdepth 1 -type f -not -name '.*' -exec cp -l {} "$stage"/ \;
+  find "$stage" -maxdepth 1 -type f -empty -exec sh -c 'rm "$1" && echo > "$1"' _ {} \;
   { for w in "${without[@]}"; do echo "%define _without_$w 1"; done
-    cat kernel.spec; } > kernel-copr.spec
-  rpmbuild -bs --define "_sourcedir $work" --define "_srcrpmdir $out/srpm/kernel" \
-    kernel-copr.spec
-  rm -f kernel-copr.spec
+    cat kernel.spec; } > "$stage/kernel-copr.spec"
+  rm -f "$out"/srpm/kernel/*.src.rpm
+  rpmbuild -bs --define "_sourcedir $stage" --define "_srcrpmdir $out/srpm/kernel" \
+    "$stage/kernel-copr.spec"
+  rm -rf "$stage"
   exit 0
 fi
 

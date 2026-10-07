@@ -13,8 +13,8 @@ The work needed to move the packages in this repository from COPR into Fedora. D
 - [x] ✅ intel-npu-driver 1.38.0 builds on f45 and rawhide
 - [x] ✅ calibre, crow-translate, gstreamer1-plugins-bad-free and pipewire rebuilt against onnxruntime 1.30
 - [ ] ⏳ llama-cpp b11460 (f45 and rawhide)
-- [ ] ⏳ monado and vcmi rebuilds
-- [ ] ⏳ python-torch rebuild on rawhide, then python-optimum-intel on rawhide
+- [x] ✅ monado and vcmi rebuilds
+- [x] ✅ python-torch rebuild on rawhide, then python-optimum-intel on rawhide
 - [ ] ⚠️ Add ollama to the COPR rebuilds (it links `libggml-base.so.0`)
 - [ ] ⚠️ Add `Recommends` for the llama-cpp backend subpackages so a plain install keeps GPU support
 

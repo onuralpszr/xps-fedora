@@ -1,0 +1,25 @@
+From: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+Subject: [PATCH] Use the system cpuinfo
+
+onnxruntime 1.30 dropped FIND_PACKAGE_ARGS for pytorch_cpuinfo and always
+fetches its own patched copy, which fails in an offline build. Use the
+installed cpuinfo when CMake finds it; its cpuinfo_deinitialize() is a no-op,
+which is what onnxruntime expected before 1.30.
+
+--- a/cmake/external/onnxruntime_external_deps.cmake
++++ b/cmake/external/onnxruntime_external_deps.cmake
+@@ -306,8 +306,14 @@
+   set(CPUINFO_BUILD_UNIT_TESTS OFF CACHE INTERNAL "")
+   set(CPUINFO_BUILD_MOCK_TESTS OFF CACHE INTERNAL "")
+   set(CPUINFO_BUILD_BENCHMARKS OFF CACHE INTERNAL "")
++  if(NOT onnxruntime_USE_VCPKG)
++    # Fedora: prefer the system cpuinfo, as onnxruntime did before 1.30
++    find_package(cpuinfo CONFIG QUIET)
++  endif()
+   if(onnxruntime_USE_VCPKG AND NOT APPLE)
+     find_package(cpuinfo CONFIG REQUIRED)
++  elseif(cpuinfo_FOUND)
++    message(STATUS "Using system cpuinfo ${cpuinfo_VERSION}")
+   else()
+     if (onnxruntime_target_platform STREQUAL "ARM64EC" OR onnxruntime_target_platform STREQUAL "ARM64")
+       message(STATUS "Applying patches for Windows ARM64/ARM64EC in cpuinfo")

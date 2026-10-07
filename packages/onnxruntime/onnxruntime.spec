@@ -77,6 +77,8 @@ Patch:      0009-dnnl-Clean-unused-vars.patch
 Patch:      0010-openVINO-runtime-fix.patch
 # Trigger onnx static registration fix
 Patch:      0011-onnx-static-registration-fix.patch
+# Use the system cpuinfo (1.30 always fetches its own copy)
+Patch:      0012-System-cpuinfo.patch
 
 # armv7hl: https://bugzilla.redhat.com/show_bug.cgi?id=2235328
 # i686:    https://fedoraproject.org/wiki/Changes/EncourageI686LeafRemoval
@@ -536,4 +538,5 @@ done
 - Update to 1.30.0
 - Build against onnx 1.22.0 and OpenVINO 2026.4.1
 - Rebase Disable-download-deps and System-date-and-mp11 patches on 1.30
+- Use the system cpuinfo again
 - Based on Fedora's onnxruntime 1.26.0 packaging

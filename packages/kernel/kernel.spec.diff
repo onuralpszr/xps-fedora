@@ -1,0 +1,64 @@
+diff --git a/kernel-local b/kernel-local
+index 8c32be5be..7e322dbba 100644
+--- a/kernel-local
++++ b/kernel-local
+@@ -1,2 +1,4 @@
+ # This file is intentionally left empty in the stock kernel. Its a nicety
+ # added for those wanting to do custom rebuilds with altered config opts.
++# Himax HM1092 IR camera (Dell XPS 14/16)
++CONFIG_VIDEO_HM1092=m
+diff --git a/kernel.spec b/kernel.spec
+index dd5b5e18c..ea98e3f71 100644
+--- a/kernel.spec
++++ b/kernel.spec
+@@ -191,17 +191,17 @@ Summary: The Linux kernel
+ #  to build the base kernel using the debug configuration. (Specifying
+ #  the --with-release option overrides this setting.)
+ %define debugbuildsenabled 1
+-# define buildid .local
++%define buildid .dellptl
+ %define specrpmversion 7.2.9
+ %define specversion 7.2.9
+ %define patchversion 7.2
+-%define pkgrelease 300
++%define pkgrelease 300.2
+ %define kversion 7
+ %define tarfile_release 7.2.9
+ # This is needed to do merge window version magic
+ %define patchlevel 2
+ # This allows pkg_release to have configurable %%{?dist} tag
+-%define specrelease 300%{?buildid}%{?dist}
++%define specrelease 300.2%{?buildid}%{?dist}
+ # This defines the kabi tarball version
+ %define kabiversion 7.2.9
+ 
+@@ -1217,6 +1217,16 @@ Patch1: patch-%{patchversion}-redhat.patch
+ %endif
+ 
+ # empty final patch to facilitate testing of kernel patches
++# Dell XPS 16 / Panther Lake display fixes (from omarchy linux-ptl)
++Patch1001: 0020-drm-i915-alpm-limit-pr-alpm-to-panel-replay.patch
++Patch1003: 0029-drm-edid-populate-monitor-range-from-displayid-adaptive-sync.patch
++# Himax HM1092 IR camera (ipu-bridge: media.git; driver: v6 on linux-media; ACPI: ours)
++Patch1005: 0031-media-dt-bindings-Add-Himax-HM1092-NIR-sensor.patch
++Patch1006: 0032-media-i2c-hm1092-add-Himax-HM1092-mono-NIR-sensor-driver.patch
++Patch1007: 0033-media-i2c-hm1092-Add-ACPI-support.patch
++# LG 00:22:b9 on XPS 14/16: ALPM fast wake ahead of IO buffer wake (v2, intel-gfx, not merged)
++Patch1008: 0034-drm-i915-alpm-Add-a-quirk-to-keep-the-fast-wake-ahead-of-the-IO-buffer-wake.patch
++
+ Patch999999: linux-kernel-test.patch
+ 
+ # END OF PATCH DEFINITIONS
+@@ -2192,6 +2202,12 @@ cp -a %{SOURCE1} .
+ ApplyOptionalPatch patch-%{patchversion}-redhat.patch
+ %endif
+ 
++ApplyOptionalPatch 0020-drm-i915-alpm-limit-pr-alpm-to-panel-replay.patch
++ApplyOptionalPatch 0029-drm-edid-populate-monitor-range-from-displayid-adaptive-sync.patch
++ApplyOptionalPatch 0031-media-dt-bindings-Add-Himax-HM1092-NIR-sensor.patch
++ApplyOptionalPatch 0032-media-i2c-hm1092-add-Himax-HM1092-mono-NIR-sensor-driver.patch
++ApplyOptionalPatch 0033-media-i2c-hm1092-Add-ACPI-support.patch
++ApplyOptionalPatch 0034-drm-i915-alpm-Add-a-quirk-to-keep-the-fast-wake-ahead-of-the-IO-buffer-wake.patch
+ ApplyOptionalPatch linux-kernel-test.patch
+ 
+ %{log_msg "End of patch applications"}

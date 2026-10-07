@@ -6,7 +6,10 @@
 # pinned f45 commit on a local "dell-ptl" branch, applies kernel.spec.diff
 # (buildid .dellptl + Patch1001-1003) and copies the patches next to it.
 #
-# Usage: scripts/build-kernel.sh [prep]      prep = only prepare + %prep
+# Usage: scripts/build-kernel.sh [prep|srpm]
+#   prep  only prepare and run %prep
+#   srpm  write a source RPM for COPR into output/srpm/kernel; COPR cannot
+#         pass --without flags, so they are written into the spec copy
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -35,6 +38,20 @@ else
 fi
 fedpkg sources >/dev/null
 
+without=(debug debuginfo realtime perf libperf tools ynl selftests kabichk
+         zfcpdump cross_headers efiuki)
+
+if [[ ${1:-} == srpm ]]; then
+  mkdir -p "$out/srpm/kernel"
+  rm -f "$out"/srpm/kernel/*.src.rpm
+  { for w in "${without[@]}"; do echo "%define _without_$w 1"; done
+    cat kernel.spec; } > kernel-copr.spec
+  rpmbuild -bs --define "_sourcedir $work" --define "_srcrpmdir $out/srpm/kernel" \
+    kernel-copr.spec
+  rm -f kernel-copr.spec
+  exit 0
+fi
+
 mode=-bb
 [[ ${1:-} == prep ]] && mode=-bp
 
@@ -42,10 +59,7 @@ rpmbuild $mode \
   --define "_sourcedir $work" --define "_specdir $work" \
   --define "_builddir $work/build" --define "_rpmdir $out/RPMS" \
   --target x86_64 \
-  --without debug --without debuginfo --without realtime \
-  --without perf --without libperf --without tools --without ynl \
-  --without selftests --without kabichk --without zfcpdump \
-  --without cross_headers --without efiuki \
+  $(printf -- '--without %s ' "${without[@]}") \
   kernel.spec 2>&1 | tee "$out/logs/kernel.log"
 
 ls -1 "$out/RPMS/x86_64/" | grep '^kernel' || true

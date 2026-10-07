@@ -9,7 +9,7 @@ enrolled in shim's MOK list. The akmods key is used for both.
 sudo dnf install akmods sbsigntools
 sudo kmodgenca -a                       # /etc/pki/akmods/{certs,private}
 sudo mokutil --import /etc/pki/akmods/certs/public_key.der
-# reboot -> MOK Manager -> Enroll MOK -> Continue -> Yes -> password -> Reboot
+# reboot, then in MOK Manager: Enroll MOK, Continue, Yes, password, Reboot
 mokutil --list-enrolled | grep Subject  # the obsidian-xps key is listed
 ```
 

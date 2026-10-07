@@ -1,0 +1,56 @@
+From 84c42e296e2f7570792cd41c7f27ccb89864d523 Mon Sep 17 00:00:00 2001
+From: Diego Herrera <dherrera@redhat.com>
+Date: Sun, 14 Jun 2026 23:20:49 -0400
+Subject: [PATCH 09/11] dnnl Clean unused vars
+--- a/onnxruntime/core/providers/dnnl/subgraph/dnnl_matmul.cc
++++ b/onnxruntime/core/providers/dnnl/subgraph/dnnl_matmul.cc
+@@ -52,15 +52,6 @@
+   if (node.OpType() == "MatMulPostOps") {
+     has_postop_fusion = true;
+     post_ops = node.GetPostOps();
+-
+-    int binary_count = 0;
+-    // Check we have enough inputs for MatMul and the binary post ops
+-    for (size_t i = 0; i < post_ops.size(); ++i) {
+-      if (binary_ops.count(post_ops[i]) != 0) {
+-        assert(node.Input(IN_BINARY_0 + binary_count).Exists());
+-        binary_count++;
+-      }
+-    }
+   }
+ 
+   bool is_fusedmatmul = false;
+--- a/onnxruntime/core/providers/dnnl/subgraph/dnnl_matmul_integer.cc
++++ b/onnxruntime/core/providers/dnnl/subgraph/dnnl_matmul_integer.cc
+@@ -27,15 +27,6 @@
+   if (node.OpType() == "MatMulIntegerPostOps") {
+     has_postop_fusion = true;
+     post_ops = node.GetPostOps();
+-
+-    int binary_count = 0;
+-    // Check we have enough inputs for MatMul and the binary post ops
+-    for (size_t i = 0; i < post_ops.size(); ++i) {
+-      if (binary_ops.count(post_ops[i]) != 0) {
+-        assert(node.Input(IN_BINARY_0 + binary_count).Exists());
+-        binary_count++;
+-      }
+-    }
+   }
+ 
+   auto src_dims = sp.GetMemory(node.Input(IN_A)).get_desc().get_dims();
+--- a/onnxruntime/core/providers/dnnl/subgraph/dnnl_subgraph_transformer.cc
++++ b/onnxruntime/core/providers/dnnl/subgraph/dnnl_subgraph_transformer.cc
+@@ -764,13 +764,6 @@
+       continue;
+     }
+ 
+-    const auto& dims = tensor_proto->dims();
+-    auto dim_size = tensor_proto->dims_size();
+-    int num_elements = 1;
+-    for (int i = 0; i < dim_size; i++) {
+-      num_elements *= int(dims[i]);
+-    }
+-
+     // check if b_zp is all zeros, assume data is s8 since only s8 weight is supported in onednn
+     bool all_zero = true;
+     std::vector<uint8_t> unpacked_tensor;

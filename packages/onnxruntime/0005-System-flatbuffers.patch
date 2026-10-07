@@ -1,0 +1,24 @@
+From cd7d290c13c1b4bcd2a7fe786ae3b7da35f1dcec Mon Sep 17 00:00:00 2001
+From: Diego Herrera <dherrera@redhat.com>
+Date: Sun, 14 Jun 2026 19:07:31 -0400
+Subject: [PATCH 05/11] System flatbuffers
+--- a/cmake/external/onnxruntime_external_deps.cmake
++++ b/cmake/external/onnxruntime_external_deps.cmake
+@@ -408,7 +408,7 @@
+     URL_HASH SHA1=${DEP_SHA1_flatbuffers}
+     PATCH_COMMAND ${ONNXRUNTIME_FLATBUFFERS_PATCH_COMMAND}
+     EXCLUDE_FROM_ALL
+-    FIND_PACKAGE_ARGS 23.5.9 NAMES Flatbuffers flatbuffers
++    FIND_PACKAGE_ARGS 23.5.9 NAMES Flatbuffers flatbuffers FlatBuffers
+ )
+ 
+ onnxruntime_fetchcontent_makeavailable(flatbuffers)
+@@ -436,6 +436,8 @@
+       target_compile_options(flatc PRIVATE /FI${CMAKE_BINARY_DIR}/gdk_cstdlib_wrapper.h)
+     endif()
+   endif()
++else()
++  add_library(flatbuffers::flatbuffers ALIAS flatbuffers::flatbuffers_shared)
+ endif()
+ endif()
+ 

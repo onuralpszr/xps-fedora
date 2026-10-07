@@ -1,0 +1,39 @@
+From d5717aa23693dd45d8a397d931be3ad605c75b16 Mon Sep 17 00:00:00 2001
+From: Diego Herrera <dherrera@redhat.com>
+Date: Sun, 14 Jun 2026 19:06:51 -0400
+Subject: [PATCH 03/11] System safeint
+--- a/cmake/external/onnxruntime_external_deps.cmake
++++ b/cmake/external/onnxruntime_external_deps.cmake
+@@ -379,21 +379,8 @@
+   RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
+ endif()
+ 
+-find_path(safeint_SOURCE_DIR NAMES "SafeInt.hpp")
+-if(NOT safeint_SOURCE_DIR)
+-  unset(safeint_SOURCE_DIR)
+-  onnxruntime_fetchcontent_declare(
+-      safeint
+-      URL ${DEP_URL_safeint}
+-      URL_HASH SHA1=${DEP_SHA1_safeint}
+-      EXCLUDE_FROM_ALL
+-  )
+-
+-  # use fetch content rather than makeavailable because safeint only includes unconditional test targets
+-  FetchContent_Populate(safeint)
+-endif()
+ add_library(safeint_interface IMPORTED INTERFACE)
+-target_include_directories(safeint_interface INTERFACE ${safeint_SOURCE_DIR})
++target_include_directories(safeint_interface INTERFACE /usr/include/SafeInt)
+ 
+ 
+ # Flatbuffers
+--- a/onnxruntime/core/common/safeint.h
++++ b/onnxruntime/core/common/safeint.h
+@@ -24,6 +24,7 @@
+ 
+ #define SAFEINT_EXCEPTION_HANDLER_CPP 1
+ #define SafeIntDefaultExceptionHandler SafeIntExceptionHandler<onnxruntime::OnnxRuntimeException>
++#define SAFEINT_CPP_THROW noexcept(false)
+ 
+ #if defined(__GNUC__)
+ #include "onnxruntime_config.h"

@@ -49,7 +49,7 @@ else
   rm -f "$work"/*.src.rpm
 fi
 
-# Release: N%{?dist} -> N%{?dist}.<suffix>
+# Release: N%{?dist} becomes N%{?dist}.<suffix>
 sed -i -E "0,/^Release:/s/^(Release:[[:space:]]*.*)$/\1.${suffix}/" "$pkg.spec"
 evr=$(rpmspec -q --srpm --qf '%{evr}\n' "$pkg.spec" 2>/dev/null | head -1)
 date=$(LC_ALL=C date +'%a %b %d %Y')

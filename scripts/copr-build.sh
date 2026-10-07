@@ -26,7 +26,7 @@ srpm_for() {
   ls "$out"/*.src.rpm
 }
 
-submit() {   # submit <srpm> [extra args] -> prints build id
+submit() {   # submit <srpm> [extra args], prints the build id
   copr-cli build --nowait --timeout "$timeout" "$project" "$@" 2>&1 |
     sed -n 's/^Created builds: *//p'
 }

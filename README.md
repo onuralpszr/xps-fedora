@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo.png" alt="xps-fedora logo" width="256">
+  <img src="https://raw.githubusercontent.com/onuralpszr/xps-fedora/main/docs/assets/logo.png" alt="xps-fedora logo" width="256">
 </p>
 
 <h1 align="center">xps-fedora</h1>
@@ -35,6 +35,10 @@
 This repository holds the RPM packages, patches and notes that make Fedora 45 run well on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390 graphics, Dell subsystem `1028:0dba`) with Secure Boot left on. It started from what [Omarchy](https://github.com/omacom/omarchy-pkgs) ships for the same machine and grew from there: a patched Fedora kernel, the IPU7 camera stack, the NPU driver and compiler, power profiles that reach the Dell thermal modes, ambient light brightness, and a full OpenVINO and llama.cpp stack built for Fedora.
 
 Most of it is not specific to this laptop. The camera, NPU and AI packages should help any Panther Lake or Lunar Lake machine, and the aim is to send as much as possible to Fedora and upstream projects.
+
+<p align="center">
+  <a href="#hardware-status"><img src="https://raw.githubusercontent.com/onuralpszr/xps-fedora/main/docs/assets/hardware-infographic.png" alt="Dell XPS 16 hardware support on Fedora and KDE Plasma" width="80%"></a>
+</p>
 
 ## Tested on
 

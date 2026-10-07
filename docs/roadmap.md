@@ -28,11 +28,11 @@ Legend: ✅ done · 🟡 partial · ❌ missing · ⛔ blocked upstream
 | Presence sensor | ISH "Human Presence v2" (camera based, via CVS) | ⛔ | sensor reports NOT AVAILABLE unless the camera streams; see findings.md |
 | Ambient light | 2× ISH ALS (one with colour temp) | ✅ | `xps-ptl-tools` auto-brightness + widget; colour temperature not used yet |
 | Thermal | DPTF, 2 fans | ✅ | thermald adaptive (boot-race fix) |
-| Dell thermal modes | `dell-pc` handler (= BIOS `ThermalManagement`) | ✅ | KDE slider → `xps-ptl-*` tuned profiles (`dell-xps-ptl-config` 1.3) |
+| Dell thermal modes | `dell-pc` handler (= BIOS `ThermalManagement`) | ✅ | KDE slider drives the `xps-ptl-*` tuned profiles (`dell-xps-ptl-config` 1.3) |
 | Power | s2idle, PSR, NVMe APST, runtime PM | 🟡 | s0ix residency and idle drain not yet measured |
 | Battery | Dell charge modes | ✅ | 50-90 % custom; `PrimaryBattChargeCfg` via sysman |
 | Audio | SoundWire, cs35l56 ×4 | ✅ | speaker tuning vs Windows not compared |
-| Input | haptic-free touchpad, Copilot key | ✅ | Copilot → input-remapper F23→F19 |
+| Input | haptic-free touchpad, Copilot key | ✅ | Copilot key through input-remapper, F23 to F19 |
 | Wi-Fi / BT | CNVi | ✅ | stock |
 | Firmware | BIOS 1.8.2 via fwupd | ✅ | n/a |
 | AI runtime | OpenVINO / GenAI | 🟡 | full stack in a venv; system-wide needs our packages |
@@ -61,8 +61,8 @@ auto-brightness from ALS; optional adaptive colour temperature.
 - Measure: `intel_gpu_top` (GPU W), `intel-npu-smi` (NPU W), RAPL / `turbostat`
   (package W), `power_now` (system W).
 
-**Sensors:** presence → lock on walk-away, wake/dim on approach/attention;
-ALS → brightness; fans/temps → one status view.
+**Sensors:** presence for lock on walk-away, wake/dim on approach/attention;
+ALS for brightness; fans and temperatures in one status view.
 
 **Security:** Secure Boot with own MOK (akmods key), signed kernel + kmods,
 face login only with IR (never RGB for sudo/login/LUKS), TPM-sealed templates.

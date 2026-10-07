@@ -9,13 +9,25 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache%202.0-blue.svg"></a>
+  <a href="#tested-on"><img alt="Dell XPS 16 DA16260" src="https://img.shields.io/badge/Dell%20XPS%2016-DA16260-007DB8?logo=dell&amp;logoColor=white"></a>
+  <a href="#tested-on"><img alt="Intel Panther Lake" src="https://img.shields.io/badge/Intel-Panther%20Lake-0071C5?logo=intel&amp;logoColor=white"></a>
   <a href="https://fedoraproject.org"><img alt="Fedora 45" src="https://img.shields.io/badge/Fedora-45-51A2DA?logo=fedora&amp;logoColor=white"></a>
-  <a href="https://github.com/onuralpszr/xps-fedora/actions/workflows/check.yml"><img alt="Check" src="https://github.com/onuralpszr/xps-fedora/actions/workflows/check.yml/badge.svg"></a>
-  <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/"><img alt="COPR intel-ai-stack" src="https://img.shields.io/badge/COPR-intel--ai--stack-294172?logo=fedora&amp;logoColor=white"></a>
+  <a href="https://kde.org/plasma-desktop/"><img alt="KDE Plasma 6.7" src="https://img.shields.io/badge/KDE%20Plasma-6.7-1D99F3?logo=kde&amp;logoColor=white"></a>
+  <a href="packages/openvino"><img alt="OpenVINO 2026.4.1 with NPU" src="https://img.shields.io/badge/OpenVINO-2026.4.1%20with%20NPU-6D28D9?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOC44NSAxOC44OCI+PHBhdGggZD0iTTEyLjkxMTcgNy45NjY1MkMxMi42Njc1IDguNDY2MTcgMTIuMTY2MyA4LjgxMzY5IDExLjU2MzMgOC44MTM2OUMxMC43MTcyIDguODEzNjkgMTAuMDU4MyA4LjEyNjI5IDEwLjA1ODMgNy4yODU3MkMxMC4wNTgzIDYuNjc4MiAxMC40MDQ4IDYuMTUyMDggMTAuOTE1MSA1LjkwNDhDMTAuNDU4NyA1LjcwNzM4IDkuOTUzOTUgNS41OTc0NyA5LjQxODE3IDUuNTk3NDdDNy4zMDIgNS41OTc0NyA1LjY1NDk3IDcuMzI5OTkgNS42NTQ5NyA5LjQzMTlDNS42NTQ5NyAxMS41MzM4IDcuMzAyNTEgMTMuMjUxNiA5LjQxODE3IDEzLjI1MTZDMTEuNTQ4MSAxMy4yNTE2IDEzLjE5NTYgMTEuNTMzMyAxMy4xOTU2IDkuNDMxOUMxMy4xOTUxIDguOTEzOTMgMTMuMDkzOCA4LjQxOTM2IDEyLjkxMTcgNy45NjY1MloiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTAgOS40MzdDMCA0LjIyNzc1IDQuMjAyODEgMCA5LjQxMjA2IDBDMTQuNjQ2OCAwIDE4Ljg0OTEgNC4yMjc3NSAxOC44NDkxIDkuNDM3QzE4Ljg0OTEgMTQuNjQ2MiAxNC42NDYyIDE4Ljg3NCA5LjQxMjA2IDE4Ljg3NEM0LjIwMjgxIDE4Ljg3NCAwIDE0LjY0NjIgMCA5LjQzN1pNMTYuMTA2IDkuNDM3QzE2LjEwNiA1LjcxMjQ3IDEzLjE4NyAyLjY0MjI4IDkuNDEyMDYgMi42NDIyOEM1LjY2MjYxIDIuNjQyMjggMi43NDMwMiA1LjcxMjQ3IDIuNzQzMDIgOS40MzdDMi43NDMwMiAxMy4xNjE1IDUuNjYyMSAxNi4yMDYzIDkuNDEyMDYgMTYuMjA2M0MxMy4xODcgMTYuMjA2OCAxNi4xMDYgMTMuMTYxNSAxNi4xMDYgOS40MzdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=="></a>
+  <a href="packages/kernel"><img alt="Kernel 7.2.9-300.2.dellptl" src="https://img.shields.io/badge/kernel-7.2.9--300.2.dellptl-FCC624?logo=linux&amp;logoColor=black"></a>
+  <img alt="Secure Boot on" src="https://img.shields.io/badge/Secure%20Boot-on-2ea44f">
+</p>
+
+<p align="center">
   <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/"><img alt="COPR xps-fedora" src="https://img.shields.io/badge/COPR-xps--fedora-294172?logo=fedora&amp;logoColor=white"></a>
-  <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/"><img alt="OpenVINO build status" src="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/status_image/last_build.png"></a>
-  <img alt="Secure Boot" src="https://img.shields.io/badge/Secure%20Boot-on-2ea44f">
+  <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/"><img alt="COPR intel-ai-stack" src="https://img.shields.io/badge/COPR-intel--ai--stack-294172?logo=fedora&amp;logoColor=white"></a>
+  <a href="https://github.com/onuralpszr/plasma-light-and-presence"><img alt="plasma-light-and-presence" src="https://img.shields.io/badge/plasma--light--and--presence-widget-1D99F3?logo=kde&amp;logoColor=white"></a>
+  <a href="https://github.com/onuralpszr/xps-fedora/releases"><img alt="Camera release" src="https://img.shields.io/github/v/release/onuralpszr/xps-fedora?filter=intel-ipu7-camera-*&amp;label=camera&amp;logo=github"></a>
+  <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/kernel/"><img alt="Kernel build" src="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/kernel/status_image/last_build.png"></a>
+  <a href="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/"><img alt="OpenVINO build" src="https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/status_image/last_build.png"></a>
+  <a href="https://github.com/onuralpszr/xps-fedora/actions/workflows/check.yml"><img alt="Check" src="https://github.com/onuralpszr/xps-fedora/actions/workflows/check.yml/badge.svg"></a>
+  <a href="https://github.com/onuralpszr/xps-fedora/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/onuralpszr/xps-fedora"></a>
+  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache%202.0-blue.svg"></a>
 </p>
 
 ## About

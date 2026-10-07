@@ -1,0 +1,39 @@
+name: Hardware problem
+description: Something on the laptop does not work or works badly.
+labels: [hardware]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Laptop model
+      placeholder: Dell XPS 16 DA16260
+    validations:
+      required: true
+  - type: input
+    id: kernel
+    attributes:
+      label: Kernel version
+      description: Output of `uname -r`.
+      placeholder: 7.2.9-300.2.dellptl.fc45.x86_64
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Display, Camera, NPU, Power and thermal, Audio, Sensors, Keyboard and touchpad, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant `journalctl -k -b` lines or command output.
+      render: text

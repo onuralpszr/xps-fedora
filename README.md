@@ -24,22 +24,26 @@ Most of it is not specific to this laptop. The camera, NPU and AI packages shoul
 
 ## Hardware status
 
+✅ working, ⚠️ partly working, ❌ not working, ⛔ blocked upstream
+
 | Component | Stock Fedora 45 | With this repo | How |
 |---|---|---|---|
-| Display, VRR 20-120 Hz | not detected | working | `kernel` patch, KDE VRR set to Automatic |
-| Display, panel self refresh | glitches, link errors | working (PSR1) | `kernel` ALPM quirk and `xe.enable_psr2_sel_fetch=0` |
-| Camera (OV08X40 through IPU7) | raw nodes only | working | `intel-ipu7-kmod`, `intel-ipu7-camera` |
-| NPU (Intel AI Boost) | no compiler | working | `intel-npu-driver` 1.38 with `intel-npu-compiler` |
-| OpenVINO on CPU, GPU and NPU | no NPU plugin | working | `openvino` 2026.4.1 from the COPR |
-| llama.cpp on the Arc GPU | CPU only | working | `llama-cpp-vulkan`, `llama-cpp-openvino` |
-| Thermal (thermald, Dell DPTF) | stops after boot | working | `dell-xps-ptl-config` |
-| Power profiles and Dell thermal modes | power saver never reached | working | `dell-xps-ptl-config` tuned profiles |
-| Ambient light brightness | none | working | `xps-ptl-tools`, moving to plasma-sensord |
-| Copilot key | unknown key | working | input-remapper preset in `tools/copilot-key` |
-| Video decode H.264 and HEVC | VP9 and AV1 only | working | RPM Fusion `intel-media-driver` |
-| Audio, Wi-Fi, Bluetooth, touchpad, keyboard light | working | working | stock |
-| IR camera (HM1092) and face login | no driver | blocked | the camera bridge does not pass IR frames yet |
-| Presence sensor | not usable | blocked | camera based, needs vendor support, see [findings](docs/findings.md) |
+| Display, VRR 20-120 Hz | ❌ not detected | ✅ | `kernel` patch, KDE VRR set to Automatic |
+| Display, panel self refresh | ⚠️ glitches, link errors | ✅ PSR1 | `kernel` ALPM quirk and `xe.enable_psr2_sel_fetch=0` |
+| Camera (OV08X40 through IPU7) | ❌ raw nodes only | ✅ | `intel-ipu7-kmod`, `intel-ipu7-camera` |
+| NPU (Intel AI Boost) | ❌ no compiler | ✅ | `intel-npu-driver` 1.38 with `intel-npu-compiler` |
+| OpenVINO on CPU, GPU and NPU | ⚠️ no NPU plugin | ✅ | `openvino` 2026.4.1 from the COPR |
+| llama.cpp on the Arc GPU | ⚠️ CPU only | ✅ | `llama-cpp-vulkan`, `llama-cpp-openvino` |
+| Thermal (thermald, Dell DPTF) | ❌ stops after boot | ✅ | `dell-xps-ptl-config` |
+| Power profiles and Dell thermal modes | ❌ power saver never reached | ✅ | `dell-xps-ptl-config` tuned profiles |
+| Ambient light brightness | ❌ none | ✅ | `xps-ptl-tools`, moving to plasma-sensord |
+| Copilot key | ❌ unknown key | ✅ | input-remapper preset in `tools/copilot-key` |
+| Video decode H.264 and HEVC | ⚠️ VP9 and AV1 only | ✅ | RPM Fusion `intel-media-driver` |
+| External monitor through a USB-C dock | ✅ | ✅ | limited to 60 Hz by the dock's two DP lanes |
+| Audio, Wi-Fi, Bluetooth, touchpad, keyboard light | ✅ | ✅ | stock |
+| IR camera (HM1092) and face login | ❌ no driver | ⛔ | the camera bridge does not pass IR frames yet |
+| Presence sensor | ❌ not usable | ⛔ | camera based, needs vendor support, see [findings](docs/findings.md) |
+| Idle battery drain and sleep states | ⚠️ not measured | ⚠️ | measurement still to do |
 
 ## Installing
 

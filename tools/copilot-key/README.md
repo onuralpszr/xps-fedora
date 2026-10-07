@@ -1,4 +1,4 @@
-# Copilot key → app launcher (KDE)
+# Copilot key as an app launcher (KDE)
 
 The Copilot key sends `KEY_LEFTMETA + KEY_LEFTSHIFT + KEY_F23` (libinput).
 Fedora's xkeyboard-config 2.48 gives `<FK23>` the type `PC_SHIFT_SUPER_LEVEL2`
@@ -16,7 +16,7 @@ cp copilot.json "$HOME/.config/input-remapper-2/presets/AT Translated Set 2 keyb
 sudo systemctl enable --now input-remapper
 input-remapper-control --command autoload
 ```
-Then System Settings → Keyboard → Shortcuts → the app → press the Copilot key
+Then System Settings, Keyboard, Shortcuts, pick the app and press the Copilot key
 (records Meta+Shift+F19).
 
 Don't use the xkb option `fkeys:basic_13-24` instead: it also turns F20

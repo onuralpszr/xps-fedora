@@ -9,6 +9,6 @@
         "target_uinput": "keyboard",
         "output_symbol": "KEY_F19",
         "mapping_type": "key_macro",
-        "name": "Copilot key: F23 -> F19"
+        "name": "Copilot key: F23 to F19"
     }
 ]

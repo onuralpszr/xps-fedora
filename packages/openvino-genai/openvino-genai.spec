@@ -52,6 +52,9 @@ BuildRequires:  ninja-build
 BuildRequires:  unzip
 BuildRequires:  openvino-devel >= %{ov_version}
 BuildRequires:  python3-devel
+# for the import check in %%check
+BuildRequires:  python3-openvino >= %{ov_version}
+BuildRequires:  python3-numpy
 
 Requires:       openvino-tokenizers%{?_isa} = %{version}-%{release}
 

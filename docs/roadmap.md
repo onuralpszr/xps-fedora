@@ -69,7 +69,7 @@ Principles:
 
 **P1: the repository** 4. COPR + one-command install (`dell-xps-ptl` meta package). 5. Automation: rebuild kernel on Fedora kernel updates; watch upstreams. 6. `xps-ptl-doctor`: one command that checks everything in this table.
 
-**P2: features with no Linux software yet** 7. Power profiles ↔ Dell `ThermalManagement` (small daemon or tuned plugin). 8. Presence/attention sensor daemon (walk-away lock, dim when not looking). 9. ALS auto-brightness in KDE (iio-sensor-proxy is already running). 10. llama.cpp with Vulkan. 11. OpenVINO system-wide: `openvino` 2026.4 (+NPU plugin, GGUF), tokenizers, genai; then Python tools (transformers, optimum, optimum-intel, nncf).
+**P2: features with no Linux software yet** 7. Power profiles and Dell `ThermalManagement` (small daemon or tuned plugin). 8. Presence/attention sensor daemon (walk-away lock, dim when not looking). 9. ALS auto-brightness in KDE (iio-sensor-proxy is already running). 10. llama.cpp with Vulkan. 11. OpenVINO system-wide: `openvino` 2026.4 (+NPU plugin, GGUF), tokenizers, genai; then Python tools (transformers, optimum, optimum-intel, nncf).
 
 **P3: blocked or upstream** 12. IR camera + Gaze (needs CVS multi-sensor + HM1092 driver upstream; ask Jake Steinman). 13. PSR2 selective update / Panel Replay on the LG panel. 14. Upstream reports (see `upstreaming.md`). 15. Camera: black splash instead of green flash; speaker tuning comparison.
 

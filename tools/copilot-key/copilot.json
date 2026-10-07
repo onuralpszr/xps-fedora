@@ -1,0 +1,14 @@
+[
+    {
+        "input_combination": [
+            {
+                "type": 1,
+                "code": 193
+            }
+        ],
+        "target_uinput": "keyboard",
+        "output_symbol": "KEY_F19",
+        "mapping_type": "key_macro",
+        "name": "Copilot key: F23 -> F19"
+    }
+]

@@ -12,29 +12,29 @@ Principles:
 
 ✅ done, ⚠️ partial, ❌ missing, ⛔ blocked upstream
 
-| Area               | Hardware                                        | Status | Notes / next step                                                            |
-| ------------------ | ----------------------------------------------- | ------ | ---------------------------------------------------------------------------- |
-| Kernel             | n/a                                             | ✅     | `kernel-*.dellptl` (VRR, ALPM quirk), rebase on each Fedora kernel           |
-| Display            | LG OLED 3200x2000@120, VRR 20-120               | ⚠️     | PSR1 via `xe.enable_psr2_sel_fetch=0`; PSR2 SU / Panel Replay ⛔ upstream    |
-| GPU                | Arc B390 (xe)                                   | ✅     | compute, Level Zero, VA-API (H.264/HEVC/VP9/AV1), Vulkan                     |
-| NPU                | Intel AI Boost (NPU5)                           | ✅     | driver + compiler 1.38                                                       |
-| RGB camera         | OV08X40 via IPU7 + CVS                          | ✅     | akmod + HAL; cosmetic green flash on open                                    |
-| IR camera          | HM1092 via CVS                                  | ⛔     | CVS bridge only routes one sensor; secure handshake open                     |
-| Face login         | n/a                                             | ⛔     | Gaze once IR works; RGB-only = lock screen at most                           |
-| Presence sensor    | ISH "Human Presence v2" (camera based, via CVS) | ⛔     | sensor reports NOT AVAILABLE unless the camera streams; see findings.md      |
-| Ambient light      | 2× ISH ALS (one with colour temp)               | ✅     | `xps-ptl-tools` auto-brightness + widget; colour temperature not used yet    |
-| Thermal            | DPTF, 2 fans                                    | ✅     | thermald adaptive (boot-race fix)                                            |
-| Dell thermal modes | `dell-pc` handler (= BIOS `ThermalManagement`)  | ✅     | KDE slider drives the `xps-ptl-*` tuned profiles (`dell-xps-ptl-config` 1.3) |
-| Power              | s2idle, PSR, NVMe APST, runtime PM              | ⚠️     | s0ix residency and idle drain not yet measured                               |
-| Battery            | Dell charge modes                               | ✅     | 50-90 % custom; `PrimaryBattChargeCfg` via sysman                            |
-| Audio              | SoundWire, cs35l56 ×4                           | ✅     | speaker tuning vs Windows not compared                                       |
-| Input              | haptic-free touchpad, Copilot key               | ✅     | Copilot key through input-remapper, F23 to F19                               |
-| Wi-Fi / BT         | CNVi                                            | ✅     | stock                                                                        |
-| Firmware           | BIOS 1.8.2 via fwupd                            | ✅     | n/a                                                                          |
-| AI runtime         | OpenVINO / GenAI                                | ⚠️     | full stack in a venv; system-wide needs our packages                         |
-| AI tools           | optimum-intel, nncf                             | ⚠️     | venv only                                                                    |
-| llama.cpp          | Vulkan on Arc                                   | ❌     | Fedora's build is CPU + HIP (AMD) only                                       |
-| Monitoring         | n/a                                             | ⚠️     | tools exist but no single view                                               |
+| Area               | Hardware                                        | Status | Notes / next step                                                                              |
+| ------------------ | ----------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| Kernel             | n/a                                             | ✅     | `kernel-*.dellptl` (VRR, ALPM quirk), rebase on each Fedora kernel                             |
+| Display            | LG OLED 3200x2000@120, VRR 20-120               | ⚠️     | PSR1 via `xe.enable_psr2_sel_fetch=0`; PSR2 SU / Panel Replay ⛔ upstream                      |
+| GPU                | Arc B390 (xe)                                   | ✅     | compute, Level Zero, VA-API (H.264/HEVC/VP9/AV1), Vulkan                                       |
+| NPU                | Intel AI Boost (NPU5)                           | ✅     | driver + compiler 1.38                                                                         |
+| RGB camera         | OV08X40 via IPU7 + CVS                          | ✅     | akmod + HAL; cosmetic green flash on open                                                      |
+| IR camera          | HM1092 via CVS                                  | ⛔     | CVS bridge only routes one sensor; secure handshake open                                       |
+| Face login         | n/a                                             | ⛔     | Gaze once IR works; RGB-only = lock screen at most                                             |
+| Presence sensor    | ISH "Human Presence v2" (camera based, via CVS) | ⛔     | sensor reports NOT AVAILABLE unless the camera streams; see findings.md                        |
+| Ambient light      | 2× ISH ALS (one with colour temp)               | ✅     | `plasma-light-and-presence` service, settings page and widget; colour temperature not used yet |
+| Thermal            | DPTF, 2 fans                                    | ✅     | thermald adaptive (boot-race fix)                                                              |
+| Dell thermal modes | `dell-pc` handler (= BIOS `ThermalManagement`)  | ✅     | KDE slider drives the `xps-ptl-*` tuned profiles (`dell-xps-ptl-config` 1.3)                   |
+| Power              | s2idle, PSR, NVMe APST, runtime PM              | ⚠️     | s0ix residency and idle drain not yet measured                                                 |
+| Battery            | Dell charge modes                               | ✅     | 50-90 % custom; `PrimaryBattChargeCfg` via sysman                                              |
+| Audio              | SoundWire, cs35l56 ×4                           | ✅     | speaker tuning vs Windows not compared                                                         |
+| Input              | haptic-free touchpad, Copilot key               | ✅     | Copilot key through input-remapper, F23 to F19                                                 |
+| Wi-Fi / BT         | CNVi                                            | ✅     | stock                                                                                          |
+| Firmware           | BIOS 1.8.2 via fwupd                            | ✅     | n/a                                                                                            |
+| AI runtime         | OpenVINO / GenAI                                | ⚠️     | full stack in a venv; system-wide needs our packages                                           |
+| AI tools           | optimum-intel, nncf                             | ⚠️     | venv only                                                                                      |
+| llama.cpp          | Vulkan on Arc                                   | ❌     | Fedora's build is CPU + HIP (AMD) only                                                         |
+| Monitoring         | n/a                                             | ⚠️     | tools exist but no single view                                                                 |
 
 ## 2. Maximum configuration (target)
 
@@ -79,13 +79,15 @@ Principles:
 
 COPR only accepts free software, so the proprietary IPU7 imaging libraries can't go there.
 
-| Repo | Packages |
-| --- | --- |
-| **COPR `xps-ptl`** (free) | `kernel` (`.dellptl`), `akmod-intel-ipu7`, `intel-npu-driver` (+`intel-npu-compiler`, Apache-2.0 prebuilt), `dell-xps-ptl-config`, `xps-ptl-tools` (doctor, power-mode bridge, presence daemon), `llama-cpp` (Vulkan), `openvino` / `openvino-tokenizers` / `openvino-genai`, `python3-transformers` / `-optimum` / `-optimum-intel` / `-nncf` (+ small deps), **`dell-xps-ptl`** meta package |
-| **Non-free** (self-hosted repo or RPM Fusion nonfree submission) | `intel-ipu7-camera` (bins + HAL + icamerasrc); long term: split like RPM Fusion's IPU6 stack and submit there |
-| Users also need | RPM Fusion free + nonfree (`intel-media-driver`, `v4l2-relayd`, `akmod-v4l2loopback`) |
+| Repo                                                             | Packages                                                                                                                                                                                                                                                     |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **COPR `thunderbirdtr/intel-ai-stack`**                          | `intel-npu-driver` (+`intel-npu-compiler`), `onnx`, `openvino`, `openvino-genai` (+ tokenizers), `onnxruntime`, `llama-cpp` (Vulkan, OpenVINO), `python3-transformers` / `-optimum` / `-optimum-intel` / `-nncf`, and rebuilds of the onnxruntime dependents |
+| **COPR `thunderbirdtr/xps-fedora`**                              | `kernel` (`.dellptl`), `intel-ipu7-kmod`, `dell-xps-ptl-config`, `plasma-light-and-presence`                                                                                                                                                                 |
+| **COPR `thunderbirdtr/plasma-light-and-presence`**               | `plasma-light-and-presence` on its own, for any Plasma 6 laptop                                                                                                                                                                                              |
+| **Non-free** (self-hosted repo or RPM Fusion nonfree submission) | `intel-ipu7-camera` (bins + HAL + icamerasrc); long term: split like RPM Fusion's IPU6 stack and submit there                                                                                                                                                |
+| Users also need                                                  | RPM Fusion free + nonfree (`intel-media-driver`, `v4l2-relayd`, `akmod-v4l2loopback`)                                                                                                                                                                        |
 
-Chroot: `fedora-45-x86_64` (add `fedora-rawhide-x86_64` once stable).
+Chroots: `fedora-45-x86_64` and `fedora-rawhide-x86_64` (the kernel is Fedora 45 only).
 
 ### Meta package `dell-xps-ptl`
 

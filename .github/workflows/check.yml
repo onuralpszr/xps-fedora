@@ -17,7 +17,7 @@ jobs:
       - name: Install tools
         run: dnf -y install git rpmdevtools rpm-build rpmlint make python3
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -60,6 +60,6 @@ jobs:
     name: Shell scripts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: shellcheck
         run: shellcheck -S warning scripts/*.sh tools/build-host/*.sh

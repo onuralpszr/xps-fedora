@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fedora kernel + packages/kernel patches -> output/RPMS.
+# Fedora kernel + packages/kernel patches, built into output/RPMS.
 #
 # The spec is Fedora's own (src.fedoraproject.org/rpms/kernel), so it is not
 # kept here. This clones Fedora dist-git into work/kernel, checks out the

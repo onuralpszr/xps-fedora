@@ -1,6 +1,6 @@
 # 📊 Local AI benchmarks
 
-Measured on 2026-10-08 on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390, NPU 5010, 32 GB), plugged in, `xps-ptl-performance` profile, Fedora 45 with the packages from this repository: llama-cpp b11460, OpenVINO and OpenVINO GenAI 2026.4.1, intel-npu-driver 1.38, whisper-cpp 1.9.5.
+Measured on 2026-10-08 on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390, NPU 5010, 32 GB), plugged in, `xps-ptl-performance` profile, Fedora 45 with the packages from this repository: llama-cpp b11460, OpenVINO and OpenVINO GenAI 2026.4.1, intel-npu-driver 1.38, whisper-cpp 1.9.5, ollama 0.40.1.
 
 ## 🏁 Summary
 
@@ -9,6 +9,7 @@ Measured on 2026-10-08 on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390,
 | 💬 Chat speed (tokens/s) | llama.cpp **Vulkan**, or OpenVINO GenAI on the GPU | 35 to 40 tokens/s for 4B models, 20 to 23 for 9B, 37 for gpt-oss-20b |
 | 📄 Long prompts | llama.cpp **OpenVINO GPU** | reads prompts 2 to 3 times faster than Vulkan (Gemma 4 E4B: 4128 against 1433 tokens/s) |
 | 🔋 On battery, GPU free | **NPU** with OpenVINO GenAI and `*-cw-ov` models | Qwen3 8B at 23 tokens/s, Phi-3.5 at 39 tokens/s |
+| 🦙 Easiest setup | **Ollama** with `ollama-vulkan` | as fast as llama.cpp on the same GGUF, with model downloads and a simple API |
 | 🎙️ Speech to text | whisper.cpp **Vulkan** | large-v3-turbo transcribes 66 s of audio in 7.8 s |
 | 🔎 Embeddings | llama.cpp **Vulkan** | embeddinggemma-2 at 138 sentences/s, same results as CPU |
 
@@ -54,6 +55,23 @@ Measured on 2026-10-08 on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390,
 | large-v3-turbo q5_0 | 29.5 s | 7.8 s |
 | large-v3-turbo | 44.7 s | 6.9 s |
 | base.en | 3.4 s | 2.6 s |
+
+## 🦙 Ollama against llama.cpp
+
+Ollama 0.40.1 from this repository runs models through its own build of llama.cpp b11351 (with Ollama's compat patches), so the same GGUF file was loaded into Ollama (`FROM <file>.gguf`) and into llama-cpp b11460's `llama-server`, both on Vulkan with every layer on the GPU. Same requests to both: a 628 to 645 token prompt and 128 generated tokens, greedy, mean of 3 runs after a warm-up, a different first line each run so no prompt is reused. Tokens/s.
+
+| Model | llama.cpp prompt / generate | Ollama prompt / generate |
+| --- | ---: | ---: |
+| Llama 3.2 1B Q4_0 | 3908 / 117.9 | 4192 / 118.3 |
+| Qwen3.5 4B Q4_K_M | 692 / 32.5 | 692 / 33.7 |
+| Qwen3.5 4B Q4_0 | 697 / 32.5 | 864 / 34.4 |
+| Gemma 4 E4B Q4_0 ⁷ | 933 / 30.0 | 936 / 30.4 |
+| Qwen3.5 9B Q4_K_M | 499 / 18.5 | 492 / 19.3 |
+| gpt-oss 20B MXFP4 (MoE) | 653 / 35.1 | 528 / 35.4 |
+
+⁷ Gemma 4 can end its answer early on a raw prompt, so llama.cpp ran with `ignore_eos` and Ollama with the model's chat template; both generated all 128 tokens.
+
+Ollama is as fast as llama.cpp: generation is within 4 % on every model, and prompt reading is the same except gpt-oss (19 % slower in Ollama) and Qwen3.5 4B Q4_0 (24 % faster). Ollama found the Arc B390 on its own (`OLLAMA_IGPU_ENABLE=1` in the packaged service) and picked a 32768 token context. The numbers are lower than the `llama-bench` table above because a server request includes sampling and runs the prompt as one request rather than a tuned batch.
 
 ## 🔎 Embeddings: embeddinggemma-2
 

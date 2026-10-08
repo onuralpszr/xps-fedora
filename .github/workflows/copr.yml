@@ -17,6 +17,7 @@ on:
           - onnxruntime
           - llama-cpp
           - whisper-cpp
+          - ollama
           - intel-npu-driver
           - python-openvino-telemetry
           - python-transformers

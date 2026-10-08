@@ -1,0 +1,61 @@
+From b201029ca6956e18a6762fc955d1f497030ff912 Mon Sep 17 00:00:00 2001
+From: Ankit Nautiyal <ankit.k.nautiyal@intel.com>
+Date: Wed, 22 Jul 2026 11:54:49 +0530
+Subject: [PATCH] drm/i915/display: Ensure a non-zero safe window from PTL
+ onwards
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+From PTL onwards, the set context latency can be in the vactive region,
+letting the safe window start some lines before the vblank start. The DSB
+waits on this safe window instead of vblank (bits [15:14] select the safe
+window signal from the DPT unit to start the DMA engine).
+
+With modes that have a smaller vblank region, the computed guardband is
+clamped to the vblank length, making the undelayed and delayed vblank
+coincide. If the SCL is also 0, the 'safe window' becomes effectively 0,
+and the DSB configured to wait for it gets stalled, since the hardware
+never signals the safe window, leading to:
+
+  *ERROR* [CRTC:159:pipe A] flip_done timed out
+  *ERROR* [CRTC:159:pipe A] DSB 0 timed out waiting for idle
+
+Keep the set context latency at a minimum of 1 to avoid this.
+
+v2: Fix the bit numbers and correct the commit message. (Chaitanya)
+
+Fixes: 4a68c7516c57 ("drm/i915/dsb: Use safe window path when VRR TG is used")
+Cc: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Signed-off-by: Ankit Nautiyal <ankit.k.nautiyal@intel.com>
+Assisted-by: GitHub-Copilot:Claude-Opus-4.8
+Reviewed-by: Chaitanya Kumar Borah <chaitanya.kumar.borah@intel.com>
+Link: https://patch.msgid.link/20260722062449.1166411-1-ankit.k.nautiyal@intel.com
+---
+ drivers/gpu/drm/i915/display/intel_display.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_display.c b/drivers/gpu/drm/i915/display/intel_display.c
+index 2c55a4818ad7d9..9dfd095f325f7d 100644
+--- a/drivers/gpu/drm/i915/display/intel_display.c
++++ b/drivers/gpu/drm/i915/display/intel_display.c
+@@ -2486,6 +2486,19 @@ static int intel_crtc_set_context_latency(struct intel_crtc_state *crtc_state)
+ 	set_context_latency = max(set_context_latency,
+ 				  intel_psr_min_set_context_latency(crtc_state));
+ 
++	/*
++	 * From PTL onwards, the set context latency can be in the vactive
++	 * region, letting the safe window start some lines before the vblank
++	 * start. With modes that have a smaller vblank region, the computed
++	 * guardband is clamped to the vblank length, making the undelayed and
++	 * delayed vblank coincide. If the SCL is also 0, the 'safe window'
++	 * becomes effectively 0, and the DSB configured to wait for it gets
++	 * stalled, since the hardware never signals the safe window. Keep the
++	 * set context latency at a minimum of 1 to avoid this.
++	 */
++	if (DISPLAY_VER(display) >= 30)
++		set_context_latency = max(1, set_context_latency);
++
+ 	return set_context_latency;
+ }
+ 

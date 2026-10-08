@@ -20,6 +20,7 @@ declare -A project=(
   [onnxruntime]=intel-ai-stack
   [llama-cpp]=intel-ai-stack
   [whisper-cpp]=intel-ai-stack
+  [ollama]=intel-ai-stack
   [intel-npu-driver]=intel-ai-stack
   [python-openvino-telemetry]=intel-ai-stack
   [python-transformers]=intel-ai-stack

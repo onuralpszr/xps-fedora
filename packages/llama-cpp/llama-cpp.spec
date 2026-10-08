@@ -48,7 +48,7 @@ Name:           llama-cpp
 
 License:        MIT AND Apache-2.0 AND LicenseRef-Fedora-Public-Domain
 Version:        b11460
-Release:        1%{?dist}
+Release:        2%{?dist}
 
 URL:            https://github.com/ggml-org/llama.cpp
 Source0:        %{url}/archive/%{version}.tar.gz#/llama.cpp-%{version}.tar.gz
@@ -73,6 +73,11 @@ ExclusiveArch:  x86_64 aarch64
 %global toolchain rocm
 # hipcc does not support some clang flags
 %global build_cxxflags %(echo %{optflags} | sed -e 's/-fstack-protector-strong/-Xarch_host -fstack-protector-strong/' -e 's/-fcf-protection/-Xarch_host -fcf-protection/' -e 's/-mtls-dialect=gnu2//')
+%if 0%{?fedora} && 0%{?fedora} < 46
+# With ROCm 7.2 the thin LTO links of libggml and the CPU variants never
+# finish on Fedora 45; rawhide's ROCm 10 links them fine
+%global _lto_cflags %{nil}
+%endif
 %else
 %global build_hip OFF
 %global toolchain gcc
@@ -401,6 +406,9 @@ export LD_LIBRARY_PATH=$PWD/%{_vpath_builddir}/bin
 %endif
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11460-2
+- Build without LTO on Fedora 45, where the ROCm 7.2 thin LTO links hang
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11460-1
 - Update to b11460
 - Build backends as loadable modules in %{_libdir}/ggml with -vulkan,

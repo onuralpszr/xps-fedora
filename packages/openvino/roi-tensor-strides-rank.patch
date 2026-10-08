@@ -1,0 +1,150 @@
+From 6fa76871233132b0d6d4d47e20421ab333fbe396 Mon Sep 17 00:00:00 2001
+From: Chaitanya-970 <chaitanyabh97@gmail.com>
+Date: Thu, 8 Oct 2026 00:05:25 +0530
+Subject: [PATCH] [Core] Update ROI tensor strides when rank is expanded
+
+Signed-off-by: Chaitanya-970 <chaitanyabh97@gmail.com>
+---
+ src/core/src/runtime/itensor.cpp      |  9 +++++++
+ src/core/tests/ov_tensor_test.cpp     | 37 +++++++++++++++++++++++++++
+ src/inference/src/dev/make_tensor.cpp | 32 +++++++++++++++++++++--
+ 3 files changed, 76 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/src/runtime/itensor.cpp b/src/core/src/runtime/itensor.cpp
+index a1edcfd0c260..dce0356866c4 100644
+--- a/src/core/src/runtime/itensor.cpp
++++ b/src/core/src/runtime/itensor.cpp
+@@ -110,6 +110,15 @@ void ITensor::copy_to(const std::shared_ptr<ov::ITensor>& dst) const {
+         src_strides = get_strides();
+         dst_strides = dst->get_strides();
+ 
++        OPENVINO_ASSERT(src_strides.size() == shape_rank && dst_strides.size() == shape_rank,
++                        "Tensor strides rank must match shape rank for copy_to (src_strides: ",
++                        src_strides.size(),
++                        ", dst_strides: ",
++                        dst_strides.size(),
++                        ", shape: ",
++                        shape_rank,
++                        ")");
++
+         ov::Strides src_str, dst_str;
+ 
+         // Calculate src and dst shapes
+diff --git a/src/core/tests/ov_tensor_test.cpp b/src/core/tests/ov_tensor_test.cpp
+index f997b8bec8e7..ef5cd6e7ea60 100644
+--- a/src/core/tests/ov_tensor_test.cpp
++++ b/src/core/tests/ov_tensor_test.cpp
+@@ -693,8 +693,45 @@ TEST_F(OVTensorTest, setShapeExpandRoiRank) {
+ 
+     EXPECT_NO_THROW(roi_tensor.set_shape({1, 1, 2}));
+     EXPECT_EQ(roi_tensor.get_shape(), ov::Shape({1, 1, 2}));
++    EXPECT_EQ(roi_tensor.get_strides(), ov::Strides({64, 64, 4}));
++
+     EXPECT_NO_THROW(roi_tensor.set_shape({1, 1, 2, 2}));
+     EXPECT_EQ(roi_tensor.get_shape(), ov::Shape({1, 1, 2, 2}));
++    EXPECT_EQ(roi_tensor.get_strides(), ov::Strides({128, 128, 64, 4}));
++}
++
++TEST_F(OVTensorTest, copyToExpandedRoiRank) {
++    ov::Tensor owner{ov::element::i64, {1}};
++    ov::Tensor roi{owner, {0}, {1}};
++    ov::Tensor src{ov::element::i64, {1, 1}};
++    src.data<int64_t>()[0] = 42;
++
++    EXPECT_NO_THROW(src.copy_to(roi));
++    EXPECT_EQ(roi.get_shape(), ov::Shape({1, 1}));
++    EXPECT_EQ(roi.get_strides(), ov::Strides({8, 8}));
++    EXPECT_EQ(roi.data<int64_t>()[0], 42);
++
++    ov::Tensor dst{ov::element::i64, {1, 1}};
++    EXPECT_NO_THROW(roi.copy_to(dst));
++    EXPECT_EQ(dst.get_shape(), ov::Shape({1, 1}));
++    EXPECT_EQ(dst.get_strides(), ov::Strides({8, 8}));
++    EXPECT_EQ(dst.data<int64_t>()[0], 42);
++}
++
++TEST_F(OVTensorTest, setShapeExpandScalarRoiRank) {
++    ov::Tensor t{ov::element::i32, {}};
++    t.data<int32_t>()[0] = 99;
++    ov::Tensor roi_tensor{t, {}, {}};
++
++    EXPECT_NO_THROW(roi_tensor.set_shape({1}));
++    EXPECT_EQ(roi_tensor.get_shape(), ov::Shape({1}));
++    EXPECT_EQ(roi_tensor.get_strides(), ov::Strides({4}));
++    EXPECT_EQ(roi_tensor.data<int32_t>()[0], 99);
++
++    EXPECT_NO_THROW(roi_tensor.set_shape({1, 1}));
++    EXPECT_EQ(roi_tensor.get_shape(), ov::Shape({1, 1}));
++    EXPECT_EQ(roi_tensor.get_strides(), ov::Strides({4, 4}));
++    EXPECT_EQ(roi_tensor.data<int32_t>()[0], 99);
+ }
+ 
+ TEST_F(OVTensorTest, setShapeInvalidExpandRoiRank) {
+diff --git a/src/inference/src/dev/make_tensor.cpp b/src/inference/src/dev/make_tensor.cpp
+index 9ef2032db14f..05e599f81f39 100644
+--- a/src/inference/src/dev/make_tensor.cpp
++++ b/src/inference/src/dev/make_tensor.cpp
+@@ -448,17 +448,45 @@ class BaseRoiTensor {
+             std::distance(new_shape.cbegin(), new_dim.base()) - 1);
+ 
+         m_shape = std::move(new_shape);
++        update_padded_strides();
+     }
+ 
+     size_t get_offset() const {
+         return m_offset;
+     }
+ 
++    const Strides& get_strides() const {
++        const auto& owner_strides = m_owner->get_strides();
++        return m_padded_strides.size() == m_shape.size() ? m_padded_strides : owner_strides;
++    }
++
+ protected:
++    void update_padded_strides() {
++        const auto& owner_strides = m_owner->get_strides();
++        if (m_shape.size() <= owner_strides.size()) {
++            m_padded_strides.clear();
++            return;
++        }
++        const auto pad = m_shape.size() - owner_strides.size();
++        m_padded_strides.assign(m_shape.size(), 0);
++        if (!owner_strides.empty()) {
++            std::copy(owner_strides.begin(), owner_strides.end(), m_padded_strides.begin() + pad);
++            for (size_t i = pad; i > 0; --i) {
++                m_padded_strides[i - 1] = m_shape[i] * m_padded_strides[i];
++            }
++        } else if (!m_padded_strides.empty()) {
++            m_padded_strides.back() = m_owner->get_element_type().size();
++            for (size_t i = m_padded_strides.size() - 1; i > 0; --i) {
++                m_padded_strides[i - 1] = m_shape[i] * m_padded_strides[i];
++            }
++        }
++    }
++
+     std::shared_ptr<ITensor> m_owner;
+     Shape m_shape;
+     const Shape m_capacity;
+     const size_t m_offset;
++    Strides m_padded_strides;
+ };
+ 
+ /**
+@@ -475,7 +503,7 @@ class RoiTensor : public BaseRoiTensor, public ITensor {
+     }
+ 
+     const Strides& get_strides() const override {
+-        return m_owner->get_strides();
++        return BaseRoiTensor::get_strides();
+     }
+ 
+     const Shape& get_shape() const override {
+@@ -525,7 +553,7 @@ class RoiRemoteTensor : public BaseRoiTensor, public IRemoteTensor {
+     }
+ 
+     const Strides& get_strides() const override {
+-        return m_owner->get_strides();
++        return BaseRoiTensor::get_strides();
+     }
+ 
+     const Shape& get_shape() const override {

@@ -39,11 +39,11 @@ Measured on 2026-10-08 on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390,
 | Phi-3.5 mini INT4-CW | 53.8 (22 ms) | 39.0 (586 ms, 1.5 s) | 36.0 (60 ms) |
 | Qwen3 8B INT4-CW | 26.4 (46 ms) | 23.1 (924 ms, 24 s) | 17.8 (150 ms) |
 | Qwen3.5 4B INT4 (VLM pipeline) | 40.5 (37 ms) | ✗ ⁵ | 20.5 (839 ms) |
-| Gemma 4 E4B INT4 (VLM pipeline) | 32.1 (67 ms) ⁶ | ✗ ⁵ | 15.0 (265 ms) ⁶ |
+| Gemma 4 E4B INT4 (VLM pipeline) | 33.4 (90 ms) ⁶ | ✗ ⁵ | 21.9 (126 ms) ⁶ |
 | Qwen3.5 9B INT4 (VLM pipeline) | 23.3 (56 ms) | ✗ ⁵ | 12.8 (1184 ms) |
 
 ⁵ The NPU compile did not finish in 15 to 50 minutes. Qwen3.5 and Gemma 4 ship as vision-language models without channel-wise (`-cw`) NPU variants.
-⁶ Needs openvino 2026.4.1-3; earlier builds abort, see "Problems found". The PyPI wheels: 34.2 tokens/s on the GPU, 22.7 on the CPU.
+⁶ Needs openvino 2026.4.1-3; earlier builds abort, see "Problems found". The PyPI wheels, run back to back with the same script, give the same speed: 33.3 tokens/s on the GPU, 21.9 on the CPU.
 
 ## 🎙️ whisper.cpp
 

@@ -1,0 +1,5 @@
+# Keep the Intel CVS camera vision chip out of runtime power saving. After it
+# suspends once it fails to resume (runtime PM error), and the IPU7 image
+# processor then reports "Device or resource busy", so the camera only opens
+# once per boot. The IPU7 itself still suspends and resumes normally.
+ACTION=="add", SUBSYSTEM=="i2c", KERNEL=="i2c-INTC10E1:00", ATTR{power/control}="on"

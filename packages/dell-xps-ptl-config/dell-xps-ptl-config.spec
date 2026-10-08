@@ -6,10 +6,12 @@
 # - xe: PSR1 instead of PSR2 selective fetch (glitches on the LG OLED)
 # - power profiles: KDE's slider drives Dell thermal modes (dell-pc) and the
 #   SoC power slider, which the legacy platform_profile can't reach
+# - camera: keep the CVS vision chip awake, it fails to resume from runtime
+#   suspend and the camera then opens only once per boot
 
 Name:           dell-xps-ptl-config
-Version:        1.3
-Release:        2%{?dist}
+Version:        1.4
+Release:        1%{?dist}
 Summary:        Fedora configuration for Dell XPS on Intel Panther Lake
 License:        MIT
 URL:            https://github.com/onuralpszr/xps-fedora
@@ -24,8 +26,10 @@ Source5:        tuned-xps-ptl-powersave.conf
 Source6:        tuned-xps-ptl-balanced.conf
 Source7:        tuned-xps-ptl-balanced-battery.conf
 Source8:        tuned-xps-ptl-performance.conf
+Source9:        90-dell-xps-ptl-cvs.rules
 
 BuildRequires:  systemd-rpm-macros
+BuildRequires:  systemd-udev
 Requires:       thermald
 # Signing hook tools; the key itself comes from `kmodgenca` (akmods)
 Requires:       sbsigntools
@@ -43,7 +47,8 @@ thermald), and a kernel-install plugin that re-signs locally built
 *.dellptl* kernels with the akmods MOK key for Secure Boot. Also runs the
 xe display driver without PSR2 selective fetch (PSR1), which is stable on the
 XPS LG OLED panel. Power profiles drive Dell's thermal modes and the SoC
-power slider through xps-ptl-* tuned profiles.
+power slider through xps-ptl-* tuned profiles. A udev rule keeps the CVS
+camera vision chip awake so the camera opens more than once per boot.
 
 %prep
 
@@ -55,6 +60,7 @@ install -Dm755 %{SOURCE1} %{buildroot}%{_prefix}/lib/kernel/install.d/10-sign-de
 install -Dm644 %{SOURCE2} %{buildroot}%{_modprobedir}/dell-xps-ptl-xe.conf
 install -Dm755 %{SOURCE3} %{buildroot}%{_libexecdir}/dell-xps-ptl/platform-profile
 install -Dm755 %{SOURCE4} %{buildroot}%{_libexecdir}/dell-xps-ptl/ppd-mapping
+install -Dm644 %{SOURCE9} %{buildroot}%{_udevrulesdir}/90-dell-xps-ptl-cvs.rules
 # profile, Dell thermal mode, SoC power slider
 while read -r name dell soc; do
     d=%{buildroot}%{_prefix}/lib/tuned/profiles/xps-ptl-$name
@@ -95,8 +101,13 @@ fi
 %{_modprobedir}/dell-xps-ptl-xe.conf
 %{_libexecdir}/dell-xps-ptl/
 %{_prefix}/lib/tuned/profiles/xps-ptl-*/
+%{_udevrulesdir}/90-dell-xps-ptl-cvs.rules
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.4-1
+- udev: keep the CVS camera vision chip out of runtime suspend; it fails to
+  resume and the camera then opens only once per boot
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.3-2
 - Ship the tuned profiles as flat source files and generate their
   platform scripts, so the package builds in COPR

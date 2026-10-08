@@ -330,6 +330,9 @@ sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3
 | [`whisper-cpp`](packages/whisper-cpp) | 1.9.5 | speech to text, shares ggml and its GPU backends with llama-cpp |
 | [`python-nncf`](packages/python-nncf), [`python-optimum`](packages/python-optimum), [`python-optimum-intel`](packages/python-optimum-intel), [`python-transformers`](packages/python-transformers), [`python-openvino-telemetry`](packages/python-openvino-telemetry) | latest     | model export and compression tools               |
 
+> [!WARNING]
+> **llama.cpp is built without AMD ROCm.** The ROCm (HIP) backend took most of every COPR build, 4 to 5 hours on Fedora 45 against under an hour without it, and this repository targets Intel hardware. There is no `llama-cpp-hip` package here: AMD GPUs run llama.cpp through `llama-cpp-vulkan`, which replaces `llama-cpp-hip` on upgrade. To build with ROCm again, use `--with rocm` locally or turn the `rocm` bcond back on in the spec, as shown in [AMD ROCm in llama-cpp](docs/ci.md#amd-rocm-in-llama-cpp).
+
 ## Build status
 
 Live status of the last COPR build of each package.

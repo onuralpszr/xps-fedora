@@ -79,11 +79,16 @@ bump-kernel)
 rebuilds)
   copr_repo=https://download.copr.fedorainfracloud.org/results/$copr_owner/intel-ai-stack/fedora-$release-x86_64/
   stale=()
+  # dnf fails on a --disablerepo pattern that matches nothing, as in CI
+  no_copr=()
+  if dnf -q repo list --enabled | grep -q '^copr:'; then
+    no_copr=(--disablerepo='copr:*')
+  fi
   for pkg in "${rebuilt[@]}"; do
     fedora=$(dnf -q repoquery --latest-limit 1 --qf '%{evr}\n' \
-      --disablerepo='copr:*' "$pkg" 2>/dev/null | sort -V | tail -1)
+      "${no_copr[@]}" "$pkg" | sort -V | tail -1)
     ours=$(dnf -q repoquery --latest-limit 1 --qf '%{evr}\n' \
-      --repofrompath="watch-copr,$copr_repo" --repo=watch-copr "$pkg" 2>/dev/null | tail -1)
+      --repofrompath="watch-copr,$copr_repo" --repo=watch-copr "$pkg" | tail -1)
     # 9.14.0-1.fc45.1.ovstack is our rebuild of Fedora's 9.14.0-1.fc45
     ours_base=${ours%.1.ovstack}
     echo "$pkg: fedora ${fedora:-none}, copr ${ours:-none}"

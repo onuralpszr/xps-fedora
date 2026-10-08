@@ -120,7 +120,8 @@ test -e %{buildroot}%{_prefix}/lib/ollama/vulkan/libggml-vulkan.so
 %systemd_postun_with_restart ollama.service
 
 %files
-%license LICENSE llama-cpp-src/LICENSE vendor/modules.txt
+# llama.cpp installs its licenses into %{_prefix}/lib/ollama itself
+%license LICENSE vendor/modules.txt
 %doc README.md
 %{_bindir}/ollama
 %dir %{_prefix}/lib/ollama

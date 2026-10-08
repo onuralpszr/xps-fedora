@@ -77,6 +77,7 @@ for preset in cpu vulkan; do
   cmake -S llama/server --preset $preset -G Ninja \
     -DFETCHCONTENT_SOURCE_DIR_LLAMA_CPP=$PWD/llama-cpp-src \
     -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
+    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
     -DCMAKE_C_FLAGS_RELEASE="%{build_cflags} -DNDEBUG" \
     -DCMAKE_CXX_FLAGS_RELEASE="%{build_cxxflags} -DNDEBUG" \
     -DCMAKE_EXE_LINKER_FLAGS="%{build_ldflags}" \

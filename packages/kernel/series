@@ -1,5 +1,5 @@
 # Patches applied on top of Fedora's kernel, in this order.
-# Lines starting with # are comments; 0028 is kept but no longer applied.
+# Lines starting with # are comments; 0028 and 0034 are kept but no longer applied.
 
 # Dell XPS 16 / Panther Lake display fixes (from omarchy linux-ptl)
 0020-drm-i915-alpm-limit-pr-alpm-to-panel-replay.patch
@@ -10,5 +10,11 @@
 0032-media-i2c-hm1092-add-Himax-HM1092-mono-NIR-sensor-driver.patch
 0033-media-i2c-hm1092-Add-ACPI-support.patch
 
-# LG 00:22:b9 on XPS 14/16: ALPM fast wake ahead of IO buffer wake (v2, intel-gfx, not merged)
-0034-drm-i915-alpm-Add-a-quirk-to-keep-the-fast-wake-ahead-of-the-IO-buffer-wake.patch
+# 0034 (ALPM fast wake quirk for the LG 00:22:b9 panel) is kept but no longer
+# applied: its author withdrew it on intel-gfx on 2026-09-23, since setting
+# fast wake above IO wake stops PSR2 selective updates
+
+# Panther Lake display fixes from mainline 7.3 (also in omarchy linux-omarchy)
+0035-drm-i915-display-Ensure-a-non-zero-safe-window-from-PTL-onwards.patch
+0036-drm-i915-dsb-shift-delayed-vblank-DSL-wait-start-by-one-scanline.patch
+0037-drm-i915-vrr-Disable-DC-balance-by-default.patch

@@ -282,6 +282,8 @@ sudo dnf install intel-npu-driver intel-npu-compiler
 sudo dnf install openvino libopenvino-intel-npu-plugin python3-openvino python3-openvino-genai python3-openvino-tokenizers
 # llama.cpp with the Arc GPU through Vulkan or OpenVINO
 sudo dnf install llama-cpp-vulkan llama-cpp-openvino
+# Speech to text with whisper.cpp on the Arc GPU
+sudo dnf install whisper-cpp llama-cpp-vulkan
 # ONNX Runtime with the OpenVINO execution provider
 sudo dnf install onnxruntime-openvino python3-onnxruntime-openvino
 # Convert and compress your own models
@@ -325,6 +327,7 @@ sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3
 | [`onnx`](packages/onnx)                                                                                                                                                                                                                                               | 1.22.0     | shared library kept for onnxruntime and Python   |
 | [`onnxruntime`](packages/onnxruntime)                                                                                                                                                                                                                                 | 1.30.0     | CPU, MIGraphX and OpenVINO variants              |
 | [`llama-cpp`](packages/llama-cpp)                                                                                                                                                                                                                                     | b11460     | Vulkan, OpenVINO and HIP backends as subpackages |
+| [`whisper-cpp`](packages/whisper-cpp) | 1.9.5 | speech to text, shares ggml and its GPU backends with llama-cpp |
 | [`python-nncf`](packages/python-nncf), [`python-optimum`](packages/python-optimum), [`python-optimum-intel`](packages/python-optimum-intel), [`python-transformers`](packages/python-transformers), [`python-openvino-telemetry`](packages/python-openvino-telemetry) | latest     | model export and compression tools               |
 
 ## Build status

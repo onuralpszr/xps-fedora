@@ -68,16 +68,18 @@ ExclusiveArch:  x86_64 aarch64
 %bcond_with openvino
 %endif
 
+%if 0%{?fedora} && 0%{?fedora} < 46
+# With ROCm 7.2 the thin LTO links of libggml and the CPU variants never
+# finish on Fedora 45; rawhide's ROCm 10 links them fine. Set before
+# build_cxxflags below, which expands optflags right away.
+%global _lto_cflags %{nil}
+%endif
+
 %if %{with rocm}
 %global build_hip ON
 %global toolchain rocm
 # hipcc does not support some clang flags
 %global build_cxxflags %(echo %{optflags} | sed -e 's/-fstack-protector-strong/-Xarch_host -fstack-protector-strong/' -e 's/-fcf-protection/-Xarch_host -fcf-protection/' -e 's/-mtls-dialect=gnu2//')
-%if 0%{?fedora} && 0%{?fedora} < 46
-# With ROCm 7.2 the thin LTO links of libggml and the CPU variants never
-# finish on Fedora 45; rawhide's ROCm 10 links them fine
-%global _lto_cflags %{nil}
-%endif
 %else
 %global build_hip OFF
 %global toolchain gcc

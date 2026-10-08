@@ -4,7 +4,7 @@ Two COPR projects build the packages in this repository:
 
 | Project                                                                                                                     | Packages                                                                                         |
 | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [thunderbirdtr/intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/)                       | onnx, openvino, openvino-genai, onnxruntime, llama-cpp, whisper-cpp, intel-npu-driver and the Python packages |
+| [thunderbirdtr/intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/)                       | onnx, openvino, openvino-genai, onnxruntime, llama-cpp, whisper-cpp, ollama, intel-npu-driver and the Python packages |
 | [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/)                               | dell-xps-ptl-config, intel-ipu7-kmod, kernel, plasma-light-and-presence                          |
 | [thunderbirdtr/plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/) | plasma-light-and-presence (from its own repository)                                              |
 

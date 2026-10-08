@@ -11,6 +11,8 @@ pkgdir := $(abspath $(dir $(spec)))
 srpm:
 	command -v spectool >/dev/null || dnf -y install rpmdevtools rpm-build
 	spectool -g -C $(pkgdir) $(spec)
+	# Sources that are generated rather than downloaded, such as a Go vendor archive
+	if [ -x $(pkgdir)/make-vendor.sh ]; then $(pkgdir)/make-vendor.sh $(pkgdir) $(spec); fi
 	rpmbuild -bs \
 	  --define "_sourcedir $(pkgdir)" \
 	  --define "_srcrpmdir $(outdir)" \

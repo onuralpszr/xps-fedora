@@ -47,7 +47,7 @@
 Summary:    A cross-platform inferencing and training accelerator
 Name:       onnxruntime
 Version:    1.30.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 # onnxruntime and SafeInt are MIT
 # onnx is Apache License 2.0
 # optional-lite is Boost Software License 1.0
@@ -97,7 +97,7 @@ BuildRequires:  cmake >= 3.13
 BuildRequires:  make
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
-BuildRequires:  onnx-devel = 1.22.0
+BuildRequires:  onnx-devel = 1.23.2
 BuildRequires:  abseil-cpp-devel
 BuildRequires:  boost-devel >= 1.66
 BuildRequires:  bzip2
@@ -534,6 +534,9 @@ done
 %{_docdir}/%{name}
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.30.0-2
+- Rebuild against onnx 1.23.2
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.30.0-1
 - Update to 1.30.0
 - Build against onnx 1.22.0 and OpenVINO 2026.4.1

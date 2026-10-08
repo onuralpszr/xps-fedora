@@ -77,8 +77,10 @@ sudo dnf install intel-npu-driver intel-npu-compiler
 sudo dnf install openvino libopenvino-intel-npu-plugin python3-openvino-genai python3-openvino-tokenizers
 sudo dnf install llama-cpp-vulkan llama-cpp-openvino
 sudo dnf install onnxruntime-openvino python3-onnxruntime-openvino
-sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3-torch python3-torchvision
+sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3-torch
 ```
+
+Leave out `python3-torchvision` for now: Fedora 45's build (0.27.1-6) loads but registers none of its operators with torch 2.12, and while it is installed every `transformers` model import fails with "Could not import module 'PreTrainedModel'". If it is already installed, `sudo dnf remove python3-torchvision` fixes `optimum-cli` again.
 
 Useful tools from Fedora:
 

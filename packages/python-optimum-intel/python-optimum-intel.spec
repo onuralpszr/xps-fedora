@@ -2,7 +2,7 @@
 
 Name:           python-%{pypi_name}
 Version:        2.2.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Hugging Face Optimum for Intel: OpenVINO and NNCF
 
 License:        Apache-2.0
@@ -26,9 +26,10 @@ Summary:        %{summary}
 Requires:       python3-optimum
 # Not imported at build time but needed for anything useful
 Requires:       python3-openvino-tokenizers
-# Exporting models with optimum-cli needs PyTorch; torchvision only for vision models
+# Exporting models with optimum-cli needs PyTorch. Not torchvision: Fedora's
+# python3-torchvision 0.27.1-6 registers no ops with torch 2.12, and once it is
+# installed every transformers import of PreTrainedModel fails.
 Recommends:     python3-torch
-Suggests:       python3-torchvision
 
 %description -n python3-%{pypi_name} %_description
 
@@ -72,6 +73,9 @@ test -f %{buildroot}%{python3_sitelib}/optimum/intel/__init__.py
 
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2.2.0-3
+- Drop the torchvision suggestion; Fedora's torchvision breaks transformers
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2.2.0-2
 - Recommend python3-torch for model export
 

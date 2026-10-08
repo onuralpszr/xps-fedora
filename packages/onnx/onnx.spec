@@ -135,12 +135,13 @@ export PYTHONPATH=%{buildroot}%{python3_sitearch}
 (cd / && %{python3} -c "import onnx, onnx.checker, onnx.reference; print(onnx.__version__)")
 # Tests that need python-parameterized (not in Fedora) are skipped
 # Run the tests against the installed package, not the source tree
-cp -a onnx/test %{_builddir}/onnx-tests
+# 1.23 moved them from onnx/test to tests/python
+cp -a tests/python %{_builddir}/onnx-tests
 cd %{_builddir}
 %pytest onnx-tests -p no:cacheprovider \
     $(grep -rlE 'parameterized|from shape_inference_test' onnx-tests --include='*.py' | sed 's/^/--ignore=/') \
-    --ignore=onnx-tests/test_backend_reference.py \
-    --ignore=onnx-tests/test_backend_test.py
+    --ignore=onnx-tests/backend_reference_test.py \
+    --ignore=onnx-tests/backend_test.py
 
 
 %files libs

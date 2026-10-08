@@ -8,7 +8,7 @@
 # them, and the dist-info is written here instead of building a wheel.
 
 Name:       onnx
-Version:    1.22.0
+Version:    1.23.2
 Release:    1%{?dist}
 Summary:    Open standard for machine learning interoperability
 License:    Apache-2.0
@@ -164,6 +164,9 @@ cd %{_builddir}
 
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.23.2-1
+- Update to 1.23.2
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.22.0-1
 - Update to 1.22.0
 - Port the shared-library setup to 1.22: libonnx keeps default visibility

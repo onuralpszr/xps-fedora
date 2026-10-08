@@ -22,7 +22,7 @@ models from popular frameworks like PyTorch, TensorFlow, ONNX, and more.}
 
 Name:           openvino
 Version:        2026.4.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Toolkit for optimizing and deploying AI inference
 
 # Most of the source code is Apache-2.0, with the following exceptions:
@@ -62,7 +62,7 @@ BuildRequires:  gflags-devel
 BuildRequires:  glibc-devel
 BuildRequires:  nlohmann-json-devel
 BuildRequires:  oneapi-level-zero-devel
-BuildRequires:  onnx-devel >= 1.22
+BuildRequires:  onnx-devel >= 1.23.2
 BuildRequires:  opencl-headers
 BuildRequires:  pkgconfig(OpenCL)
 %if 0%{?fedora} > 44
@@ -472,6 +472,9 @@ LD_LIBRARY_PATH=%{buildroot}%{_libdir} PYTHONPATH=%{buildroot}%{python3_sitearch
 
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2026.4.1-4
+- Rebuild against onnx 1.23.2
+
 * Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2026.4.1-3
 - Backport the ROI tensor strides fix (openvino#38246, PR #38670) so Gemma 4
   no longer aborts in ITensor::copy_to under _GLIBCXX_ASSERTIONS

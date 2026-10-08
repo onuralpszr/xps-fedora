@@ -10,16 +10,16 @@ installing into PY_SITEARCH. Replaces 0001, 0002 (library part) and 0005.
 
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -510,6 +510,8 @@
- # system rejects a protoc custom command shared across several targets.
+@@ -556,6 +556,8 @@
+ # it as the owner of that custom command instead of erroring out.
  add_library(onnx_proto ${ONNX_PROTO_SRCS})
  add_onnx_global_defines(onnx_proto)
 +set_target_properties(onnx_proto PROPERTIES VERSION ${ONNX_VERSION}
 +                                            SOVERSION ${ONNX_VERSION})
  add_dependencies(onnx_proto onnx_proto_gen)
+ add_dependencies(onnx_proto onnx_proto_headers)
  
- # Core library. Hand-written sources come from target_sources(onnx ...) in the
-@@ -517,18 +519,13 @@
+@@ -564,18 +566,13 @@
  add_library(onnx $<TARGET_OBJECTS:onnx_proto>)
  add_subdirectory(onnx)
  add_dependencies(onnx onnx_proto)
@@ -42,7 +42,7 @@ installing into PY_SITEARCH. Replaces 0001, 0002 (library part) and 0005.
    # find system nanobind
    if(NOT DEFINED nanobind_DIR OR "${nanobind_DIR}" STREQUAL "")
      execute_process(
-@@ -568,8 +565,14 @@
+@@ -615,8 +612,14 @@
    # Force-load the whole (static) archive so the operator schemas' static
    # initializers are not dropped as apparently-unused. $<LINK_LIBRARY:WHOLE_ARCHIVE,...>
    # is the portable --whole-archive / -force_load / /WHOLEARCHIVE spelling.
@@ -59,7 +59,7 @@ installing into PY_SITEARCH. Replaces 0001, 0002 (library part) and 0005.
  endif()
  
  add_onnx_compile_options(onnx_proto)
-@@ -652,8 +655,13 @@
+@@ -699,8 +702,13 @@
  endif()
  
  if(ONNX_BUILD_PYTHON)

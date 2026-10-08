@@ -22,7 +22,7 @@ models from popular frameworks like PyTorch, TensorFlow, ONNX, and more.}
 
 Name:           openvino
 Version:        2026.4.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Toolkit for optimizing and deploying AI inference
 
 # Most of the source code is Apache-2.0, with the following exceptions:
@@ -45,6 +45,9 @@ Patch1: xbyak-gflags-system-modules.patch
 Patch2: samples-system-gflags-json.patch
 # Configure the NPU plugin against the system Level Zero
 Patch3: npu-system-level-zero.patch
+# Keep ROI tensor strides at the shape's rank, fixes the out of bounds read in
+# ITensor::copy_to that aborts Gemma 4 in GenAI (openvino#38246, PR #38670)
+Patch4: roi-tensor-strides-rank.patch
 # The pybind11 3.x call_guard and OpenCL-CLHPP macro fixes Fedora carries
 # for 2026.0.0 are upstream in 2026.4.
 
@@ -469,6 +472,10 @@ LD_LIBRARY_PATH=%{buildroot}%{_libdir} PYTHONPATH=%{buildroot}%{python3_sitearch
 
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2026.4.1-3
+- Backport the ROI tensor strides fix (openvino#38246, PR #38670) so Gemma 4
+  no longer aborts in ITensor::copy_to under _GLIBCXX_ASSERTIONS
+
 * Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2026.4.1-2
 - Link the NPU compiler into the plugin directory too; the loader opens it
   from there, so NPU compilation failed with "Failed to load compiler library"

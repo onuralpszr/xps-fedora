@@ -110,6 +110,24 @@ Fixed in `intel-ipu7-camera` 1.0.6-3 with `omit_drivers` for the IPU7 modules in
 
 </details>
 
+<details>
+<summary>Camera opens only once, or not at all (2026-10-08)</summary>
+
+Two separate causes, both seen as `PSysDevice: Failed to open psys device Device or resource busy` in the relay log and `intel_ipu7_psys: Runtime PM failed (-16)` in the kernel log. The CVS vision chip (`/sys/bus/i2c/devices/i2c-INTC10E1:00`) and the IPU7 PCI device then show `error` in `power/runtime_status`, and that state only clears with a reboot.
+
+1. **BIOS `HPDSensor=IntelHPD`**: the camera does not open at all, even right after boot. Intel's presence detection keeps the vision chip. The setup screen has no option for it; read and set it from Linux with `dell-wmi-sysman`, it applies on the next boot:
+
+   ```bash
+   sudo cat /sys/class/firmware-attributes/dell-wmi-sysman/attributes/HPDSensor/current_value
+   echo MSHPD | sudo tee /sys/class/firmware-attributes/dell-wmi-sysman/attributes/HPDSensor/current_value
+   ```
+
+2. **The vision chip fails to resume from runtime suspend**: with `MSHPD` the first camera session after boot works, but once the chip suspends it never comes back, so every later open fails. `dell-xps-ptl-config` 1.4 ships a udev rule that keeps only the vision chip awake (`power/control=on`); the IPU7 still suspends and resumes normally. Not yet reported upstream.
+
+Do not use `unbind` on `0000:00:05.0` as a reset: the IPU7 driver crashes in `ipu7_psys_remove` (`ipu7_dma_free`, `find_iova`) and only a reboot recovers.
+
+</details>
+
 ## IR camera (Himax HM1092)
 
 The Windows Hello IR sensor is a Himax HM1092 (ACPI `HIMX1092`, `\_SB_.LNK0`). Power, reset and the IR flood LED come from `INT3472:00`, which already exposes `/sys/class/leds/HIMX1092_00::ir_flood_led`. The three `OVTI01AF` entries are disabled BIOS placeholders.
@@ -224,7 +242,7 @@ Intel "Human Presence v2" (HID `0x200011`, model `HuP v2`, detection type facial
 | buffered stream, camera idle | `NOT AVAILABLE`, then silent |
 | ov08x40 runtime PM forced on, not streaming | `READY`, then silent |
 | test `intel_cvs` with `ICVS_HOST_VISION_SENSING` | no change |
-| BIOS `HPDSensor=IntelHPD` (default `MSHPD`) | the same |
+| BIOS `HPDSensor=IntelHPD` (default `MSHPD`) | the same, and the camera stops working; set it back to `MSHPD` (see Camera) |
 | camera streaming to an app | about 4 s presence bursts, on motion only |
 
 The CVS only sees frames while the host streams; nothing on Linux sets up its standalone mode, where the chip drives the sensor itself. Four ISH clients have no Linux driver: `1F050626-…`, `A7216DFB-…`, `BB579A2E-…`, `C1CC78B9-…`. This needs Intel or Synaptics and should be reported together with the CVS and IR thread.

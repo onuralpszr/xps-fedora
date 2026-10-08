@@ -39,11 +39,11 @@ Measured on 2026-10-08 on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390,
 | Phi-3.5 mini INT4-CW | 53.8 (22 ms) | 39.0 (586 ms, 1.5 s) | 36.0 (60 ms) |
 | Qwen3 8B INT4-CW | 26.4 (46 ms) | 23.1 (924 ms, 24 s) | 17.8 (150 ms) |
 | Qwen3.5 4B INT4 (VLM pipeline) | 40.5 (37 ms) | ✗ ⁵ | 20.5 (839 ms) |
-| Gemma 4 E4B INT4 (VLM pipeline) | ✗ ⁶ | ✗ ⁵ | ✗ ⁶ |
+| Gemma 4 E4B INT4 (VLM pipeline) | 32.1 (67 ms) ⁶ | ✗ ⁵ | 15.0 (265 ms) ⁶ |
 | Qwen3.5 9B INT4 (VLM pipeline) | 23.3 (56 ms) | ✗ ⁵ | 12.8 (1184 ms) |
 
 ⁵ The NPU compile did not finish in 15 to 50 minutes. Qwen3.5 and Gemma 4 ship as vision-language models without channel-wise (`-cw`) NPU variants.
-⁶ Aborts in our build, see "Problems found". The PyPI wheels run it: 34.2 tokens/s on the GPU, 22.7 on the CPU.
+⁶ Needs openvino 2026.4.1-3; earlier builds abort, see "Problems found". The PyPI wheels: 34.2 tokens/s on the GPU, 22.7 on the CPU.
 
 ## 🎙️ whisper.cpp
 
@@ -74,7 +74,7 @@ CPU and Vulkan agree exactly. The OpenVINO backend's results are wrong: unrelate
 | 🔧 | **NPU compiler not found with the RPMs**: the OpenVINO NPU plugin opens `libopenvino_intel_npu_compiler.so` from its own directory, so every NPU compile through the system OpenVINO failed with "Failed to load compiler library". | Fixed in openvino 2026.4.1-2 (PR #10) |
 | 🔧 | **Fedora's python3-torchvision 0.27.1-6 is broken** with torch 2.12: it registers none of its operators, and while it is installed every `transformers` model import fails, which stops `optimum-cli export`. | Left out of the install docs and the optimum-intel suggestion (PR #11); report to Fedora |
 | 🔧 | **Fedora's whisper-cpp bundles libggml** and conflicts with llama-cpp. | whisper-cpp 1.9.5 on the shared ggml (PR #12) |
-| 🐛 | **Gemma 4 in OpenVINO GenAI aborts** with `_GLIBCXX_ASSERTIONS`: an out of bounds index in `ov::ITensor::copy_to`, called from GenAI's `ModelRunner::forward`. The PyPI build has no assertions and runs it. | Report upstream to OpenVINO |
+| 🔧 | **Gemma 4 in OpenVINO GenAI aborts** with `_GLIBCXX_ASSERTIONS`: an out of bounds index in `ov::ITensor::copy_to`, called from GenAI's `ModelRunner::forward`. The PyPI build has no assertions and runs it. Upstream as [openvino#38246](https://github.com/openvinotoolkit/openvino/issues/38246). | Fixed in openvino 2026.4.1-3 with the upstream fix from [openvino#38670](https://github.com/openvinotoolkit/openvino/pull/38670) |
 | 🐛 | **llama.cpp OpenVINO backend**: wrong embeddings for embeddinggemma-2, no MXFP4, and whisper decoding fails on a `Slice` node ("Axis 3 out of the tensor rank range"). | Report upstream |
 | 🐛 | **NPU compile of Qwen3.5 and Gemma 4** (OpenVINO GenAI) never finishes. | Report upstream to OpenVINO |
 | 📝 | `llama-bench` with the OpenVINO backend needs `-fa 1`, and the device comes from `GGML_OPENVINO_DEVICE`, not `-dev`. | Documented here |

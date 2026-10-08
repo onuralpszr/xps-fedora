@@ -16,6 +16,7 @@ on:
           - openvino-genai
           - onnxruntime
           - llama-cpp
+          - whisper-cpp
           - intel-npu-driver
           - python-openvino-telemetry
           - python-transformers

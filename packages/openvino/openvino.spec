@@ -22,7 +22,7 @@ models from popular frameworks like PyTorch, TensorFlow, ONNX, and more.}
 
 Name:           openvino
 Version:        2026.4.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Toolkit for optimizing and deploying AI inference
 
 # Most of the source code is Apache-2.0, with the following exceptions:
@@ -364,6 +364,9 @@ WHEEL_VERSION=%{version} \
 # the copy intel-npu-compiler installs (the driver loads the same library)
 ln -s ../libopenvino_intel_npu_compiler_loader.so \
       %{buildroot}%{_libdir}/%{name}-%{version}/libopenvino_intel_npu_compiler_loader.so
+# The loader then opens the compiler from its own directory
+ln -s ../libopenvino_intel_npu_compiler.so \
+      %{buildroot}%{_libdir}/%{name}-%{version}/libopenvino_intel_npu_compiler.so
 
 # Remove openvino-telemetry (not packaged in Fedora)
 rm -rf %{buildroot}%{python3_sitearch}/openvino_telemetry*
@@ -430,6 +433,7 @@ LD_LIBRARY_PATH=%{buildroot}%{_libdir} PYTHONPATH=%{buildroot}%{python3_sitearch
 %dir %{_libdir}/%{name}-%{version}
 %{_libdir}/%{name}-%{version}/lib%{name}_intel_npu_plugin.so
 %{_libdir}/%{name}-%{version}/libopenvino_intel_npu_compiler_loader.so
+%{_libdir}/%{name}-%{version}/libopenvino_intel_npu_compiler.so
 
 ## Frontends
 
@@ -465,6 +469,10 @@ LD_LIBRARY_PATH=%{buildroot}%{_libdir} PYTHONPATH=%{buildroot}%{python3_sitearch
 
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2026.4.1-2
+- Link the NPU compiler into the plugin directory too; the loader opens it
+  from there, so NPU compilation failed with "Failed to load compiler library"
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 2026.4.1-1
 - Update to 2026.4.1
 - Enable the Intel NPU plugin (libopenvino-intel-npu-plugin), using

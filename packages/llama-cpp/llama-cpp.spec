@@ -47,8 +47,8 @@ Name:           llama-cpp
 # This is the main license
 
 License:        MIT AND Apache-2.0 AND LicenseRef-Fedora-Public-Domain
-Version:        b11460
-Release:        2%{?dist}
+Version:        b11513
+Release:        1%{?dist}
 
 URL:            https://github.com/ggml-org/llama.cpp
 Source0:        %{url}/archive/%{version}.tar.gz#/llama.cpp-%{version}.tar.gz
@@ -408,7 +408,8 @@ export LD_LIBRARY_PATH=$PWD/%{_vpath_builddir}/bin
 %endif
 
 %changelog
-* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11460-2
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11513-1
+- Update to b11513
 - Build without LTO on Fedora 45, where the ROCm 7.2 thin LTO links hang
 
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11460-1

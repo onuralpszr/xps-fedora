@@ -88,9 +88,21 @@ balanced-battery balanced balanced
 performance performance performance
 EOF
 
+%pre
+# Remember whether the refresh service is new, so an upgrade from before 1.5
+# enables it once, like a fresh install, without undoing a later disable
+mkdir -p %{_localstatedir}/lib/rpm-state/%{name}
+if [ ! -e %{_userunitdir}/dell-xps-ptl-refresh.service ]; then
+    touch %{_localstatedir}/lib/rpm-state/%{name}/refresh-new
+fi
+
 %post
 systemctl daemon-reload || :
 %systemd_user_post dell-xps-ptl-refresh.service
+if [ $1 -gt 1 ] && [ -e %{_localstatedir}/lib/rpm-state/%{name}/refresh-new ]; then
+    systemctl --no-reload preset --global dell-xps-ptl-refresh.service || :
+fi
+rm -rf %{_localstatedir}/lib/rpm-state/%{name}
 %{_libexecdir}/dell-xps-ptl/ppd-mapping xps || :
 systemctl try-restart tuned.service tuned-ppd.service || :
 

@@ -8,9 +8,11 @@
 #   SoC power slider, which the legacy platform_profile can't reach
 # - camera: keep the CVS vision chip awake, it fails to resume from runtime
 #   suspend and the camera then opens only once per boot
+# - display: a user service runs the panel at 120 Hz on AC and 60 Hz on
+#   battery (settings in ~/.config/dell-xps-ptl/refresh.conf)
 
 Name:           dell-xps-ptl-config
-Version:        1.4
+Version:        1.5
 Release:        1%{?dist}
 Summary:        Fedora configuration for Dell XPS on Intel Panther Lake
 License:        MIT
@@ -27,6 +29,8 @@ Source6:        tuned-xps-ptl-balanced.conf
 Source7:        tuned-xps-ptl-balanced-battery.conf
 Source8:        tuned-xps-ptl-performance.conf
 Source9:        90-dell-xps-ptl-cvs.rules
+Source10:       refresh-switch
+Source11:       dell-xps-ptl-refresh.service
 
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  systemd-udev
@@ -39,6 +43,10 @@ Requires(posttrans): dracut
 Requires:       tuned
 Requires:       tuned-ppd
 Requires:       python3
+# refresh-switch: kscreen-doctor, busctl and gdbus
+Requires:       libkscreen
+Requires:       glib2
+Requires:       systemd
 
 %description
 thermald drop-in that waits for RAPL, coretemp and the INT3400 DPTF sensors
@@ -48,7 +56,8 @@ thermald), and a kernel-install plugin that re-signs locally built
 xe display driver without PSR2 selective fetch (PSR1), which is stable on the
 XPS LG OLED panel. Power profiles drive Dell's thermal modes and the SoC
 power slider through xps-ptl-* tuned profiles. A udev rule keeps the CVS
-camera vision chip awake so the camera opens more than once per boot.
+camera vision chip awake so the camera opens more than once per boot. A user
+service switches the panel to 120 Hz on AC power and 60 Hz on battery.
 
 %prep
 
@@ -61,6 +70,10 @@ install -Dm644 %{SOURCE2} %{buildroot}%{_modprobedir}/dell-xps-ptl-xe.conf
 install -Dm755 %{SOURCE3} %{buildroot}%{_libexecdir}/dell-xps-ptl/platform-profile
 install -Dm755 %{SOURCE4} %{buildroot}%{_libexecdir}/dell-xps-ptl/ppd-mapping
 install -Dm644 %{SOURCE9} %{buildroot}%{_udevrulesdir}/90-dell-xps-ptl-cvs.rules
+install -Dm755 %{SOURCE10} %{buildroot}%{_libexecdir}/dell-xps-ptl/refresh-switch
+install -Dm644 %{SOURCE11} %{buildroot}%{_userunitdir}/dell-xps-ptl-refresh.service
+install -d %{buildroot}%{_userpresetdir}
+echo 'enable dell-xps-ptl-refresh.service' > %{buildroot}%{_userpresetdir}/80-dell-xps-ptl.preset
 # profile, Dell thermal mode, SoC power slider
 while read -r name dell soc; do
     d=%{buildroot}%{_prefix}/lib/tuned/profiles/xps-ptl-$name
@@ -75,12 +88,26 @@ balanced-battery balanced balanced
 performance performance performance
 EOF
 
+%pre
+# Remember whether the refresh service is new, so an upgrade from before 1.5
+# enables it once, like a fresh install, without undoing a later disable
+mkdir -p %{_localstatedir}/lib/rpm-state/%{name}
+if [ ! -e %{_userunitdir}/dell-xps-ptl-refresh.service ]; then
+    touch %{_localstatedir}/lib/rpm-state/%{name}/refresh-new
+fi
+
 %post
 systemctl daemon-reload || :
+%systemd_user_post dell-xps-ptl-refresh.service
+if [ $1 -gt 1 ] && [ -e %{_localstatedir}/lib/rpm-state/%{name}/refresh-new ]; then
+    systemctl --no-reload preset --global dell-xps-ptl-refresh.service || :
+fi
+rm -rf %{_localstatedir}/lib/rpm-state/%{name}
 %{_libexecdir}/dell-xps-ptl/ppd-mapping xps || :
 systemctl try-restart tuned.service tuned-ppd.service || :
 
 %preun
+%systemd_user_preun dell-xps-ptl-refresh.service
 if [ $1 -eq 0 ]; then
     %{_libexecdir}/dell-xps-ptl/ppd-mapping default || :
 fi
@@ -102,8 +129,14 @@ fi
 %{_libexecdir}/dell-xps-ptl/
 %{_prefix}/lib/tuned/profiles/xps-ptl-*/
 %{_udevrulesdir}/90-dell-xps-ptl-cvs.rules
+%{_userunitdir}/dell-xps-ptl-refresh.service
+%{_userpresetdir}/80-dell-xps-ptl.preset
 
 %changelog
+* Fri Oct 09 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.5-1
+- Add the dell-xps-ptl-refresh user service: 120 Hz on AC power, 60 Hz on
+  battery, configurable per user in ~/.config/dell-xps-ptl/refresh.conf
+
 * Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.4-1
 - udev: keep the CVS camera vision chip out of runtime suspend; it fails to
   resume and the camera then opens only once per boot

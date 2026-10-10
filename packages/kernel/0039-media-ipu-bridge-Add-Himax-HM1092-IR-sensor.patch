@@ -1,0 +1,35 @@
+From 4fdb0342f05eed8bd134e84859a4e89e60bd5bc1 Mon Sep 17 00:00:00 2001
+From: Jake Steinman <j@metarealtyinc.ca>
+Date: Thu, 30 Jul 2026 10:24:14 -0400
+Subject: [PATCH] media: ipu-bridge: Add Himax HM1092 IR sensor
+
+The HM1092 is a mono IR sensor used for face unlock on Intel IPU6 and
+IPU7 laptops. Without an entry here the sensor endpoint is built with no
+link-frequencies property, the driver rejects every mode and the sensor
+never binds.
+
+Two frequencies are listed because the sensor is driven from a different
+external clock depending on the platform, with the PLL programmed to
+match: 180480000 Hz on Dell (19.2 MHz EXTCLK) and 180000000 Hz on ASUS
+(24 MHz).
+
+Assisted-by: Claude:claude-opus-5
+Signed-off-by: Jake Steinman <j@metarealtyinc.ca>
+Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
+---
+ drivers/media/pci/intel/ipu-bridge.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/media/pci/intel/ipu-bridge.c b/drivers/media/pci/intel/ipu-bridge.c
+index 20cb133de826d9..f9efa501e8cf0b 100644
+--- a/drivers/media/pci/intel/ipu-bridge.c
++++ b/drivers/media/pci/intel/ipu-bridge.c
+@@ -49,6 +49,8 @@
+  * Please keep the list sorted by ACPI HID.
+  */
+ static const struct ipu_sensor_config ipu_supported_sensors[] = {
++	/* Himax HM1092 */
++	IPU_SENSOR_CONFIG("HIMX1092", 2, 180000000, 180480000),
+ 	/* Himax HM11B1 */
+ 	IPU_SENSOR_CONFIG("HIMX11B1", 1, 384000000),
+ 	/* Himax HM2170 */

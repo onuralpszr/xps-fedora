@@ -5,10 +5,13 @@
 0020-drm-i915-alpm-limit-pr-alpm-to-panel-replay.patch
 0029-drm-edid-populate-monitor-range-from-displayid-adaptive-sync.patch
 
-# Himax HM1092 IR camera (ipu-bridge: media.git; driver: v6 on linux-media; ACPI: ours)
+# Himax HM1092 IR camera (driver: v6 on linux-media; ACPI and 19.2 MHz: Jake
+# Steinman on linux-media 2026-10-10; probe deferral: ours; ipu-bridge: mainline 7.3)
 0031-media-dt-bindings-Add-Himax-HM1092-NIR-sensor.patch
 0032-media-i2c-hm1092-add-Himax-HM1092-mono-NIR-sensor-driver.patch
-0033-media-i2c-hm1092-Add-ACPI-support.patch
+0033-media-i2c-hm1092-Add-ACPI-enumeration-and-the-19.2-MHz-configuration.patch
+0038-media-i2c-hm1092-Defer-probe-until-the-fwnode-endpoint-exists.patch
+0039-media-ipu-bridge-Add-Himax-HM1092-IR-sensor.patch
 
 # 0034 (ALPM fast wake quirk for the LG 00:22:b9 panel) is kept but no longer
 # applied: its author withdrew it on intel-gfx on 2026-09-23, since setting

@@ -1,0 +1,34 @@
+From: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+Subject: [PATCH] media: i2c: hm1092: Defer probe until the fwnode endpoint exists
+
+On Intel laptops (Dell XPS 14/16 DA14260/DA16260, Panther Lake + IPU7) the
+fwnode graph endpoint of the HM1092 is created by ipu-bridge when the IPU
+ISYS probes. If the sensor probes first, the endpoint is missing and probe
+fails for good with "parsing endpoint failed".
+
+Return -EPROBE_DEFER while the endpoint is missing, the same way ov08x40
+and other IPU sensors do.
+
+Not yet upstream; applies on top of "media: i2c: hm1092: Add ACPI
+enumeration and the 19.2 MHz configuration".
+
+Signed-off-by: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+---
+--- a/drivers/media/i2c/hm1092.c
++++ b/drivers/media/i2c/hm1092.c
+@@ -899,7 +899,15 @@
+ 	unsigned long link_freq_bitmap;
+ 	int ret;
+ 
++	/*
++	 * On ACPI systems the fwnode graph is created by the IPU bridge driver,
++	 * which also adds the sensor properties. Wait for it.
++	 */
+ 	ep = fwnode_graph_get_endpoint_by_id(fwnode, 0, 0, 0);
++	if (!ep)
++		return dev_err_probe(dev, -EPROBE_DEFER,
++				     "waiting for fwnode graph endpoint\n");
++
+ 	ret = v4l2_fwnode_endpoint_alloc_parse(ep, &bus_cfg);
+ 	fwnode_handle_put(ep);
+ 	if (ret)

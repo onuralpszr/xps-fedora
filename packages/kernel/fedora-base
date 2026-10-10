@@ -1,6 +1,6 @@
 # Fedora kernel this package is built on, and our release on top of it.
 # scripts/upstream-watch.sh updates the first two lines when Fedora ships a
 # new f45 kernel; bump local_release by hand when the patches change.
-fedora_ref=45fb77a73
-fedora_nvr=kernel-7.2.9-300
-local_release=3
+fedora_ref=6cfad0f
+fedora_nvr=kernel-7.2.9-301
+local_release=1

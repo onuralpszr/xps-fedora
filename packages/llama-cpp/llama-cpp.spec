@@ -3,7 +3,7 @@
 # own subpackage:
 #   llama-cpp-vulkan    any Vulkan GPU (Intel Arc, AMD, NVIDIA)
 #   llama-cpp-openvino  Intel CPU / GPU / NPU through OpenVINO
-#   llama-cpp-hip       AMD ROCm
+#   llama-cpp-hip       AMD ROCm, off by default (see the rocm bcond below)
 # The CPU backend is built in all x86-64 variants (SSE4.2 ... AVX-512/AMX)
 # and the best one for the running CPU is picked at load time, instead of
 # Fedora's baseline-only build.
@@ -47,7 +47,7 @@ Name:           llama-cpp
 # This is the main license
 
 License:        MIT AND Apache-2.0 AND LicenseRef-Fedora-Public-Domain
-Version:        b11460
+Version:        b11513
 Release:        1%{?dist}
 
 URL:            https://github.com/ggml-org/llama.cpp
@@ -56,11 +56,13 @@ Source0:        %{url}/archive/%{version}.tar.gz#/llama.cpp-%{version}.tar.gz
 # aarch64 needs a maintainer
 ExclusiveArch:  x86_64 aarch64
 
-%ifarch x86_64
-%bcond_without rocm
-%else
+# ROCm is off by default: this COPR targets Intel hardware, and the HIP
+# backend took most of each build (4 to 5 hours on Fedora 45 against under an
+# hour without it). llama-cpp-vulkan covers AMD GPUs and replaces
+# llama-cpp-hip on upgrade. To turn ROCm back on, change this to
+# %%bcond_without rocm on x86_64 (see docs/ci.md), or build locally with
+# --with rocm.
 %bcond_with rocm
-%endif
 %bcond_without vulkan
 %ifarch x86_64
 %bcond_without openvino
@@ -69,6 +71,12 @@ ExclusiveArch:  x86_64 aarch64
 %endif
 
 %if %{with rocm}
+%if 0%{?fedora} && 0%{?fedora} < 46
+# With ROCm 7.2 the thin LTO links of libggml and the CPU variants never
+# finish on Fedora 45; rawhide's ROCm 10 links them fine. Set before
+# build_cxxflags below, which expands optflags right away.
+%global _lto_cflags %{nil}
+%endif
 %global build_hip ON
 %global toolchain rocm
 # hipcc does not support some clang flags
@@ -156,6 +164,11 @@ ggml library.
 Summary:        Vulkan backend for %{name}
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 Supplements:    %{name}
+%if %{without rocm}
+# Without the HIP backend, AMD GPUs run through Vulkan; replace llama-cpp-hip
+# (Fedora's, or an earlier build here) so upgrades keep a GPU backend
+Obsoletes:      %{name}-hip < %{version}-%{release}
+%endif
 
 %description vulkan
 GPU acceleration for llama.cpp through Vulkan; works with Intel Arc, AMD and
@@ -272,7 +285,7 @@ export HIPCC_COMPILE_FLAGS_APPEND="--offload-compress"
     -DGGML_HIP=%{build_hip} \
     -DGGML_VULKAN=%{build_vulkan} \
     -DGGML_OPENVINO=%{?with_openvino:ON}%{!?with_openvino:OFF} \
-    -DAMDGPU_TARGETS="$(echo '%{rocm_gpu_list_default}' | sed -E 's/[;,]?gfx1250//g; s/^[;,]//')" \
+    %{?with_rocm:-DAMDGPU_TARGETS="$(echo '%{rocm_gpu_list_default}' | sed -E 's/[;,]?gfx1250//g; s/^[;,]//')"} \
     -DLLAMA_BUILD_EXAMPLES=%{build_examples} \
     -DLLAMA_BUILD_TESTS=%{build_test}
 
@@ -401,6 +414,12 @@ export LD_LIBRARY_PATH=$PWD/%{_vpath_builddir}/bin
 %endif
 
 %changelog
+* Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11513-1
+- Update to b11513
+- Turn ROCm off by default; llama-cpp-vulkan replaces llama-cpp-hip
+- With ROCm on, build without LTO on Fedora 45, where the ROCm 7.2 thin LTO
+  links hang
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11460-1
 - Update to b11460
 - Build backends as loadable modules in %{_libdir}/ggml with -vulkan,

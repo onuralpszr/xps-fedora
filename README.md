@@ -305,7 +305,7 @@ sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3
 | 📷 | **Camera updates** | `intel-ipu7-camera` comes from a GitHub release, not a repository, so `dnf upgrade` does not see new versions. Watch the [releases](https://github.com/onuralpszr/xps-fedora/releases) or the camera badge at the top. It moves to RPM Fusion once it is accepted there. |
 | 🎥 | **Camera does not open** | Check the BIOS presence setting, which the setup screen does not show: `sudo cat /sys/class/firmware-attributes/dell-wmi-sysman/attributes/HPDSensor/current_value` must say `MSHPD`, not `IntelHPD`. Set it with `echo MSHPD \| sudo tee` to the same file and reboot. If the camera opens only once per boot, update `dell-xps-ptl-config` to 1.4 or newer. See [findings](docs/findings.md#camera-ipu7). |
 | 🔐 | **Secure Boot** | Every new `.dellptl` kernel and every IPU7 module rebuild is signed with your akmods key automatically. If the camera disappears after a kernel update, run `sudo akmods --force` and reboot. |
-| 🦙 | **llama.cpp and ollama** | The COPR's llama.cpp ships a newer `libggml` than Fedora's ollama expects, so the two may conflict; do not install both from these repositories yet. Install the backend you want explicitly (`llama-cpp-vulkan` or `llama-cpp-openvino`); plain `llama-cpp` is CPU only. |
+| 🦙 | **llama.cpp and ollama** | Both install side by side: ollama keeps its own llama.cpp in `/usr/lib/ollama`. Install the llama.cpp backend you want explicitly (`llama-cpp-vulkan` or `llama-cpp-openvino`); plain `llama-cpp` is CPU only. The ROCm backend is not built, AMD GPUs use `llama-cpp-vulkan`. |
 
 ## Packages
 
@@ -328,10 +328,13 @@ sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3
 | [`openvino-genai`](packages/openvino-genai)                                                                                                                                                                                                                           | 2026.4.1.0 | also builds OpenVINO Tokenizers                  |
 | [`onnx`](packages/onnx)                                                                                                                                                                                                                                               | 1.22.0     | shared library kept for onnxruntime and Python   |
 | [`onnxruntime`](packages/onnxruntime)                                                                                                                                                                                                                                 | 1.30.0     | CPU, MIGraphX and OpenVINO variants              |
-| [`llama-cpp`](packages/llama-cpp)                                                                                                                                                                                                                                     | b11460     | Vulkan, OpenVINO and HIP backends as subpackages |
+| [`llama-cpp`](packages/llama-cpp)                                                                                                                                                                                                                                     | b11513     | Vulkan and OpenVINO backends as subpackages, [ROCm off](docs/ci.md#amd-rocm-in-llama-cpp) |
 | [`whisper-cpp`](packages/whisper-cpp) | 1.9.5 | speech to text, shares ggml and its GPU backends with llama-cpp |
 | [`ollama`](packages/ollama) | 0.40.1 | newer than Fedora's 0.24, CPU and Vulkan |
 | [`python-nncf`](packages/python-nncf), [`python-optimum`](packages/python-optimum), [`python-optimum-intel`](packages/python-optimum-intel), [`python-transformers`](packages/python-transformers), [`python-openvino-telemetry`](packages/python-openvino-telemetry) | latest     | model export and compression tools               |
+
+> [!WARNING]
+> **llama.cpp is built without AMD ROCm.** The ROCm (HIP) backend took most of every COPR build, 4 to 5 hours on Fedora 45 against under an hour without it, and this repository targets Intel hardware. There is no `llama-cpp-hip` package here: AMD GPUs run llama.cpp through `llama-cpp-vulkan`, which replaces `llama-cpp-hip` on upgrade. To build with ROCm again, use `--with rocm` locally or turn the `rocm` bcond back on in the spec, as shown in [AMD ROCm in llama-cpp](docs/ci.md#amd-rocm-in-llama-cpp).
 
 ## Build status
 

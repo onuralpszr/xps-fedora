@@ -57,3 +57,25 @@ Do this once, after the repository is on GitHub.
 make -f .copr/Makefile srpm spec=packages/<name>/<name>.spec outdir=/tmp/srpm
 scripts/mock-build.sh <name>
 ```
+
+## AMD ROCm in llama-cpp
+
+The COPR builds llama-cpp without its ROCm (HIP) backend. This repository targets Intel hardware, and HIP took most of every build: 4 to 5 hours on Fedora 45, against under an hour for the CPU, Vulkan and OpenVINO backends. AMD GPUs still run through `llama-cpp-vulkan`, which also replaces `llama-cpp-hip` on upgrade, so nobody is left without a GPU backend.
+
+To build with ROCm locally, pass the bcond to mock or rpmbuild:
+
+```bash
+rpmbuild -ba --with rocm packages/llama-cpp/llama-cpp.spec
+```
+
+To turn it back on in the COPR, enable it on x86_64 in `packages/llama-cpp/llama-cpp.spec`:
+
+```spec
+%ifarch x86_64
+%bcond_without rocm
+%else
+%bcond_with rocm
+%endif
+```
+
+That brings back `llama-cpp-hip` and drops its `Obsoletes` from `llama-cpp-vulkan`. On Fedora 45 the spec then also turns LTO off, because ROCm 7.2's thin LTO links of `libggml` never finish there. Give the build a long COPR timeout, for example `copr-cli build-package thunderbirdtr/intel-ai-stack --name llama-cpp --timeout 72000`.

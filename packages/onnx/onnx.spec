@@ -9,7 +9,7 @@
 
 Name:       onnx
 Version:    1.22.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    Open standard for machine learning interoperability
 License:    Apache-2.0
 
@@ -164,6 +164,11 @@ cd %{_builddir}
 
 
 %changelog
+* Sun Oct 11 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.22.0-2
+- Link libonnx against libonnx_proto instead of embedding its objects: with
+  both copies, onnxruntime's OpenVINO provider on the NPU loaded
+  onnx-ml.proto twice and protobuf aborted
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.22.0-1
 - Update to 1.22.0
 - Port the shared-library setup to 1.22: libonnx keeps default visibility

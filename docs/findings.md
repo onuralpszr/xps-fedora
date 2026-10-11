@@ -12,7 +12,7 @@ What was broken on stock Fedora 45 on the Dell XPS 16 DA16260, how it was tracke
 | ✨ | [Panel self refresh](#display-panel-self-refresh) | ✅ | ALPM fast wake quirk (0034) and PSR1 through `xe.enable_psr2_sel_fetch=0` |
 | 🔐 | [Secure Boot](#secure-boot) | ✅ | kernel-install hook signs with the akmods key |
 | 📷 | [Camera](#camera-ipu7) | ✅ | `intel-ipu7-kmod` with ACPI, `intel-ipu7-camera`, `v4l2-relayd` |
-| 🙂 | [IR camera](#ir-camera-himax-hm1092) | ⛔ | the CVS bridge does not pass IR frames yet |
+| 🙂 | [IR camera](#ir-camera-himax-hm1092) | ✅ | kernel 301.2: 19.2 MHz hm1092, ipu-bridge entry; Gaze face unlock on the lock screen |
 | ⚡ | [NPU](#npu) | ✅ | `intel-npu-driver` 1.38 with Intel's compiler |
 | ❄️ | [Thermal](#thermal) | ✅ | thermald waits for the sensors before starting |
 | 🎚️ | [Power profiles](#power-profiles) | ✅ | tuned profiles that set both platform profile handlers |
@@ -132,36 +132,57 @@ Do not use `unbind` on `0000:00:05.0` as a reset: the IPU7 driver crashes in `ip
 
 The Windows Hello IR sensor is a Himax HM1092 (ACPI `HIMX1092`, `\_SB_.LNK0`). Power, reset and the IR flood LED come from `INT3472:00`, which already exposes `/sys/class/leds/HIMX1092_00::ir_flood_led`. The three `OVTI01AF` entries are disabled BIOS placeholders.
 
-It is **blocked**: the sensor also sits behind the CVS bridge, and no IR frames reach Linux until the bridge passes the IR stream. A working IR camera needs a sensor driver that accepts the 19.2 MHz clock, CVS changes for the IR port (lanes, routing and maybe a handshake), and then the ipu-bridge entry. Only Jake Steinman has reported frames on a DA16260.
+It **works** on kernel `7.2.9-301.2.dellptl` with `intel-ipu7-kmod` 1.0.6-3: 648x368 10-bit greyscale at 30 fps on CSI2 port 2, with the RGB camera unaffected. The earlier "blocked by CVS" conclusion was wrong. The sensor is wired straight to the IPU7 (`bind hm1092 17-0024 nlanes is 1 port is 2`); only the sensor driver was missing the 19.2 MHz clock setup Dell uses.
 
 <details>
-<summary>Upstream state (checked 2026-10-06)</summary>
+<summary>Patches (PR #22)</summary>
 
-- `ipu-bridge: Add Himax HM1092 IR sensor` v2 (Jake Steinman): **accepted** in media.git next, for 7.3. Link frequencies 180.48 MHz for Dell (19.2 MHz clock) and 180 MHz for ASUS (24 MHz).
-- Two competing sensor drivers, neither reviewed yet:
-  - Ramshouriesh R v6 (2026-08-01): devicetree only, 24 MHz only, tested on an ASUS Zenbook A14 (Snapdragon). Rejects the 19.2 MHz clock.
-  - Jake Steinman (2026-07-26): ACPI `HIMX1092`, x86 IPU6 and IPU7, **tested on the Dell XPS 16 DA16260**, 648x368. Its 238 register init table was taken from the Windows `hm1092.sys` and checked against a bus capture, which may be a provenance concern upstream.
-- The 7.2 CVS driver handles one sink (port 0, RGB) and rejects a lane count mismatch (HM1092 is 1 lane in, 2 out). Intel (Miguel Vadillo, platform-driver-x86, 2026-05-15) agreed that check is wrong and posted a fix; a "secure handshake" on IR port 2 was left open.
-- omarchy#8641 (XPS 14): the sensor never answers on I2C; CVS likely controls its power.
+- `0033` Jake Steinman, linux-media 2026-10-10 ([series 31855](https://patchwork.linuxtv.org/project/linux-media/list/?series=31855)): ACPI `HIMX1092` and a configuration table picked by clock rate, with the 19.2 MHz one (648x368, PLL 19.2 MHz x 94 / 10 = 180.48 MHz link). On top of Ramshouriesh R's v6 driver (`0031`, `0032`). Tested by him on a DA16260, here on a second one.
+- `0038` ours: `-EPROBE_DEFER` until ipu-bridge has created the fwnode endpoint, the part of our old ACPI patch that 0033 lacks.
+- `0039` `media: ipu-bridge: Add Himax HM1092 IR sensor`, mainline [4fdb0342f05e](https://github.com/torvalds/linux/commit/4fdb0342f05e) (7.3).
+- `intel-ipu7-kmod` `0006`: Y10 and Y10P capture formats, patch 2 of the same series ported from staging/ipu7 to the ipu7-drivers tree. Without it no monochrome sensor can be captured.
 
 </details>
 
 <details>
-<summary>What was tried here (patches 0030 to 0033)</summary>
+<summary>How we got here</summary>
 
-- Patch 0033 adds the `HIMX1092` ACPI ID to the v6 driver and returns `-EPROBE_DEFER` while the fwnode endpoint is missing, like `ov08x40`. v6 as posted only has an OF match table and fails for good if it probes before ipu-bridge creates the endpoint.
-- First boot on `300.1`: ACPI match and ipu-bridge work ("Found supported sensor HIMX1092:00"), but probe fails with `external clock 19200000 is not supported`. v6 only has the 24 MHz PLL setup; 19.2 MHz divided by 8 and multiplied by 75 gives the same link.
-- With the ipu-bridge entry present but hm1092 failing to probe, the ISYS notifier never completes, so the RGB camera breaks too (`VIDIOC_STREAMON: Broken pipe`). The ipu-bridge entry (0030) was dropped and may only come back together with a working hm1092.
-- The IR flood LED has no kernel consumer on purpose; userspace switches the LED around a capture.
+- 300.1 (2026-10-06): the v6 driver plus our ACPI ID probed, but failed with `external clock 19200000 is not supported`. With the ipu-bridge entry present and hm1092 failing, the ISYS notifier never completed and the RGB camera broke too, so the entry was dropped until the sensor driver worked.
+- We first blamed the CVS bridge, which only handles port 0. The IR sensor never goes through it: it sits on CSI2 port 2 directly ([omarchy#8641](https://github.com/omacom/omarchy/issues/8641), [fix pack findings](https://github.com/HritwikSinghal/svp7500-camera-fix-pack)).
+- 301.2 (2026-10-11): with the 19.2 MHz configuration the sensor binds, the notifier completes and both cameras work.
 
 </details>
 
 <details>
-<summary>Face login</summary>
+<summary>Capturing a frame</summary>
 
-- Not Howdy: its last stable release was in 2020. The plan is **Gaze** (GunduLabs, Rust, SCRFD, ArcFace and liveness, PAM through `gazed` over D-Bus, TPM sealed templates, a Fedora 45 COPR, `gaze-kde`, OpenVINO and NPU support).
-- Gaze would need an 8-bit GREY V4L2 node (relayed from the IPU7 raw10 stream) and a sysfs LED emitter profile for `HIMX1092_00::ir_flood_led`.
-- RGB only face login works with the current webcam but is easier to fool with a photo. If used at all: lock screen only, never sudo, SDDM or LUKS, and the password always as a fallback.
+The raw ISYS nodes are root only on purpose (`71-ipu7-hide-isys.rules` from `intel-ipu7-camera`). The IR flood LED is `/sys/class/leds/HIMX1092_00::ir_flood_led`; nothing in the kernel drives it, userspace switches it around a capture.
+
+```
+media-ctl -d /dev/media0 -l '"Intel IPU7 CSI2 2":1 -> "Intel IPU7 ISYS Capture 16":0 [1]'
+media-ctl -d /dev/media0 -V '"Intel IPU7 CSI2 2":0 [fmt:Y10_1X10/648x368]'
+media-ctl -d /dev/media0 -V '"Intel IPU7 CSI2 2":1 [fmt:Y10_1X10/648x368 crop:(0,0)/648x368]'
+sudo v4l2-ctl -d /dev/video16 --set-fmt-video=width=648,height=368,pixelformat='Y10 '
+echo 1 | sudo tee /sys/class/leds/HIMX1092_00::ir_flood_led/brightness
+sudo v4l2-ctl -d /dev/video16 --stream-mmap --stream-count=10 --stream-to=ir.raw
+echo 0 | sudo tee /sys/class/leds/HIMX1092_00::ir_flood_led/brightness
+```
+
+Y10 is 16 bits per pixel with 1344 bytes per line; shift right by 2 for 8 bit. Exposure is fixed for now (mean level about 66 of 255 at arm's length in a dark room); there is no auto exposure yet.
+
+</details>
+
+<details>
+<summary>Face login (Gaze)</summary>
+
+[Gaze](https://github.com/GunduLabs/gaze) 0.3.9 (COPR `gundulabs/gaze`, `gaze-kde`) works IR only: enrollment, `gaze auth`, PAM (checked with `pamtester` on a separate service first) and hands-free unlock on the KDE lock screen, with the password field still working as a fallback. A phone photo of the enrolled face is rejected.
+
+- `gazed` only captures from a kernel `/dev/video*` node and GStreamer cannot read Y10, so a relay converts the IR stream to GREY into a v4l2loopback node, `/dev/video42` "Dell IR Camera". It starts the sensor and the LED only while a client streams, using v4l2loopback's client usage event, like `v4l2-relayd` does for the RGB camera.
+- Gaze has no sysfs LED emitter support, so the relay drives the LED and `emitter_enabled` stays `false`.
+- `/etc/gaze/config.toml`: `rgb = ""`, `ir = "/dev/video42"`, `emitter_enabled = false`.
+- `gaze-kde` puts Gaze in `/etc/pam.d/kde-smartcard` (the up-front biometric slot), `[success=done default=ignore]`, so a failed match falls through to the password. `sudo gaze-kde-pam disable` removes it.
+- Not Howdy: its last stable release was in 2020.
+- Still to do: package the relay, auto exposure, NPU inference through OpenVINO.
 
 </details>
 

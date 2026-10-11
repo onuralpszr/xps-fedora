@@ -1,0 +1,187 @@
+#!/usr/bin/python3
+"""On-demand relay from the HM1092 IR sensor to a v4l2loopback node.
+
+The raw IPU7 node gives Y10 (10 bits in 16-bit words), which GStreamer and
+face login tools cannot read, and it is root only (71-ipu7-hide-isys.rules).
+This keeps a GREY loopback node alive with a black frame twice a second and
+only starts the sensor and the IR flood LED while a client streams from it,
+like v4l2-relayd does for the RGB camera. v4l2loopback reports clients with
+V4L2_EVENT_PRI_CLIENT_USAGE (count 1 while a reader streams, 0 when none).
+
+Usage: ir-relay [loopback node]     (default /dev/video42, root)
+"""
+import fcntl
+import os
+import re
+import select
+import signal
+import struct
+import subprocess
+import sys
+import time
+
+import numpy as np
+
+MEDIA = "/dev/media0"
+CSI = "Intel IPU7 CSI2 2"
+LED = "/sys/class/leds/HIMX1092_00::ir_flood_led/brightness"
+WIDTH, HEIGHT = 648, 368
+IDLE_INTERVAL = 0.5
+
+# linux/videodev2.h and v4l2loopback.h, x86_64 layouts
+VIDIOC_S_FMT = 0xC0D05605
+VIDIOC_SUBSCRIBE_EVENT = 0x4020565A
+VIDIOC_DQEVENT = 0x80885659
+V4L2_BUF_TYPE_VIDEO_OUTPUT = 2
+V4L2_FIELD_NONE = 1
+V4L2_PIX_FMT_GREY = 0x59455247
+V4L2_EVENT_PRI_CLIENT_USAGE = 0x08000000 + 0x08E00000 + 1
+
+
+def log(msg):
+    print(msg, flush=True)
+
+
+def run(*args):
+    return subprocess.run(args, check=True, capture_output=True, text=True).stdout
+
+
+def set_led(on):
+    try:
+        with open(LED, "w") as f:
+            f.write("1" if on else "0")
+    except OSError as e:
+        log(f"IR LED: {e}")
+
+
+class Sensor:
+    """The IR sensor streaming Y10 through v4l2-ctl, started on demand."""
+
+    def __init__(self):
+        self.proc = None
+        self.frame_bytes = 0
+
+    def start(self):
+        graph = run("media-ctl", "-d", MEDIA, "-p")
+        block = graph.split(f": {CSI} (", 1)[1].split("\n- entity", 1)[0]
+        capture = re.search(r'pad1: SOURCE.*?-> "([^"]+)"', block, re.S).group(1)
+        video = run("media-ctl", "-d", MEDIA, "-e", capture).strip()
+        fmt = f"Y10_1X10/{WIDTH}x{HEIGHT}"
+        run("media-ctl", "-d", MEDIA, "-l", f'"{CSI}":1 -> "{capture}":0 [1]')
+        run("media-ctl", "-d", MEDIA, "-V", f'"{CSI}":0 [fmt:{fmt}]')
+        run("media-ctl", "-d", MEDIA, "-V", f'"{CSI}":1 [fmt:{fmt} crop:(0,0)/{WIDTH}x{HEIGHT}]')
+        run("v4l2-ctl", "-d", video, f"--set-fmt-video=width={WIDTH},height={HEIGHT},pixelformat=Y10 ")
+        info = run("v4l2-ctl", "-d", video, "--get-fmt-video")
+        self.bpl = int(re.search(r"Bytes per Line\s*:\s*(\d+)", info).group(1))
+        self.frame_bytes = self.bpl * HEIGHT
+        set_led(True)
+        self.proc = subprocess.Popen(
+            ["v4l2-ctl", "-d", video, "--stream-mmap", "--stream-count=0", "--stream-to=-"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        os.set_blocking(self.proc.stdout.fileno(), False)
+        self.buf = b""
+        log(f"sensor on ({video})")
+
+    def stop(self):
+        if self.proc:
+            self.proc.terminate()
+            try:
+                self.proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self.proc.kill()
+            self.proc = None
+            log("sensor off")
+        set_led(False)
+
+    def fileno(self):
+        return self.proc.stdout.fileno()
+
+    def frames(self):
+        """GREY frames ready so far; None when the stream ended."""
+        chunk = self.proc.stdout.read(4 * self.frame_bytes) if self.proc else b""
+        if chunk == b"" and self.proc.poll() is not None:
+            return None
+        self.buf += chunk or b""
+        out = []
+        while len(self.buf) >= self.frame_bytes:
+            raw, self.buf = self.buf[:self.frame_bytes], self.buf[self.frame_bytes:]
+            y10 = np.frombuffer(raw, dtype="<u2").reshape(HEIGHT, self.bpl // 2)[:, :WIDTH]
+            out.append((y10 >> 2).astype(np.uint8).tobytes())
+        return out
+
+
+def open_loopback(path):
+    fd = os.open(path, os.O_RDWR | os.O_NONBLOCK)
+    pix = struct.pack("12I", WIDTH, HEIGHT, V4L2_PIX_FMT_GREY, V4L2_FIELD_NONE,
+                      WIDTH, WIDTH * HEIGHT, 0, 0, 0, 0, 0, 0)
+    fmt = struct.pack("I4x", V4L2_BUF_TYPE_VIDEO_OUTPUT) + pix.ljust(200, b"\0")
+    fcntl.ioctl(fd, VIDIOC_S_FMT, fmt)
+    fcntl.ioctl(fd, VIDIOC_SUBSCRIBE_EVENT, struct.pack("8I", V4L2_EVENT_PRI_CLIENT_USAGE, 0, 0, 0, 0, 0, 0, 0))
+    return fd
+
+
+def readers(fd):
+    """Latest client count from queued events, or None if there was none."""
+    count = None
+    while True:
+        try:
+            ev = fcntl.ioctl(fd, VIDIOC_DQEVENT, bytes(136))
+        except OSError:
+            return count
+        if struct.unpack_from("I", ev, 0)[0] == V4L2_EVENT_PRI_CLIENT_USAGE:
+            count = struct.unpack_from("I", ev, 8)[0]
+
+
+def main():
+    if os.geteuid() != 0:
+        sys.exit("ir-relay must run as root")
+    path = sys.argv[1] if len(sys.argv) > 1 else "/dev/video42"
+    fd = open_loopback(path)
+    sensor = Sensor()
+    black = bytes(WIDTH * HEIGHT)
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+    set_led(False)
+    log(f"idle on {path}, {WIDTH}x{HEIGHT} GREY")
+
+    active = False
+    next_idle = 0.0
+    try:
+        while True:
+            watch = [sensor] if active and sensor.proc else []
+            timeout = max(0.0, next_idle - time.monotonic()) if not active else 1.0
+            ready, _, prio = select.select(watch, [], [fd], timeout)
+
+            if fd in prio:
+                count = readers(fd)
+                if count is not None and bool(count) != active:
+                    active = bool(count)
+                    log(f"client {'streaming' if active else 'gone'}")
+                    if active:
+                        try:
+                            sensor.start()
+                        except (subprocess.CalledProcessError, AttributeError, OSError) as e:
+                            log(f"sensor start failed: {e}")
+                            sensor.stop()
+                    else:
+                        sensor.stop()
+
+            if active and sensor.proc and sensor in ready:
+                frames = sensor.frames()
+                if frames is None:
+                    log("sensor stream ended, restarting")
+                    sensor.stop()
+                    sensor.start()
+                    continue
+                for frame in frames:
+                    os.write(fd, frame)
+            elif not active and time.monotonic() >= next_idle:
+                os.write(fd, black)
+                next_idle = time.monotonic() + IDLE_INTERVAL
+    finally:
+        sensor.stop()
+        os.close(fd)
+        log("stopped")
+
+
+if __name__ == "__main__":
+    main()

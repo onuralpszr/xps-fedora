@@ -1,0 +1,22 @@
+[Unit]
+Description=Dell XPS IR camera relay (HM1092 to v4l2loopback)
+Documentation=https://github.com/onuralpszr/xps-fedora/blob/main/docs/findings.md#ir-camera-himax-hm1092
+After=modprobe@v4l2loopback.service camera-init.service
+Wants=modprobe@v4l2loopback.service
+Before=gazed.service
+# Started by 70-dell-xps-ptl-ir-relay.rules when hm1092 binds to the sensor
+ConditionPathExists=/sys/bus/i2c/drivers/hm1092/i2c-HIMX1092:00
+
+[Service]
+Type=simple
+# The loopback node only exists while the relay runs
+ExecStartPre=-/usr/bin/v4l2loopback-ctl delete /dev/video42
+ExecStartPre=/usr/bin/v4l2loopback-ctl add -n "Dell IR Camera" -x 1 -w 648 -h 368 /dev/video42
+ExecStart=/usr/libexec/dell-xps-ptl/ir-relay /dev/video42
+ExecStopPost=-/usr/bin/v4l2loopback-ctl delete /dev/video42
+ExecStopPost=-/bin/sh -c 'echo 0 > "/sys/class/leds/HIMX1092_00::ir_flood_led/brightness"'
+Restart=on-failure
+RestartSec=2
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes

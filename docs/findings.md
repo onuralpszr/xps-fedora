@@ -182,7 +182,9 @@ Y10 is 16 bits per pixel with 1344 bytes per line; shift right by 2 for 8 bit. E
 - `/etc/gaze/config.toml`: `rgb = ""`, `ir = "/dev/video42"`, `emitter_enabled = false`.
 - `gaze-kde` puts Gaze in `/etc/pam.d/kde-smartcard` (the up-front biometric slot), `[success=done default=ignore]`, so a failed match falls through to the password. `sudo gaze-kde-pam disable` removes it.
 - Not Howdy: its last stable release was in 2020.
-- Still to do: package the relay, auto exposure, NPU inference through OpenVINO.
+- The relay ships in `dell-xps-ptl-config` 1.6 (`dell-xps-ptl-ir-relay.service`), started by a udev rule when hm1092 binds, because at boot the driver binds after `camera-init.service` loads it.
+- **NPU:** Gaze runs its models on the NPU through onnxruntime's OpenVINO provider from the `intel-ai-stack` COPR, about 8 to 16 times faster than CPU per model ([benchmarks](benchmarks.md#-face-login-gaze-on-the-npu)). Instead of the symlinks under `/usr/lib/gaze/runtimes` that Gaze's docs describe, point `gazed` at the system library with its `ORT_DYLIB_PATH` override and set `[inference] execution_provider = "openvino"`, `device = "npu"`. `gaze doctor` then still warns that the runtime is "not registered"; the benchmark lines showing `openvino / npu` are what count. Needs onnx 1.22.0-2 or newer: earlier builds abort on a duplicate `onnx-ml.proto`.
+- Still to do: auto exposure.
 
 </details>
 

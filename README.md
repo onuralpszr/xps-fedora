@@ -273,6 +273,19 @@ gaze auth --verbose
 
 `gaze-kde` adds face unlock to the KDE lock screen (`/etc/pam.d/kde-smartcard`); the password field keeps working. `sudo gaze-kde-pam disable` turns it off. See [findings](docs/findings.md#ir-camera-himax-hm1092).
 
+To run the face models on the NPU (about 8 to 16 times faster than CPU, see [benchmarks](docs/benchmarks.md#-face-login-gaze-on-the-npu)), use ONNX Runtime with OpenVINO from the `intel-ai-stack` COPR:
+
+```bash
+sudo dnf install onnxruntime-openvino
+sudo systemctl edit gazed --drop-in=openvino --stdin <<'EOF'
+[Service]
+Environment=ORT_DYLIB_PATH=/usr/lib64/libonnxruntime.so.1
+EOF
+sudo sed -i 's/^execution_provider = "cpu"/execution_provider = "openvino"/; s/^device = "cpu"/device = "npu"/' /etc/gaze/config.toml
+sudo systemctl restart gazed
+gaze doctor --benchmark
+```
+
 </details>
 
 <details>

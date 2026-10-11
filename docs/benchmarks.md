@@ -12,6 +12,7 @@ Measured on 2026-10-08 on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390,
 | 🦙 Easiest setup | **Ollama** with `ollama-vulkan` | as fast as llama.cpp on the same GGUF, with model downloads and a simple API |
 | 🎙️ Speech to text | whisper.cpp **Vulkan** | large-v3-turbo transcribes 66 s of audio in 7.8 s |
 | 🔎 Embeddings | llama.cpp **Vulkan** | embeddinggemma-2 at 138 sentences/s, same results as CPU |
+| 🙂 Face login | **NPU** through ONNX Runtime's OpenVINO provider | Gaze's IR recognizer in 2.6 ms instead of 22 ms, with steady timings |
 
 ## 🦙 llama.cpp
 
@@ -85,6 +86,19 @@ Google's Gemma 4 based multimodal embedding model (`embedding_gemma2`, 768 dimen
 
 CPU and Vulkan agree exactly. The OpenVINO backend's results are wrong: unrelated pairs score as high as related ones, matching the backend's documented limited embedding support.
 
+## 🙂 Face login: Gaze on the NPU
+
+[Gaze](https://github.com/GunduLabs/gaze) 0.3.9 with the IR camera, `gaze doctor --benchmark`, measured on 2026-10-11, plugged in, `xps-ptl-balanced` profile. The NPU path is onnxruntime 1.30.0 with the OpenVINO execution provider and OpenVINO 2026.4.1 from this repository, onnx 1.22.0-2.
+
+| Model | CPU avg (p95) | NPU avg (p95) | Speedup |
+| --- | ---: | ---: | ---: |
+| Face detector | 10.0 ms (25.4) | 0.6 ms (0.7) | 16x |
+| Face recognizer, IR | 22.1 ms (30.2) | 2.6 ms (2.7) | 8.5x |
+| Face recognizer, RGB | 19.6 ms (31.7) | 2.5 ms (2.7) | 8x |
+| Liveness (MiniFASNet) | 3.1 ms (4.9) | 1.8 ms (1.9) | 1.7x |
+
+A face login frame (detector plus IR recognizer) takes about 3 ms on the NPU against about 32 ms on the CPU. The NPU is also steady: its p95 stays within 0.2 ms of the average, while the CPU's p95 is 2 to 3 times its average. Face unlock and the photo rejection test behave the same on both. Setup in [findings](findings.md#ir-camera-himax-hm1092).
+
 ## 🐞 Problems found
 
 | | Problem | Status |
@@ -95,6 +109,7 @@ CPU and Vulkan agree exactly. The OpenVINO backend's results are wrong: unrelate
 | 🔧 | **Gemma 4 in OpenVINO GenAI aborts** with `_GLIBCXX_ASSERTIONS`: an out of bounds index in `ov::ITensor::copy_to`, called from GenAI's `ModelRunner::forward`. The PyPI build has no assertions and runs it. Upstream as [openvino#38246](https://github.com/openvinotoolkit/openvino/issues/38246). | Fixed in openvino 2026.4.1-3 with the upstream fix from [openvino#38670](https://github.com/openvinotoolkit/openvino/pull/38670) |
 | 🐛 | **llama.cpp OpenVINO backend**: wrong embeddings for embeddinggemma-2, no MXFP4, and whisper decoding fails on a `Slice` node ("Axis 3 out of the tensor rank range"). | Report upstream |
 | 🐛 | **NPU compile of Qwen3.5 and Gemma 4** (OpenVINO GenAI) never finishes. | Report upstream to OpenVINO |
+| 🔧 | **onnxruntime's OpenVINO provider aborts on the NPU** with `File already exists in database: onnx/onnx-ml.proto`: our onnx 1.22 build put the ONNX protos in both `libonnx` and `libonnx_proto`, and the NPU path loads both. Found with Gaze. | Fixed in onnx 1.22.0-2 (PR #25): libonnx links libonnx_proto |
 | 📝 | `llama-bench` with the OpenVINO backend needs `-fa 1`, and the device comes from `GGML_OPENVINO_DEVICE`, not `-dev`. | Documented here |
 | 📝 | llama.cpp's default thread count is slow on this CPU (4 P-cores, 8 E-cores, 4 LP E-cores): Qwen3.5 4B generates 12.5 tokens/s by default and 22.9 with `-t 8`. | Use `-t 8` for generation |
 | 📝 | `embeddinggemma-2` needs transformers 5.19, but optimum-intel 2.2 caps transformers below 5.6, so it cannot be converted to OpenVINO IR yet. | Waiting for optimum-intel |

@@ -14,7 +14,8 @@
   <a href="https://fedoraproject.org"><img alt="Fedora 45" src="https://img.shields.io/badge/Fedora-45-51A2DA?logo=fedora&amp;logoColor=white"></a>
   <a href="https://kde.org/plasma-desktop/"><img alt="KDE Plasma 6.7" src="https://img.shields.io/badge/KDE%20Plasma-6.7-1D99F3?logo=kde&amp;logoColor=white"></a>
   <a href="packages/openvino"><img alt="OpenVINO 2026.4.1 with NPU" src="https://img.shields.io/badge/OpenVINO-2026.4.1%20with%20NPU-6D28D9?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOC44NSAxOC44OCI+PHBhdGggZD0iTTEyLjkxMTcgNy45NjY1MkMxMi42Njc1IDguNDY2MTcgMTIuMTY2MyA4LjgxMzY5IDExLjU2MzMgOC44MTM2OUMxMC43MTcyIDguODEzNjkgMTAuMDU4MyA4LjEyNjI5IDEwLjA1ODMgNy4yODU3MkMxMC4wNTgzIDYuNjc4MiAxMC40MDQ4IDYuMTUyMDggMTAuOTE1MSA1LjkwNDhDMTAuNDU4NyA1LjcwNzM4IDkuOTUzOTUgNS41OTc0NyA5LjQxODE3IDUuNTk3NDdDNy4zMDIgNS41OTc0NyA1LjY1NDk3IDcuMzI5OTkgNS42NTQ5NyA5LjQzMTlDNS42NTQ5NyAxMS41MzM4IDcuMzAyNTEgMTMuMjUxNiA5LjQxODE3IDEzLjI1MTZDMTEuNTQ4MSAxMy4yNTE2IDEzLjE5NTYgMTEuNTMzMyAxMy4xOTU2IDkuNDMxOUMxMy4xOTUxIDguOTEzOTMgMTMuMDkzOCA4LjQxOTM2IDEyLjkxMTcgNy45NjY1MloiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTAgOS40MzdDMCA0LjIyNzc1IDQuMjAyODEgMCA5LjQxMjA2IDBDMTQuNjQ2OCAwIDE4Ljg0OTEgNC4yMjc3NSAxOC44NDkxIDkuNDM3QzE4Ljg0OTEgMTQuNjQ2MiAxNC42NDYyIDE4Ljg3NCA5LjQxMjA2IDE4Ljg3NEM0LjIwMjgxIDE4Ljg3NCAwIDE0LjY0NjIgMCA5LjQzN1pNMTYuMTA2IDkuNDM3QzE2LjEwNiA1LjcxMjQ3IDEzLjE4NyAyLjY0MjI4IDkuNDEyMDYgMi42NDIyOEM1LjY2MjYxIDIuNjQyMjggMi43NDMwMiA1LjcxMjQ3IDIuNzQzMDIgOS40MzdDMi43NDMwMiAxMy4xNjE1IDUuNjYyMSAxNi4yMDYzIDkuNDEyMDYgMTYuMjA2M0MxMy4xODcgMTYuMjA2OCAxNi4xMDYgMTMuMTYxNSAxNi4xMDYgOS40MzdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=="></a>
-  <a href="packages/kernel"><img alt="Kernel 7.2.9-300.2.dellptl" src="https://img.shields.io/badge/kernel-7.2.9--300.2.dellptl-FCC624?logo=linux&amp;logoColor=black"></a>
+  <a href="packages/kernel"><img alt="Kernel 7.2.9-301.2.dellptl" src="https://img.shields.io/badge/kernel-7.2.9--301.2.dellptl-FCC624?logo=linux&amp;logoColor=black"></a>
+  <a href="docs/findings.md#ir-camera-himax-hm1092"><img alt="IR face unlock" src="https://img.shields.io/badge/IR%20face%20unlock-working-2ea44f?logo=linux&amp;logoColor=white"></a>
   <img alt="Secure Boot on" src="https://img.shields.io/badge/Secure%20Boot-on-2ea44f">
 </p>
 
@@ -44,12 +45,12 @@ Most of it is not specific to this laptop. The camera, NPU and AI packages shoul
 
 | | Part | Details |
 | --- | --- | --- |
-| 💻 | **Model** | Dell XPS 16 DA16260, board `0VRKYR`, subsystem `1028:0dba`, BIOS 1.8.2 (2026-05-22) |
+| 💻 | **Model** | Dell XPS 16 DA16260, board `0VRKYR`, subsystem `1028:0dba`, BIOS 1.11.0 (2026-08-04) |
 | 🧠 | **CPU** | Intel Core Ultra X7 358H (Panther Lake H, 16 cores, up to 4.8 GHz) |
 | 🎮 | **Graphics** | Intel Arc B390 (`8086:b080`), `xe` driver, Mesa 26.2.4 |
 | ⚡ | **NPU** | Intel AI Boost (`8086:b03e`) |
 | 🖥️ | **Display** | LG OLED, 3200x2000, 20-120 Hz VRR |
-| 📷 | **Camera** | IPU7.5 (`8086:b05d`) with OV08X40 RGB and Himax HM1092 IR, behind the Synaptics SVP7500 vision chip (`06cb:0701`) |
+| 📷 | **Camera** | IPU7.5 (`8086:b05d`): OV08X40 RGB behind the Synaptics SVP7500 vision chip (`06cb:0701`), Himax HM1092 IR straight on CSI2 port 2 |
 | 🧮 | **Memory** | 32 GB |
 | 💾 | **Storage** | SK hynix PVC10 NVMe, 1 TB |
 | 📶 | **Wireless** | Intel CNVi Wi-Fi (`8086:e440`) and Bluetooth |
@@ -57,7 +58,7 @@ Most of it is not specific to this laptop. The camera, NPU and AI packages shoul
 | 🖱️ | **Touchpad** | `2C2F:0033` |
 | 🔌 | **Ports** | 3 USB-C with Thunderbolt 4 / USB4 |
 | 🔋 | **Battery** | BYD, 68.6 Wh |
-| 🐧 | **Software** | Fedora 45, KDE Plasma 6.7.5, kernel 7.2.9-300.2.dellptl |
+| 🐧 | **Software** | Fedora 45, KDE Plasma 6.7.5, kernel 7.2.9-301.2.dellptl |
 
 <details>
 <summary>📋 Full <code>lspci</code></summary>
@@ -110,7 +111,7 @@ Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 
 ## Hardware status
 
-![Working](https://img.shields.io/badge/working-15-2ea44f?style=for-the-badge) ![Blocked](https://img.shields.io/badge/blocked-2-cf222e?style=for-the-badge)
+![Working](https://img.shields.io/badge/working-16-2ea44f?style=for-the-badge) ![Blocked](https://img.shields.io/badge/blocked-1-cf222e?style=for-the-badge)
 
 ✅ working &nbsp; ⚠️ partly working &nbsp; ❌ not working &nbsp; ⛔ blocked upstream
 
@@ -118,7 +119,7 @@ Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 
 | Component | Stock Fedora 45 | With this repo | How |
 | --- | :---: | :---: | --- |
-| 🐧 **Fedora kernel 7.2.9 with Panther Lake fixes** | ⚠️ no display and PSR fixes | ✅ | `kernel` 7.2.9-300.2.dellptl from the COPR, Secure Boot stays on |
+| 🐧 **Fedora kernel 7.2.9 with Panther Lake fixes** | ⚠️ no display and PSR fixes | ✅ | `kernel` 7.2.9-301.2.dellptl from the COPR, Secure Boot stays on |
 
 ### 🖥️ Display and graphics
 
@@ -134,7 +135,7 @@ Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 | Component | Stock Fedora 45 | With this repo | How |
 | --- | :---: | :---: | --- |
 | 🎥 **Camera (OV08X40 through IPU7)** | ❌ raw nodes only | ✅ | `intel-ipu7-kmod`, `intel-ipu7-camera` |
-| 🙂 **IR camera (HM1092) and face login** | ❌ no driver | ⛔ | the camera bridge does not pass IR frames yet |
+| 🙂 **IR camera (HM1092) and face login** | ❌ no driver | ✅ | `kernel` 301.2 and `intel-ipu7-kmod` 1.0.6-3, `dell-xps-ptl-config` 1.6 relay, [Gaze](https://github.com/GunduLabs/gaze) on the KDE lock screen |
 
 ### 🧠 AI and NPU
 
@@ -244,6 +245,37 @@ The camera appears as "Intel MIPI Camera" after a reboot.
 </details>
 
 <details>
+<summary>🙂 <b>IR camera and face login</b>: HM1092 IR sensor, Gaze face unlock on the KDE lock screen</summary>
+
+Needs kernel `7.2.9-301.2.dellptl` or newer, `intel-ipu7-kmod` 1.0.6-3 and `dell-xps-ptl-config` 1.6. The relay in `dell-xps-ptl-config` turns the IR sensor into `/dev/video42` "Dell IR Camera" and switches the sensor and the IR light on only while a face login tool reads it.
+
+```bash
+sudo dnf copr enable gundulabs/gaze
+sudo dnf install gaze gaze-kde
+sudo systemctl enable --now gazed
+```
+
+Then set the IR camera in `/etc/gaze/config.toml`, restart `gazed` and enroll:
+
+```toml
+[cameras]
+rgb = ""
+ir = "/dev/video42"
+emitter_enabled = false
+```
+
+```bash
+sudo systemctl restart gazed
+gaze doctor
+gaze add-face default
+gaze auth --verbose
+```
+
+`gaze-kde` adds face unlock to the KDE lock screen (`/etc/pam.d/kde-smartcard`); the password field keeps working. `sudo gaze-kde-pam disable` turns it off. See [findings](docs/findings.md#ir-camera-himax-hm1092).
+
+</details>
+
+<details>
 <summary>🎬 <b>Video decode</b>: H.264 and HEVC on the Arc GPU</summary>
 
 ```bash
@@ -317,7 +349,7 @@ sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3
 | [`intel-ipu7-kmod`](packages/intel-ipu7-kmod)                                          | IPU7 camera drivers as an akmod                                                           |
 | [`intel-ipu7-camera`](packages/intel-ipu7-camera)                                      | Camera HAL, firmware, GStreamer source and the relay service for apps                     |
 | [`intel-npu-driver`](packages/intel-npu-driver)                                        | NPU driver 1.38 and Intel's NPU compiler                                                  |
-| [`dell-xps-ptl-config`](packages/dell-xps-ptl-config)                                  | thermald fix, kernel signing hook, display option and power profiles                      |
+| [`dell-xps-ptl-config`](packages/dell-xps-ptl-config)                                  | thermald fix, kernel signing hook, display option, power profiles and the IR camera relay |
 | [`plasma-light-and-presence`](https://github.com/onuralpszr/plasma-light-and-presence) | Ambient light brightness with a System Settings page and a Plasma widget (own repository) |
 
 **AI stack** (published in the COPR)
@@ -342,7 +374,7 @@ Live status of the last COPR build of each package.
 | `kernel` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![kernel](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/kernel/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/kernel/) | Fedora kernel with the XPS 16 patches |
 | `intel-ipu7-kmod` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![intel-ipu7-kmod](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/intel-ipu7-kmod/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/intel-ipu7-kmod/) | IPU7 camera drivers (akmod) |
 | `intel-ipu7-camera` | [GitHub release](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-4.dellptl) | [![intel-ipu7-camera](https://img.shields.io/github/v/release/onuralpszr/xps-fedora?filter=intel-ipu7-camera-*&label=release)](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-4.dellptl) | IPU7 camera HAL, firmware and relay service |
-| `dell-xps-ptl-config` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![dell-xps-ptl-config](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/) | thermald, power profiles, kernel signing |
+| `dell-xps-ptl-config` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![dell-xps-ptl-config](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/) | thermald, power profiles, kernel signing, IR camera relay |
 | `plasma-light-and-presence` | [plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/) | [![plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/package/plasma-light-and-presence/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/package/plasma-light-and-presence/) | ambient light brightness for Plasma |
 | `intel-npu-driver` | [intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | [![intel-npu-driver](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/intel-npu-driver/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/intel-npu-driver/) | NPU driver and compiler |
 | `openvino` | [intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | [![openvino](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/) | OpenVINO with the NPU plugin |

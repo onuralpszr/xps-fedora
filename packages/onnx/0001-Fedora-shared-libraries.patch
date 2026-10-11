@@ -8,9 +8,13 @@ allows the Python extension with a static onnx; restore the 1.21 behaviour:
 default visibility, SOVERSION, the extension linking the shared library and
 installing into PY_SITEARCH. Replaces 0001, 0002 (library part) and 0005.
 
+libonnx links the shared libonnx_proto instead of embedding its objects,
+so each ONNX proto file is registered once even when both libraries are
+loaded (onnxruntime with OpenVINO's ONNX frontend).
+
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -510,6 +510,8 @@
+@@ -510,25 +510,31 @@
  # system rejects a protoc custom command shared across several targets.
  add_library(onnx_proto ${ONNX_PROTO_SRCS})
  add_onnx_global_defines(onnx_proto)
@@ -19,8 +23,18 @@ installing into PY_SITEARCH. Replaces 0001, 0002 (library part) and 0005.
  add_dependencies(onnx_proto onnx_proto_gen)
  
  # Core library. Hand-written sources come from target_sources(onnx ...) in the
-@@ -517,18 +519,13 @@
- add_library(onnx $<TARGET_OBJECTS:onnx_proto>)
+ # subdirectories; the protobuf objects are pulled in from onnx_proto.
+-add_library(onnx $<TARGET_OBJECTS:onnx_proto>)
++if(BUILD_SHARED_LIBS)
++  # Fedora: link the shared libonnx_proto instead of copying its objects into
++  # libonnx. With both copies, a process that loads libonnx (onnxruntime) and
++  # libonnx_proto (OpenVINO's ONNX frontend) registers onnx-ml.proto twice and
++  # protobuf aborts ("File already exists in database").
++  add_library(onnx)
++  target_link_libraries(onnx PUBLIC onnx_proto)
++else()
++  add_library(onnx $<TARGET_OBJECTS:onnx_proto>)
++endif()
  add_subdirectory(onnx)
  add_dependencies(onnx onnx_proto)
 -set_target_properties(onnx PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -42,7 +56,7 @@ installing into PY_SITEARCH. Replaces 0001, 0002 (library part) and 0005.
    # find system nanobind
    if(NOT DEFINED nanobind_DIR OR "${nanobind_DIR}" STREQUAL "")
      execute_process(
-@@ -568,8 +565,14 @@
+@@ -568,8 +574,14 @@
    # Force-load the whole (static) archive so the operator schemas' static
    # initializers are not dropped as apparently-unused. $<LINK_LIBRARY:WHOLE_ARCHIVE,...>
    # is the portable --whole-archive / -force_load / /WHOLEARCHIVE spelling.
@@ -59,7 +73,7 @@ installing into PY_SITEARCH. Replaces 0001, 0002 (library part) and 0005.
  endif()
  
  add_onnx_compile_options(onnx_proto)
-@@ -652,8 +655,13 @@
+@@ -652,8 +664,13 @@
  endif()
  
  if(ONNX_BUILD_PYTHON)

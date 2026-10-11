@@ -23,7 +23,7 @@
 Name:           %{prjname}-kmod
 Summary:        Kernel module (kmod) for %{prjname}
 Version:        1.0.6
-Release:        2.dellptl%{?dist}
+Release:        3.dellptl%{?dist}
 License:        GPL-2.0-only
 URL:            https://github.com/intel/ipu7-drivers
 
@@ -31,6 +31,8 @@ Source0:        https://github.com/intel/ipu7-drivers/archive/%{drivers_commit}/
 
 Patch0:         0004-ipu7-psys-register-device-bus.patch
 Patch1:         0005-ipu7-psys-harden-userptr-pinning.patch
+# Y10 capture for the HM1092 IR sensor (linux-media 2026-10-10, ported from staging)
+Patch2:         0006-ipu7-isys-add-10-bit-greyscale-capture-formats.patch
 # Fedora enables mainline lt6911uxe; hide LT6911 from the ACPI pdata build
 Patch101:       0101-Fedora-hide-LT6911-from-IPU-ACPI-build.patch
 
@@ -53,6 +55,7 @@ kmodtool --target %{_target_cpu} --repo rpmfusion --kmodname %{prjname} %{?build
 (cd ipu7-drivers-%{drivers_commit}
 %patch -P0 -p1 -F0
 %patch -P1 -p1 -F0
+%patch -P2 -p1 -F0
 %patch -P101 -p1
 )
 
@@ -74,6 +77,9 @@ done
 %{?akmod_install}
 
 %changelog
+* Sat Oct 10 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-3.dellptl
+- Add Y10 and Y10P capture formats so the HM1092 IR sensor can be captured
+
 * Tue Oct 06 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-2.dellptl
 - Build with BUILD_INTEL_IPU_ACPI=1: without it isys never binds the
   OV08X40 ("no subdevice info provided") and the camera stays black

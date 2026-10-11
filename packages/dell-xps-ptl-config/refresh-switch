@@ -1,0 +1,97 @@
+#!/bin/bash
+# Run the built-in panel at its high refresh rate on AC power and a lower one
+# on battery. The dell-xps-ptl-refresh user service runs this in the Plasma
+# session: it applies the right rate at login, then again on every UPower
+# OnBattery change, which arrives over D-Bus (no polling).
+#
+# Settings, per user, in ~/.config/dell-xps-ptl/refresh.conf:
+#   ENABLED=true      false leaves the refresh rate alone
+#   AC_HZ=120         rate on AC power
+#   BATTERY_HZ=60     rate on battery
+#   OUTPUT=eDP-1      panel to switch (default: the first eDP output)
+# After editing, run: systemctl --user restart dell-xps-ptl-refresh
+#
+# Usage: refresh-switch              follow power changes (the service)
+#        refresh-switch ac|battery   apply one rate now
+#        refresh-switch status       print the settings and current mode
+set -euo pipefail
+
+conf=${XDG_CONFIG_HOME:-$HOME/.config}/dell-xps-ptl/refresh.conf
+ENABLED=true
+AC_HZ=120
+BATTERY_HZ=60
+OUTPUT=
+if [[ -r $conf ]]; then
+  # shellcheck source=/dev/null
+  . "$conf"
+fi
+
+outputs() {
+  kscreen-doctor -o 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g'
+}
+
+panel() {
+  if [[ -n $OUTPUT ]]; then
+    echo "$OUTPUT"
+  else
+    outputs | awk '/^Output:/ && $3 ~ /^eDP/ {print $3; exit}'
+  fi
+}
+
+on_battery() {
+  busctl get-property org.freedesktop.UPower /org/freedesktop/UPower \
+    org.freedesktop.UPower OnBattery | grep -q true
+}
+
+current_mode() {
+  outputs | awk -v o="$1" '/^Output:/ {show = ($3 == o)} show' |
+    grep -oE '[0-9]+:[0-9]+x[0-9]+@[0-9.]+\*' | head -1
+}
+
+# Switch to the mode with the same resolution as now and the wanted rate
+apply() {
+  local hz=$1 out info current size id
+  out=$(panel)
+  [[ -n $out ]] || return 0
+  info=$(outputs | awk -v o="$out" '/^Output:/ {show = ($3 == o)} show')
+  current=$(grep -oE '[0-9]+:[0-9]+x[0-9]+@[0-9.]+\*' <<< "$info" | head -1)
+  [[ -n $current ]] || return 0
+  size=$(sed -E 's/^[0-9]+:([0-9]+x[0-9]+)@.*/\1/' <<< "$current")
+  if [[ $current =~ @${hz}\. ]]; then
+    return 0
+  fi
+  id=$(grep -oE "[0-9]+:${size}@${hz}\.[0-9]+" <<< "$info" | head -1 | cut -d: -f1)
+  if [[ -z $id ]]; then
+    echo "no ${size}@${hz} mode on $out" >&2
+    return 0
+  fi
+  echo "$out: ${size} at ${hz} Hz"
+  kscreen-doctor "output.$out.mode.$id" >/dev/null
+}
+
+update() {
+  [[ $ENABLED == true ]] || return 0
+  if on_battery; then apply "$BATTERY_HZ"; else apply "$AC_HZ"; fi
+}
+
+case ${1:-} in
+  ac) apply "$AC_HZ"; exit ;;
+  battery) apply "$BATTERY_HZ"; exit ;;
+  status)
+    out=$(panel)
+    power=ac
+    if on_battery; then power=battery; fi
+    printf 'enabled=%s\nac_hz=%s\nbattery_hz=%s\noutput=%s\npower=%s\nmode=%s\n' \
+      "$ENABLED" "$AC_HZ" "$BATTERY_HZ" "$out" "$power" \
+      "$(current_mode "$out" | sed 's/^[0-9]*://; s/\*$//')"
+    exit ;;
+esac
+
+update
+gdbus monitor --system --dest org.freedesktop.UPower --object-path /org/freedesktop/UPower |
+  while read -r line; do
+    if [[ $line == *"'OnBattery'"* ]]; then
+      sleep 1
+      update
+    fi
+  done

@@ -1,0 +1,13 @@
+[Unit]
+Description=Panel refresh rate follows the power source (high on AC, lower on battery)
+Documentation=https://github.com/onuralpszr/xps-fedora
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/libexec/dell-xps-ptl/refresh-switch
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

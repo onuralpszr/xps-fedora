@@ -10,9 +10,12 @@
 #   suspend and the camera then opens only once per boot
 # - display: a user service runs the panel at 120 Hz on AC and 60 Hz on
 #   battery (settings in ~/.config/dell-xps-ptl/refresh.conf)
+# - IR camera: relay the HM1092 IR sensor (Y10, root only raw node) into
+#   /dev/video42 as GREY for face login, sensor and IR LED on only while a
+#   client streams
 
 Name:           dell-xps-ptl-config
-Version:        1.5
+Version:        1.6
 Release:        1%{?dist}
 Summary:        Fedora configuration for Dell XPS on Intel Panther Lake
 License:        MIT
@@ -31,6 +34,9 @@ Source8:        tuned-xps-ptl-performance.conf
 Source9:        90-dell-xps-ptl-cvs.rules
 Source10:       refresh-switch
 Source11:       dell-xps-ptl-refresh.service
+Source12:       ir-relay
+Source13:       dell-xps-ptl-ir-relay.service
+Source14:       70-dell-xps-ptl-ir-relay.rules
 
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  systemd-udev
@@ -47,6 +53,10 @@ Requires:       python3
 Requires:       libkscreen
 Requires:       glib2
 Requires:       systemd
+# ir-relay: media-ctl and v4l2-ctl, numpy, v4l2loopback-ctl
+Requires:       v4l-utils
+Requires:       python3-numpy
+Requires:       v4l2loopback
 
 %description
 thermald drop-in that waits for RAPL, coretemp and the INT3400 DPTF sensors
@@ -57,7 +67,10 @@ xe display driver without PSR2 selective fetch (PSR1), which is stable on the
 XPS LG OLED panel. Power profiles drive Dell's thermal modes and the SoC
 power slider through xps-ptl-* tuned profiles. A udev rule keeps the CVS
 camera vision chip awake so the camera opens more than once per boot. A user
-service switches the panel to 120 Hz on AC power and 60 Hz on battery.
+service switches the panel to 120 Hz on AC power and 60 Hz on battery. An
+IR camera relay turns the HM1092 IR sensor into /dev/video42 ("Dell IR
+Camera", 8-bit gray) for face login, with the sensor and IR LED on only
+while a client streams.
 
 %prep
 
@@ -72,6 +85,9 @@ install -Dm755 %{SOURCE4} %{buildroot}%{_libexecdir}/dell-xps-ptl/ppd-mapping
 install -Dm644 %{SOURCE9} %{buildroot}%{_udevrulesdir}/90-dell-xps-ptl-cvs.rules
 install -Dm755 %{SOURCE10} %{buildroot}%{_libexecdir}/dell-xps-ptl/refresh-switch
 install -Dm644 %{SOURCE11} %{buildroot}%{_userunitdir}/dell-xps-ptl-refresh.service
+install -Dm755 %{SOURCE12} %{buildroot}%{_libexecdir}/dell-xps-ptl/ir-relay
+install -Dm644 %{SOURCE13} %{buildroot}%{_unitdir}/dell-xps-ptl-ir-relay.service
+install -Dm644 %{SOURCE14} %{buildroot}%{_udevrulesdir}/70-dell-xps-ptl-ir-relay.rules
 install -d %{buildroot}%{_userpresetdir}
 echo 'enable dell-xps-ptl-refresh.service' > %{buildroot}%{_userpresetdir}/80-dell-xps-ptl.preset
 # profile, Dell thermal mode, SoC power slider
@@ -103,11 +119,17 @@ if [ $1 -gt 1 ] && [ -e %{_localstatedir}/lib/rpm-state/%{name}/refresh-new ]; t
     systemctl --no-reload preset --global dell-xps-ptl-refresh.service || :
 fi
 rm -rf %{_localstatedir}/lib/rpm-state/%{name}
+# The udev rule starts the IR relay when hm1092 binds at boot; start it now
+# if the sensor is already bound, restart it on upgrade
+if [ -e /sys/bus/i2c/drivers/hm1092/i2c-HIMX1092:00 ]; then
+    systemctl restart dell-xps-ptl-ir-relay.service || :
+fi
 %{_libexecdir}/dell-xps-ptl/ppd-mapping xps || :
 systemctl try-restart tuned.service tuned-ppd.service || :
 
 %preun
 %systemd_user_preun dell-xps-ptl-refresh.service
+%systemd_preun dell-xps-ptl-ir-relay.service
 if [ $1 -eq 0 ]; then
     %{_libexecdir}/dell-xps-ptl/ppd-mapping default || :
 fi
@@ -131,8 +153,15 @@ fi
 %{_udevrulesdir}/90-dell-xps-ptl-cvs.rules
 %{_userunitdir}/dell-xps-ptl-refresh.service
 %{_userpresetdir}/80-dell-xps-ptl.preset
+%{_unitdir}/dell-xps-ptl-ir-relay.service
+%{_udevrulesdir}/70-dell-xps-ptl-ir-relay.rules
 
 %changelog
+* Sun Oct 11 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.6-1
+- Add the dell-xps-ptl-ir-relay service: the HM1092 IR sensor as
+  /dev/video42 "Dell IR Camera" (GREY 648x368) for face login, sensor and
+  IR LED on only while a client streams; started by udev when hm1092 binds
+
 * Fri Oct 09 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.5-1
 - Add the dell-xps-ptl-refresh user service: 120 Hz on AC power, 60 Hz on
   battery, configurable per user in ~/.config/dell-xps-ptl/refresh.conf

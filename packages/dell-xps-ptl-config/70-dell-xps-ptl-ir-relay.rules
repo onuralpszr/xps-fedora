@@ -1,0 +1,5 @@
+# Start the IR relay once hm1092 has bound to the sensor. At boot the driver
+# binds after camera-init.service loads it, so the relay follows the bind
+# event instead of a boot target; stop it again if the driver goes away.
+ACTION=="bind", SUBSYSTEM=="i2c", KERNEL=="i2c-HIMX1092:00", DRIVER=="hm1092", RUN+="/usr/bin/systemctl --no-block start dell-xps-ptl-ir-relay.service"
+ACTION=="unbind", SUBSYSTEM=="i2c", KERNEL=="i2c-HIMX1092:00", RUN+="/usr/bin/systemctl --no-block stop dell-xps-ptl-ir-relay.service"

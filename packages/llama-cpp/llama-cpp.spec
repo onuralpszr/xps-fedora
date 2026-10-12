@@ -47,7 +47,7 @@ Name:           llama-cpp
 # This is the main license
 
 License:        MIT AND Apache-2.0 AND LicenseRef-Fedora-Public-Domain
-Version:        b11513
+Version:        b11574
 Release:        1%{?dist}
 
 URL:            https://github.com/ggml-org/llama.cpp
@@ -414,6 +414,9 @@ export LD_LIBRARY_PATH=$PWD/%{_vpath_builddir}/bin
 %endif
 
 %changelog
+* Mon Oct 12 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11574-1
+- Update to b11574
+
 * Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11513-1
 - Update to b11513
 - Turn ROCm off by default; llama-cpp-vulkan replaces llama-cpp-hip

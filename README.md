@@ -126,7 +126,7 @@ Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 | Component | Stock Fedora 45 | With this repo | How |
 | --- | :---: | :---: | --- |
 | 🌈 **VRR 20-120 Hz** | ❌ not detected | ✅ | `kernel` patch, KDE VRR set to Automatic |
-| ✨ **Panel self refresh** | ⚠️ glitches, link errors | ✅ PSR1 | `kernel` ALPM quirk and `xe.enable_psr2_sel_fetch=0` |
+| ✨ **Panel self refresh** | ⚠️ glitches, link errors | ✅ PSR2 | `kernel` display fixes, PSR2 with selective fetch and Early Transport |
 | 🎬 **Video decode H.264 and HEVC** | ⚠️ VP9 and AV1 only | ✅ | RPM Fusion `intel-media-driver` |
 | 🔌 **External monitor over USB-C** | ✅ | ✅ | works; the top refresh rate depends on the dock or adapter, see [findings](docs/findings.md) |
 

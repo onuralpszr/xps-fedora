@@ -9,7 +9,7 @@ What was broken on stock Fedora 45 on the Dell XPS 16 DA16260, how it was tracke
 | | Area | Status | Fix |
 | --- | --- | :---: | --- |
 | 🌈 | [VRR](#display-vrr) | ✅ | kernel patch 0029 reads the DisplayID Adaptive Sync range |
-| ✨ | [Panel self refresh](#display-panel-self-refresh) | ✅ | ALPM fast wake quirk (0034) and PSR1 through `xe.enable_psr2_sel_fetch=0` |
+| ✨ | [Panel self refresh](#display-panel-self-refresh) | ✅ | PSR2 with selective fetch and Early Transport, driver defaults (`dell-xps-ptl-config` 1.7) |
 | 🔐 | [Secure Boot](#secure-boot) | ✅ | kernel-install hook signs with the akmods key |
 | 📷 | [Camera](#camera-ipu7) | ✅ | `intel-ipu7-kmod` with ACPI, `intel-ipu7-camera`, `v4l2-relayd` |
 | 🙂 | [IR camera](#ir-camera-himax-hm1092) | ✅ | kernel 301.2: 19.2 MHz hm1092, ipu-bridge entry; Gaze face unlock on the lock screen |
@@ -39,7 +39,16 @@ The panel's `vrr_range` was `0/0`. The EDID has no legacy range descriptor, only
 
 ## Display: panel self refresh
 
-The current setup is **PSR1**: the panel refreshes itself on a static screen and gets full frames on updates. It runs with 0 errors and no glitches. Revisit PSR2 when the selective update bug (drm/xe #7521) is fixed.
+The current setup is **PSR2 with selective fetch and Early Transport**, the deepest mode this panel offers, with the driver's defaults (`enable_psr=-1`). `dell-xps-ptl-config` 1.7 no longer sets `enable_psr2_sel_fetch=0`. The panel has no Panel Replay (`Panel Replay = no`), so there is nothing further to enable.
+
+```text
+$ sudo head -7 /sys/kernel/debug/dri/0/i915_edp_psr_status
+Sink support: PSR = yes [0x04] (Early Transport), Panel Replay = no, ...
+PSR mode: PSR2 enabled (Early Transport)
+PSR2 selective fetch: enabled
+```
+
+`[0x04]` is the panel's PSR version byte: 0x03 is PSR2 with Y coordinates, 0x04 adds Early Transport. Updating from 1.6 rebuilds the initramfs; a leftover `/etc/modprobe.d/dell-xps-ptl-xe.conf` from the trial can be deleted.
 
 <details>
 <summary>Panel Replay and the first patch set (0020, 0028)</summary>
@@ -66,6 +75,15 @@ The current setup is **PSR1**: the panel refreshes itself on a static screen and
 - `300.2` is 0020, 0029 and the quirk as **0034**, without 0028, so Panel Replay stays off through the upstream quirk and the display runs PSR2.
 - Result: 0 PSR idle timeouts, DSB poll errors and underruns (hundreds before). But PSR2 selective updates then misbehave exactly as the patch author predicted: UI glitches and a screen that feels frozen.
 - `xe.enable_psr2_sel_fetch=0` fixes that. On display version 20 and later PSR2 needs selective fetch, so this ends up as PSR1 (`PSR mode: PSR1 enabled`, status `SRDENT`). PSR1 does not use ALPM, so the quirk is inactive there but harmless.
+
+</details>
+
+<details>
+<summary>Back to PSR2 (300.3 onwards)</summary>
+
+- The quirk's author withdrew 0034 on 2026-09-23, since fast wake above IO wake is what stops PSR2 selective updates. `300.3` dropped it and added 0035 to 0037 from mainline 7.3.
+- PSR2 trial from 2026-10-09 to 2026-10-12 on `300.3` and `301.2`, with an empty `/etc/modprobe.d/dell-xps-ptl-xe.conf` overriding the package option: no glitches or freezes seen. The journal shows two short bursts of `[PLANE:125:plane 4A] fault` and `[PLANE:35:plane 1A] fault` in four days, one as the polkit dialog opened, with nothing visible on screen. The unmerged intel-gfx series "Fix stale selective fetch enable bit" (2026-09-09) addresses a related stale per-plane fetch state.
+- `dell-xps-ptl-config` 1.7 drops the option, so the driver defaults pick PSR2.
 
 </details>
 

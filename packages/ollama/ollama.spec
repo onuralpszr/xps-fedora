@@ -11,7 +11,7 @@
 %global llama_cpp_tag b11351
 
 Name:           ollama
-Version:        0.40.1
+Version:        0.40.3
 Release:        1%{?dist}
 Summary:        Get up and running with large language models locally
 
@@ -135,6 +135,9 @@ test -e %{buildroot}%{_prefix}/lib/ollama/vulkan/libggml-vulkan.so
 %{_prefix}/lib/ollama/vulkan
 
 %changelog
+* Mon Oct 12 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 0.40.3-1
+- Update to 0.40.3, still on llama.cpp b11351
+
 * Thu Oct 08 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 0.40.1-1
 - Update to 0.40.1, building Ollama's pinned llama.cpp b11351 with its
   compat patches for the CPU and Vulkan payloads

@@ -3,7 +3,6 @@
 #   without thermald
 # - kernel-install hook: sign *.dellptl* kernels with the akmods MOK key so
 #   they boot with Secure Boot on
-# - xe: PSR1 instead of PSR2 selective fetch (glitches on the LG OLED)
 # - power profiles: KDE's slider drives Dell thermal modes (dell-pc) and the
 #   SoC power slider, which the legacy platform_profile can't reach
 # - camera: keep the CVS vision chip awake, it fails to resume from runtime
@@ -15,7 +14,7 @@
 #   client streams
 
 Name:           dell-xps-ptl-config
-Version:        1.6
+Version:        1.7
 Release:        1%{?dist}
 Summary:        Fedora configuration for Dell XPS on Intel Panther Lake
 License:        MIT
@@ -24,7 +23,6 @@ BuildArch:      noarch
 
 Source0:        thermald-ptl-adaptive.conf
 Source1:        10-sign-dellptl.install
-Source2:        xe-psr.conf
 Source3:        platform-profile
 Source4:        ppd-mapping
 Source5:        tuned-xps-ptl-powersave.conf
@@ -44,7 +42,7 @@ Requires:       thermald
 # Signing hook tools; the key itself comes from `kmodgenca` (akmods)
 Requires:       sbsigntools
 Requires:       openssl
-# initramfs carries xe and modprobe.d options
+# initramfs carried the old xe modprobe.d option
 Requires(posttrans): dracut
 Requires:       tuned
 Requires:       tuned-ppd
@@ -62,15 +60,13 @@ Requires:       v4l2loopback
 thermald drop-in that waits for RAPL, coretemp and the INT3400 DPTF sensors
 before starting (Panther Lake is adaptive-only and otherwise ends up with no
 thermald), and a kernel-install plugin that re-signs locally built
-*.dellptl* kernels with the akmods MOK key for Secure Boot. Also runs the
-xe display driver without PSR2 selective fetch (PSR1), which is stable on the
-XPS LG OLED panel. Power profiles drive Dell's thermal modes and the SoC
-power slider through xps-ptl-* tuned profiles. A udev rule keeps the CVS
-camera vision chip awake so the camera opens more than once per boot. A user
-service switches the panel to 120 Hz on AC power and 60 Hz on battery. An
-IR camera relay turns the HM1092 IR sensor into /dev/video42 ("Dell IR
-Camera", 8-bit gray) for face login, with the sensor and IR LED on only
-while a client streams.
+*.dellptl* kernels with the akmods MOK key for Secure Boot. Power profiles
+drive Dell's thermal modes and the SoC power slider through xps-ptl-* tuned
+profiles. A udev rule keeps the CVS camera vision chip awake so the camera
+opens more than once per boot. A user service switches the panel to 120 Hz
+on AC power and 60 Hz on battery. An IR camera relay turns the HM1092 IR
+sensor into /dev/video42 ("Dell IR Camera", 8-bit gray) for face login, with
+the sensor and IR LED on only while a client streams.
 
 %prep
 
@@ -79,7 +75,6 @@ while a client streams.
 %install
 install -Dm644 %{SOURCE0} %{buildroot}%{_unitdir}/thermald.service.d/ptl-adaptive.conf
 install -Dm755 %{SOURCE1} %{buildroot}%{_prefix}/lib/kernel/install.d/10-sign-dellptl.install
-install -Dm644 %{SOURCE2} %{buildroot}%{_modprobedir}/dell-xps-ptl-xe.conf
 install -Dm755 %{SOURCE3} %{buildroot}%{_libexecdir}/dell-xps-ptl/platform-profile
 install -Dm755 %{SOURCE4} %{buildroot}%{_libexecdir}/dell-xps-ptl/ppd-mapping
 install -Dm644 %{SOURCE9} %{buildroot}%{_udevrulesdir}/90-dell-xps-ptl-cvs.rules
@@ -135,7 +130,7 @@ if [ $1 -eq 0 ]; then
 fi
 
 %posttrans
-# xe is in the initramfs, so its options must be too
+# drop the enable_psr2_sel_fetch=0 option of 1.6 and older from the initramfs
 dracut --regenerate-all --force >/dev/null 2>&1 || :
 
 %postun
@@ -147,7 +142,6 @@ fi
 %files
 %{_unitdir}/thermald.service.d/ptl-adaptive.conf
 %{_prefix}/lib/kernel/install.d/10-sign-dellptl.install
-%{_modprobedir}/dell-xps-ptl-xe.conf
 %{_libexecdir}/dell-xps-ptl/
 %{_prefix}/lib/tuned/profiles/xps-ptl-*/
 %{_udevrulesdir}/90-dell-xps-ptl-cvs.rules
@@ -157,6 +151,10 @@ fi
 %{_udevrulesdir}/70-dell-xps-ptl-ir-relay.rules
 
 %changelog
+* Mon Oct 12 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.7-1
+- Drop enable_psr2_sel_fetch=0: without the withdrawn fast wake quirk the
+  LG OLED runs PSR2 with selective fetch and Early Transport without glitches
+
 * Sun Oct 11 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.6-1
 - Add the dell-xps-ptl-ir-relay service: the HM1092 IR sensor as
   /dev/video42 "Dell IR Camera" (GREY 648x368) for face login, sensor and

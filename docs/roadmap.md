@@ -15,7 +15,7 @@ Principles:
 | Area               | Hardware                                        | Status | Notes / next step                                                                              |
 | ------------------ | ----------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
 | Kernel             | n/a                                             | ✅     | `kernel-*.dellptl` (VRR, ALPM quirk), rebase on each Fedora kernel                             |
-| Display            | LG OLED 3200x2000@120, VRR 20-120               | ⚠️     | PSR1 via `xe.enable_psr2_sel_fetch=0`; PSR2 SU / Panel Replay ⛔ upstream                      |
+| Display            | LG OLED 3200x2000@120, VRR 20-120               | ✅     | PSR2 with selective fetch and Early Transport; the panel has no Panel Replay                   |
 | GPU                | Arc B390 (xe)                                   | ✅     | compute, Level Zero, VA-API (H.264/HEVC/VP9/AV1), Vulkan                                       |
 | NPU                | Intel AI Boost (NPU5)                           | ✅     | driver + compiler 1.38                                                                         |
 | RGB camera         | OV08X40 via IPU7 + CVS                          | ✅     | akmod + HAL; cosmetic green flash on open                                                      |
@@ -38,7 +38,7 @@ Principles:
 
 ## 2. Maximum configuration (target)
 
-**Display:** VRR Automatic; PSR1 now, PSR2/Panel Replay once fixed upstream; auto-brightness from ALS; optional adaptive colour temperature.
+**Display:** VRR Automatic; PSR2 with selective fetch and Early Transport; auto-brightness from ALS; optional adaptive colour temperature.
 
 **Power profiles** (one switch, KDE's power slider via tuned-ppd):
 

@@ -22,7 +22,7 @@ What was broken on stock Fedora 45 on the Dell XPS 16 DA16260, how it was tracke
 | 🔌 | [External displays](#external-displays) | ℹ️ | refresh rate depends on the dock or adapter |
 | 🎬 | [Codecs, fingerprint, haptics](#not-hardware-problems) | ℹ️ | not hardware problems |
 
-The kernel in use is `7.2.9-300.2.dellptl` with patches 0020, 0029, 0031 to 0033 and 0034, plus `xe.enable_psr2_sel_fetch=0` from `dell-xps-ptl-config`.
+The kernel in use is `7.2.10-300.1.dellptl` with the patches in `packages/kernel/series`: 0020, 0029, 0031 to 0033, 0035, 0036, 0038 and 0039.
 
 ## Display: VRR
 

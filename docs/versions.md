@@ -4,7 +4,7 @@ Checked 2026-10-06.
 
 | Package                                   | Ours                                                | Base / upstream                                             | Up to date?                            |
 | ----------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- |
-| `kernel`                                  | 7.2.9-300.dellptl                                   | Fedora f45 latest: `kernel-7.2.9-300`                       | ✅ rebase on each Fedora kernel update |
+| `kernel`                                  | 7.2.10-300.1.dellptl                                | Fedora f45 latest: `kernel-7.2.10-300`                      | ✅ rebase on each Fedora kernel update |
 | `intel-npu-driver` + `intel-npu-compiler` | 1.38.0-0.1.dellptl                                  | intel/linux-npu-driver latest: v1.38.0 (Fedora f45: 1.35.0) | ✅                                     |
 | NPU firmware                              | Fedora `intel-npu-firmware` 20260916                | Intel 1.38 `vpu_50xx_v1.bin`                                | ✅ same build (Aug 20 2026, UD202638)  |
 | IPU7 firmware                             | Fedora `intel-vsc-firmware`                         | ipu7-camera-bins                                            | ✅ same files                          |

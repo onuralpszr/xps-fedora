@@ -17,7 +17,7 @@
 # applied: its author withdrew it on intel-gfx on 2026-09-23, since setting
 # fast wake above IO wake stops PSR2 selective updates
 
-# Panther Lake display fixes from mainline 7.3 (also in omarchy linux-omarchy)
+# Panther Lake display fixes from mainline 7.3 (also in omarchy linux-omarchy);
+# the VRR DC balance one (0037) is in Fedora's 7.2.10
 0035-drm-i915-display-Ensure-a-non-zero-safe-window-from-PTL-onwards.patch
 0036-drm-i915-dsb-shift-delayed-vblank-DSL-wait-start-by-one-scanline.patch
-0037-drm-i915-vrr-Disable-DC-balance-by-default.patch

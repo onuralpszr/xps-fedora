@@ -3,4 +3,4 @@
 # new f45 kernel; bump local_release by hand when the patches change.
 fedora_ref=178a0ac
 fedora_nvr=kernel-7.2.11-300
-local_release=1
+local_release=2

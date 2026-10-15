@@ -21,3 +21,7 @@
 # the VRR DC balance one (0037) is in Fedora's 7.2.10
 0035-drm-i915-display-Ensure-a-non-zero-safe-window-from-PTL-onwards.patch
 0036-drm-i915-dsb-shift-delayed-vblank-DSL-wait-start-by-one-scanline.patch
+
+# 7.2.11 regression: the sof_sdw OT25 DAI switch without its codec side
+# (upstream 86c8360c97f6) leaves the XPS 16 with no sound card at all
+0040-Revert-ASoC-sdw_utils-Switch-CS35L56-57-62-63-to-use-OT25-DAI.patch

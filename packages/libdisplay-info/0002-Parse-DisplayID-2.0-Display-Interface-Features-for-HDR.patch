@@ -1,0 +1,514 @@
+From: Sean Paul <seanpaul@chromium.org>
+Date: Fri, 15 May 2026 00:00:00 +0000
+Subject: [PATCH] libdisplay-info: Parse DisplayID 2.0 Display Interface
+ Features for HDR
+
+Implement parsing for VESA DisplayID 2.0 Display Interface Features Data Block
+(tag 0x26). Extract the supported color space and EOTF combinations bitmask
+and expose it via a new public API.
+
+Update high-level APIs di_info_get_hdr_static_metadata and
+di_info_get_supported_signal_colorimetry to fall back to parsing this
+DisplayID 2.0 block if no CTA-861 blocks are present. This allows seamless
+HDR10 detection for panels that only declare HDR support via DisplayID 2.0.
+
+Signed-off-by: Sean Paul <seanpaul@chromium.org>
+
+Backported to 0.3.0 from libdisplay-info merge request 210
+(https://gitlab.freedesktop.org/emersion/libdisplay-info/-/merge_requests/210),
+not merged upstream yet. The CTA-861 in DisplayID parts it is based on are
+left out, as is its di-edid-decode printing.
+Backported-by: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+---
+diff --git a/displayid2.c b/displayid2.c
+index 612f580..939315e 100644
+--- a/displayid2.c
++++ b/displayid2.c
+@@ -34,6 +34,151 @@ add_failure(struct di_displayid2 *displayid2, const char fmt[], ...)
+ 	va_end(args);
+ }
+ 
++static const struct di_displayid2_color_space_eotf_map std_combos[] = {
++	{
++		.color_space = DI_DISPLAYID2_INTERFACE_COLOR_SPACE_SRGB,
++		.eotf = DI_DISPLAYID2_INTERFACE_EOTF_SRGB
++	},
++	{
++		.color_space = DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT601,
++		.eotf = DI_DISPLAYID2_INTERFACE_EOTF_BT601
++	},
++	{
++		.color_space = DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT709,
++		.eotf = DI_DISPLAYID2_INTERFACE_EOTF_BT1886
++	},
++	{
++		.color_space = DI_DISPLAYID2_INTERFACE_COLOR_SPACE_ADOBE_RGB,
++		.eotf = DI_DISPLAYID2_INTERFACE_EOTF_ADOBE_RGB
++	},
++	{
++		.color_space = DI_DISPLAYID2_INTERFACE_COLOR_SPACE_DCI_P3,
++		.eotf = DI_DISPLAYID2_INTERFACE_EOTF_DCI_P3
++	},
++	{
++		.color_space = DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT2020,
++		.eotf = DI_DISPLAYID2_INTERFACE_EOTF_BT2020
++	},
++	{
++		.color_space = DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT2020,
++		.eotf = DI_DISPLAYID2_INTERFACE_EOTF_SMPTE_ST2084
++	},
++};
++
++#define NUM_STD_COMBOS (sizeof(std_combos) / sizeof(std_combos[0]))
++
++static bool
++parse_display_interface_features_block(
++	struct di_displayid2 *displayid2,
++	struct di_displayid2_data_block *data_block,
++	const uint8_t *data, size_t size)
++{
++	size_t payload_len;
++	struct di_displayid2_display_interface_features *features;
++	uint8_t comb1, num_add, val;
++	size_t comb_count, total_combs, idx, i;
++	struct di_displayid2_color_space_eotf_map *combs;
++	enum di_displayid2_interface_eotf eotf;
++	enum di_displayid2_interface_color_space color_space;
++
++	if (size < 3) {
++		return false;
++	}
++	payload_len = data[2];
++	if (payload_len < 9) {
++		return true;
++	}
++
++	features = &data_block->features;
++
++	features->color_depth.rgb = get_bit_range(data[3], 5, 0);
++	features->color_depth.ycbcr444 = get_bit_range(data[4], 5, 0);
++	features->color_depth.ycbcr422 = get_bit_range(data[5], 4, 0) << 1;
++	features->color_depth.ycbcr420 = get_bit_range(data[6], 4, 0) << 1;
++
++	if (data[7] == 0) {
++		features->ycbcr420_min_pixel_rate = 0.0f;
++	} else {
++		features->ycbcr420_min_pixel_rate = 74.25f * data[7];
++	}
++
++	features->audio.sample_rate_48khz = has_bit(data[8], 5);
++	features->audio.sample_rate_44_1khz = has_bit(data[8], 6);
++	features->audio.sample_rate_32khz = has_bit(data[8], 7);
++
++	comb1 = data[9];
++	num_add = get_bit_range(data[11], 2, 0);
++
++	if (get_bit_range(data[11], 7, 3) != 0) {
++		add_failure(displayid2,
++			    "Display Interface Features: data[11] bits 7:3 "
++			    "are not all 0.");
++	}
++
++	if (payload_len < 9 + (size_t)num_add) {
++		add_failure(displayid2,
++			    "Display Interface Features payload length (%zu) "
++			    "too small for %u additional combinations",
++			    payload_len, num_add);
++		num_add = (uint8_t)(payload_len - 9);
++	}
++
++	comb_count = 0;
++	for (i = 0; i < NUM_STD_COMBOS; i++) {
++		if (has_bit(comb1, i)) {
++			comb_count++;
++		}
++	}
++
++	total_combs = comb_count + num_add;
++	if (total_combs == 0) {
++		features->combinations = NULL;
++		features->combinations_len = 0;
++		return true;
++	}
++
++	combs = calloc(total_combs, sizeof(*combs));
++	if (combs == NULL) {
++		return false;
++	}
++
++	idx = 0;
++	for (i = 0; i < NUM_STD_COMBOS; i++) {
++		if (has_bit(comb1, i)) {
++			combs[idx++] = std_combos[i];
++		}
++	}
++
++	for (i = 0; i < num_add; i++) {
++		val = data[12 + i];
++		eotf = get_bit_range(val, 3, 0);
++		color_space = get_bit_range(val, 7, 4);
++
++		if (color_space > DI_DISPLAYID2_INTERFACE_COLOR_SPACE_CUSTOM) {
++			add_failure(displayid2,
++				    "Display Interface Features: "
++				    "additional comb %zu has "
++				    "invalid color space 0x%x",
++				    i, color_space);
++		}
++		if (eotf > DI_DISPLAYID2_INTERFACE_EOTF_CUSTOM) {
++			add_failure(displayid2,
++				    "Display Interface Features: "
++				    "additional comb %zu has invalid EOTF 0x%x",
++				    i, eotf);
++		}
++
++		combs[idx].eotf = eotf;
++		combs[idx].color_space = color_space;
++		idx++;
++	}
++
++	features->combinations = combs;
++	features->combinations_len = total_combs;
++
++	return true;
++}
++
+ static ssize_t
+ parse_data_block(struct di_displayid2 *displayid2, const uint8_t *data,
+ 		 size_t size)
+@@ -58,13 +203,19 @@ parse_data_block(struct di_displayid2 *displayid2, const uint8_t *data,
+ 		goto error;
+ 
+ 	switch (tag) {
++	case DI_DISPLAYID2_DATA_BLOCK_DISPLAY_INTERFACE_FEATURES:
++		if (!parse_display_interface_features_block(
++				displayid2, data_block, data,
++				data_block_size)) {
++			goto error;
++		}
++		break;
+ 	case DI_DISPLAYID2_DATA_BLOCK_PRODUCT_ID:
+ 	case DI_DISPLAYID2_DATA_BLOCK_DISPLAY_PARAMS:
+ 	case DI_DISPLAYID2_DATA_BLOCK_TYPE_VII_TIMING:
+ 	case DI_DISPLAYID2_DATA_BLOCK_TYPE_VIII_TIMING:
+ 	case DI_DISPLAYID2_DATA_BLOCK_TYPE_IX_TIMING:
+ 	case DI_DISPLAYID2_DATA_BLOCK_DYN_TIMING_RANGE_LIMITS:
+-	case DI_DISPLAYID2_DATA_BLOCK_DISPLAY_INTERFACE_FEATURES:
+ 	case DI_DISPLAYID2_DATA_BLOCK_STEREO_DISPLAY_INTERFACE:
+ 	case DI_DISPLAYID2_DATA_BLOCK_TILED_DISPLAY_TOPO:
+ 	case DI_DISPLAYID2_DATA_BLOCK_CONTAINERID:
+@@ -211,13 +362,24 @@ _di_displayid2_parse(struct di_displayid2 *displayid2, const uint8_t *data,
+ 	return true;
+ }
+ 
++static void
++data_block_destroy(struct di_displayid2_data_block *data_block)
++{
++	if (data_block->tag
++	    == DI_DISPLAYID2_DATA_BLOCK_DISPLAY_INTERFACE_FEATURES) {
++		free((void *)data_block->features.combinations);
++	}
++
++	free(data_block);
++}
++
+ void
+ _di_displayid2_finish(struct di_displayid2 *displayid2)
+ {
+ 	size_t i;
+ 
+ 	for (i = 0; i < displayid2->data_blocks_len; i++)
+-		free(displayid2->data_blocks[i]);
++		data_block_destroy(displayid2->data_blocks[i]);
+ }
+ 
+ int
+@@ -243,3 +405,14 @@ di_displayid2_data_block_get_tag(const struct di_displayid2_data_block *data_blo
+ {
+ 	return data_block->tag;
+ }
++
++const struct di_displayid2_display_interface_features *
++di_displayid2_data_block_get_display_interface_features(
++	const struct di_displayid2_data_block *data_block)
++{
++	if (data_block->tag
++	    != DI_DISPLAYID2_DATA_BLOCK_DISPLAY_INTERFACE_FEATURES) {
++		return NULL;
++	}
++	return &data_block->features;
++}
+diff --git a/include/displayid2.h b/include/displayid2.h
+index 0a85a3b..bd2f347 100644
+--- a/include/displayid2.h
++++ b/include/displayid2.h
+@@ -34,6 +34,9 @@ struct di_displayid2 {
+ 
+ struct di_displayid2_data_block {
+ 	enum di_displayid2_data_block_tag tag;
++
++	/* Used for DI_DISPLAYID2_DATA_BLOCK_DISPLAY_INTERFACE_FEATURES */
++	struct di_displayid2_display_interface_features features;
+ };
+ 
+ bool
+diff --git a/include/libdisplay-info/displayid2.h b/include/libdisplay-info/displayid2.h
+index 97e8e00..e56e92f 100644
+--- a/include/libdisplay-info/displayid2.h
++++ b/include/libdisplay-info/displayid2.h
+@@ -108,4 +108,84 @@ di_displayid2_data_block_get_tag(const struct di_displayid2_data_block *data_blo
+ enum di_displayid2_product_primary_use_case
+ di_displayid2_get_product_primary_use_case(const struct di_displayid2 *displayid2);
+ 
++/**
++ * Supported color depth (bits per primary color) flags.
++ */
++enum di_displayid2_color_depth {
++	DI_DISPLAYID2_COLOR_DEPTH_6 = 1 << 0,
++	DI_DISPLAYID2_COLOR_DEPTH_8 = 1 << 1,
++	DI_DISPLAYID2_COLOR_DEPTH_10 = 1 << 2,
++	DI_DISPLAYID2_COLOR_DEPTH_12 = 1 << 3,
++	DI_DISPLAYID2_COLOR_DEPTH_14 = 1 << 4,
++	DI_DISPLAYID2_COLOR_DEPTH_16 = 1 << 5,
++};
++
++/**
++ * Display interface color space standard.
++ */
++enum di_displayid2_interface_color_space {
++	DI_DISPLAYID2_INTERFACE_COLOR_SPACE_SRGB = 0x1,
++	DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT601 = 0x2,
++	DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT709 = 0x3,
++	DI_DISPLAYID2_INTERFACE_COLOR_SPACE_ADOBE_RGB = 0x4,
++	DI_DISPLAYID2_INTERFACE_COLOR_SPACE_DCI_P3 = 0x5,
++	DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT2020 = 0x6,
++	DI_DISPLAYID2_INTERFACE_COLOR_SPACE_CUSTOM = 0x7,
++};
++
++/**
++ * Display interface EOTF standard.
++ */
++enum di_displayid2_interface_eotf {
++	DI_DISPLAYID2_INTERFACE_EOTF_SRGB = 0x1,
++	DI_DISPLAYID2_INTERFACE_EOTF_BT601 = 0x2,
++	DI_DISPLAYID2_INTERFACE_EOTF_BT1886 = 0x3,
++	DI_DISPLAYID2_INTERFACE_EOTF_ADOBE_RGB = 0x4,
++	DI_DISPLAYID2_INTERFACE_EOTF_DCI_P3 = 0x5,
++	DI_DISPLAYID2_INTERFACE_EOTF_BT2020 = 0x6,
++	DI_DISPLAYID2_INTERFACE_EOTF_GAMMA = 0x7,
++	DI_DISPLAYID2_INTERFACE_EOTF_SMPTE_ST2084 = 0x8,
++	DI_DISPLAYID2_INTERFACE_EOTF_HLG = 0x9,
++	DI_DISPLAYID2_INTERFACE_EOTF_CUSTOM = 0xa,
++};
++
++struct di_displayid2_color_space_eotf_map {
++	enum di_displayid2_interface_color_space color_space;
++	enum di_displayid2_interface_eotf eotf;
++};
++
++/**
++ * Display Interface Features Data Block, defined in section 4.5.
++ */
++struct di_displayid2_display_interface_features {
++	struct {
++		int32_t rgb;
++		int32_t ycbcr444;
++		int32_t ycbcr422;
++		int32_t ycbcr420;
++	} color_depth;
++
++	/* In MP/s, zero for no limit */
++	float ycbcr420_min_pixel_rate;
++
++	struct {
++		bool sample_rate_48khz;
++		bool sample_rate_44_1khz;
++		bool sample_rate_32khz;
++	} audio;
++
++	const struct di_displayid2_color_space_eotf_map *combinations;
++	size_t combinations_len;
++};
++
++/**
++ * Get the Display Interface Features from a DisplayID v2 data block.
++ *
++ * Returns NULL if the data block tag isn't
++ * DI_DISPLAYID2_DATA_BLOCK_DISPLAY_INTERFACE_FEATURES.
++ */
++const struct di_displayid2_display_interface_features *
++di_displayid2_data_block_get_display_interface_features(
++	const struct di_displayid2_data_block *data_block);
++
+ #endif
+diff --git a/info.c b/info.c
+index f901e06..9f307e5 100644
+--- a/info.c
++++ b/info.c
+@@ -64,31 +64,102 @@ di_edid_get_cta_data_block(const struct di_edid *edid,
+ 	return NULL;
+ }
+ 
++static const struct di_displayid2_data_block *
++displayid2_get_data_block(const struct di_displayid2 *displayid2,
++                          enum di_displayid2_data_block_tag tag)
++{
++	size_t i;
++	const struct di_displayid2_data_block *const *blocks;
++
++	blocks = di_displayid2_get_data_blocks(displayid2);
++	for (i = 0; blocks[i] != NULL; i++) {
++		if (di_displayid2_data_block_get_tag(blocks[i]) == tag) {
++			return blocks[i];
++		}
++	}
++	return NULL;
++}
++
++static const struct di_displayid2_display_interface_features *
++edid_get_displayid2_display_interface_features(const struct di_edid *edid)
++{
++	const struct di_edid_ext *const *ext;
++	const struct di_displayid2 *displayid2;
++	const struct di_displayid2_data_block *block;
++
++	for (ext = di_edid_get_extensions(edid); *ext; ext++) {
++		if (di_edid_ext_get_tag(*ext) != DI_EDID_EXT_DISPLAYID) {
++			continue;
++		}
++
++		displayid2 = di_edid_ext_get_displayid2(*ext);
++		if (displayid2 == NULL) {
++			continue;
++		}
++
++		block = displayid2_get_data_block(
++			displayid2,
++			DI_DISPLAYID2_DATA_BLOCK_DISPLAY_INTERFACE_FEATURES);
++		if (block != NULL) {
++			return
++			di_displayid2_data_block_get_display_interface_features(
++				block);
++		}
++	}
++	return NULL;
++}
++
+ static void
+ derive_edid_hdr_static_metadata(const struct di_edid *edid,
+ 				struct di_hdr_static_metadata *hsm)
+ {
+ 	const struct di_cta_data_block *block;
+ 	const struct di_cta_hdr_static_metadata_block *cta_hsm;
++	const struct di_displayid2_display_interface_features *features;
++	const struct di_displayid2_color_space_eotf_map *c;
++	size_t idx;
+ 
+ 	/* By default, everything unset and only traditional gamma supported. */
+ 	hsm->traditional_sdr = true;
+ 
+ 	block = di_edid_get_cta_data_block(edid, DI_CTA_DATA_BLOCK_HDR_STATIC_METADATA);
+-	if (!block)
++	if (block) {
++		cta_hsm = di_cta_data_block_get_hdr_static_metadata(block);
++		assert(cta_hsm);
++
++		hsm->desired_content_max_luminance =
++			cta_hsm->desired_content_max_luminance;
++		hsm->desired_content_max_frame_avg_luminance =
++			cta_hsm->desired_content_max_frame_avg_luminance;
++		hsm->desired_content_min_luminance =
++			cta_hsm->desired_content_min_luminance;
++		hsm->type1 = cta_hsm->descriptors->type1;
++		hsm->traditional_sdr = cta_hsm->eotfs->traditional_sdr;
++		hsm->traditional_hdr = cta_hsm->eotfs->traditional_hdr;
++		hsm->pq = cta_hsm->eotfs->pq;
++		hsm->hlg = cta_hsm->eotfs->hlg;
++		return;
++	}
++
++	/* Fallback to DisplayID 2.0 Display Interface Features */
++	features = edid_get_displayid2_display_interface_features(edid);
++	if (features == NULL) {
+ 		return;
++	}
+ 
+-	cta_hsm = di_cta_data_block_get_hdr_static_metadata(block);
+-	assert(cta_hsm);
+-
+-	hsm->desired_content_max_luminance = cta_hsm->desired_content_max_luminance;
+-	hsm->desired_content_max_frame_avg_luminance = cta_hsm->desired_content_max_frame_avg_luminance;
+-	hsm->desired_content_min_luminance = cta_hsm->desired_content_min_luminance;
+-	hsm->type1 = cta_hsm->descriptors->type1;
+-	hsm->traditional_sdr = cta_hsm->eotfs->traditional_sdr;
+-	hsm->traditional_hdr = cta_hsm->eotfs->traditional_hdr;
+-	hsm->pq = cta_hsm->eotfs->pq;
+-	hsm->hlg = cta_hsm->eotfs->hlg;
++	for (idx = 0; idx < features->combinations_len; idx++) {
++		c = &features->combinations[idx];
++		if (c->color_space
++		    != DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT2020) {
++			continue;
++		}
++		if (c->eotf == DI_DISPLAYID2_INTERFACE_EOTF_SMPTE_ST2084) {
++			hsm->pq = true;
++		}
++		if (c->eotf == DI_DISPLAYID2_INTERFACE_EOTF_HLG) {
++			hsm->hlg = true;
++		}
++	}
+ }
+ 
+ static void
+@@ -152,21 +223,43 @@ derive_edid_supported_signal_colorimetry(const struct di_edid *edid,
+ {
+ 	const struct di_cta_data_block *block;
+ 	const struct di_cta_colorimetry_block *cm;
++	const struct di_displayid2_display_interface_features *features;
++	const struct di_displayid2_color_space_eotf_map *c;
++	size_t idx;
+ 
+ 	/* Defaults to all unsupported. */
+ 
+ 	block = di_edid_get_cta_data_block(edid, DI_CTA_DATA_BLOCK_COLORIMETRY);
+-	if (!block)
++	if (block) {
++		cm = di_cta_data_block_get_colorimetry(block);
++		assert(cm);
++
++		ssc->bt2020_cycc = cm->bt2020_cycc;
++		ssc->bt2020_ycc = cm->bt2020_ycc;
++		ssc->bt2020_rgb = cm->bt2020_rgb;
++		ssc->st2113_rgb = cm->st2113_rgb;
++		ssc->ictcp = cm->ictcp;
+ 		return;
++	}
+ 
+-	cm = di_cta_data_block_get_colorimetry(block);
+-	assert(cm);
++	/* Fallback to DisplayID 2.0 Display Interface Features */
++	features = edid_get_displayid2_display_interface_features(edid);
++	if (features == NULL) {
++		return;
++	}
+ 
+-	ssc->bt2020_cycc = cm->bt2020_cycc;
+-	ssc->bt2020_ycc = cm->bt2020_ycc;
+-	ssc->bt2020_rgb = cm->bt2020_rgb;
+-	ssc->st2113_rgb = cm->st2113_rgb;
+-	ssc->ictcp = cm->ictcp;
++	for (idx = 0; idx < features->combinations_len; idx++) {
++		c = &features->combinations[idx];
++		if (c->color_space == DI_DISPLAYID2_INTERFACE_COLOR_SPACE_DCI_P3
++		    && c->eotf == DI_DISPLAYID2_INTERFACE_EOTF_DCI_P3) {
++			ssc->st2113_rgb = true;
++		}
++		if (c->color_space
++		    == DI_DISPLAYID2_INTERFACE_COLOR_SPACE_BT2020) {
++			ssc->bt2020_rgb = true;
++			ssc->bt2020_ycc = true;
++		}
++	}
+ }
+ 
+ struct di_info *

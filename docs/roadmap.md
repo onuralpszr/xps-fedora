@@ -15,7 +15,7 @@ Principles:
 | Area               | Hardware                                        | Status | Notes / next step                                                                              |
 | ------------------ | ----------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
 | Kernel             | n/a                                             | ✅     | `kernel-*.dellptl` (VRR, ALPM quirk), rebase on each Fedora kernel                             |
-| Display            | LG OLED 3200x2000@120, VRR 20-120               | ✅     | PSR2 with selective fetch and Early Transport; the panel has no Panel Replay                   |
+| Display            | LG OLED 3200x2000@120, VRR 20-120               | ✅     | PSR2 with selective fetch and Early Transport; HDR (525 nits) via `libdisplay-info`            |
 | GPU                | Arc B390 (xe)                                   | ✅     | compute, Level Zero, VA-API (H.264/HEVC/VP9/AV1), Vulkan                                       |
 | NPU                | Intel AI Boost (NPU5)                           | ✅     | driver + compiler 1.38                                                                         |
 | RGB camera         | OV08X40 via IPU7 + CVS                          | ✅     | akmod + HAL; cosmetic green flash on open                                                      |

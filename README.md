@@ -127,6 +127,7 @@ Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 | --- | :---: | :---: | --- |
 | 🌈 **VRR 20-120 Hz** | ❌ not detected | ✅ | `kernel` patch, KDE VRR set to Automatic |
 | ✨ **Panel self refresh** | ⚠️ glitches, link errors | ✅ PSR2 | `kernel` display fixes, PSR2 with selective fetch and Early Transport |
+| 🌗 **HDR on the OLED** | ❌ "incapable" | ✅ 525 nits peak | `libdisplay-info` reads the panel's DisplayID 2.0 HDR and luminance; turn HDR on in Display settings |
 | 🎬 **Video decode H.264 and HEVC** | ⚠️ VP9 and AV1 only | ✅ | RPM Fusion `intel-media-driver` |
 | 🔌 **External monitor over USB-C** | ✅ | ✅ | works; the top refresh rate depends on the dock or adapter, see [findings](docs/findings.md) |
 
@@ -168,7 +169,7 @@ Everything comes from three places: two COPR repositories for the open packages,
 
 | | Source | What it gives you |
 | --- | --- | --- |
-| 🧩 | [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | kernel, IPU7 camera drivers, system configuration, plasma-light-and-presence |
+| 🧩 | [thunderbirdtr/xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | kernel, IPU7 camera drivers, system configuration, HDR-aware libdisplay-info, plasma-light-and-presence |
 | 🧠 | [thunderbirdtr/intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | NPU driver and compiler, OpenVINO, ONNX Runtime, llama.cpp, Python model tools |
 | 📦 | [RPM Fusion](https://rpmfusion.org/) free and nonfree | H.264 and HEVC decode, `v4l2-relayd`, `v4l2loopback` |
 | 📷 | [GitHub releases](https://github.com/onuralpszr/xps-fedora/releases) | `intel-ipu7-camera` (camera HAL and Intel imaging libraries) |
@@ -178,7 +179,7 @@ Everything comes from three places: two COPR repositories for the open packages,
 Adds every repository, sets up the Secure Boot key and installs everything. `mokutil` asks for a one-time password; enroll the key in MOK Manager on the next boot.
 
 ```bash
-sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf copr enable -y thunderbirdtr/xps-fedora && sudo dnf copr enable -y thunderbirdtr/intel-ai-stack && sudo dnf install -y akmods sbsigntools mokutil && sudo kmodgenca -a && sudo mokutil --import /etc/pki/akmods/certs/public_key.der && sudo dnf install -y dell-xps-ptl-config && sudo dnf install -y kernel akmod-intel-ipu7 plasma-light-and-presence https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm intel-npu-driver intel-npu-compiler openvino libopenvino-intel-npu-plugin python3-openvino-genai llama-cpp-vulkan llama-cpp-openvino && sudo dnf swap -y libva-intel-media-driver intel-media-driver --allowerasing && sudo reboot
+sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf copr enable -y thunderbirdtr/xps-fedora && sudo dnf copr enable -y thunderbirdtr/intel-ai-stack && sudo dnf install -y akmods sbsigntools mokutil && sudo kmodgenca -a && sudo mokutil --import /etc/pki/akmods/certs/public_key.der && sudo dnf install -y dell-xps-ptl-config && sudo dnf install -y kernel akmod-intel-ipu7 plasma-light-and-presence https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm intel-npu-driver intel-npu-compiler openvino libopenvino-intel-npu-plugin python3-openvino-genai llama-cpp-vulkan llama-cpp-openvino && sudo dnf upgrade -y libdisplay-info && sudo dnf swap -y libva-intel-media-driver intel-media-driver --allowerasing && sudo reboot
 ```
 
 ### 🚀 Everything, step by step
@@ -200,6 +201,7 @@ sudo mokutil --import /etc/pki/akmods/certs/public_key.der
 sudo dnf install dell-xps-ptl-config
 sudo dnf install kernel akmod-intel-ipu7 plasma-light-and-presence
 sudo dnf swap libva-intel-media-driver intel-media-driver --allowerasing
+sudo dnf upgrade libdisplay-info   # HDR on the OLED
 
 # 4. Camera
 sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm
@@ -363,6 +365,7 @@ sudo dnf install python3-optimum-intel python3-nncf python3-transformers python3
 | [`intel-ipu7-camera`](packages/intel-ipu7-camera)                                      | Camera HAL, firmware, GStreamer source and the relay service for apps                     |
 | [`intel-npu-driver`](packages/intel-npu-driver)                                        | NPU driver 1.38 and Intel's NPU compiler                                                  |
 | [`dell-xps-ptl-config`](packages/dell-xps-ptl-config)                                  | thermald fix, kernel signing hook, display option, power profiles and the IR camera relay |
+| [`libdisplay-info`](packages/libdisplay-info)                                          | Fedora's 0.3.0 with DisplayID 2.0 HDR detection and panel luminance, for HDR on the OLED  |
 | [`plasma-light-and-presence`](https://github.com/onuralpszr/plasma-light-and-presence) | Ambient light brightness with a System Settings page and a Plasma widget (own repository) |
 
 **AI stack** (published in the COPR)
@@ -391,6 +394,7 @@ Live status of the last COPR build of each package.
 | `intel-ipu7-kmod` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![intel-ipu7-kmod](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/intel-ipu7-kmod/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/intel-ipu7-kmod/) | IPU7 camera drivers (akmod) |
 | `intel-ipu7-camera` | [GitHub release](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-4.dellptl) | [![intel-ipu7-camera](https://img.shields.io/github/v/release/onuralpszr/xps-fedora?filter=intel-ipu7-camera-*&label=release)](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-4.dellptl) | IPU7 camera HAL, firmware and relay service |
 | `dell-xps-ptl-config` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![dell-xps-ptl-config](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/) | thermald, power profiles, kernel signing, IR camera relay |
+| `libdisplay-info` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![libdisplay-info](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/libdisplay-info/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/libdisplay-info/) | EDID library with DisplayID 2.0 HDR, for HDR on the OLED |
 | `plasma-light-and-presence` | [plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/) | [![plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/package/plasma-light-and-presence/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/package/plasma-light-and-presence/) | ambient light brightness for Plasma |
 | `intel-npu-driver` | [intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | [![intel-npu-driver](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/intel-npu-driver/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/intel-npu-driver/) | NPU driver and compiler |
 | `openvino` | [intel-ai-stack](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/) | [![openvino](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/intel-ai-stack/package/openvino/) | OpenVINO with the NPU plugin |

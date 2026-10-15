@@ -10,6 +10,7 @@ Checked 2026-10-06.
 | IPU7 firmware                             | Fedora `intel-vsc-firmware`                         | ipu7-camera-bins                                            | ✅ same files                          |
 | `intel-ipu7-kmod`                         | ipu7-drivers `a88b190`                              | upstream `495acc9` (25 commits ahead)                       | ⚠️ pinned to Omarchy, see below        |
 | `intel-ipu7-camera`                       | hal `b1f6ebe`, bins `403c67d`, icamerasrc `4fb31db` | hal `11d8aff` (+28), bins `adf5552` (+6)                    | ⚠️ pinned to Omarchy, see below        |
+| `libdisplay-info`                         | 0.3.0-2.fc45.1                                      | Fedora f45: 0.3.0-2; upstream 0.4.0, MR 210 open            | ✅ patched, drop when MR 210 ships     |
 | `dell-xps-ptl-config`                     | 1.0                                                 | n/a                                                         | ✅                                     |
 | Omarchy reference                         | `omarchy-pkgs` master                               | `97925fbc` last IPU7 change                                 | ✅ no newer changes                    |
 

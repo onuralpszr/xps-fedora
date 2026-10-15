@@ -14,7 +14,7 @@
   <a href="https://fedoraproject.org"><img alt="Fedora 45" src="https://img.shields.io/badge/Fedora-45-51A2DA?logo=fedora&amp;logoColor=white"></a>
   <a href="https://kde.org/plasma-desktop/"><img alt="KDE Plasma 6.7" src="https://img.shields.io/badge/KDE%20Plasma-6.7-1D99F3?logo=kde&amp;logoColor=white"></a>
   <a href="packages/openvino"><img alt="OpenVINO 2026.4.1 with NPU" src="https://img.shields.io/badge/OpenVINO-2026.4.1%20with%20NPU-6D28D9?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOC44NSAxOC44OCI+PHBhdGggZD0iTTEyLjkxMTcgNy45NjY1MkMxMi42Njc1IDguNDY2MTcgMTIuMTY2MyA4LjgxMzY5IDExLjU2MzMgOC44MTM2OUMxMC43MTcyIDguODEzNjkgMTAuMDU4MyA4LjEyNjI5IDEwLjA1ODMgNy4yODU3MkMxMC4wNTgzIDYuNjc4MiAxMC40MDQ4IDYuMTUyMDggMTAuOTE1MSA1LjkwNDhDMTAuNDU4NyA1LjcwNzM4IDkuOTUzOTUgNS41OTc0NyA5LjQxODE3IDUuNTk3NDdDNy4zMDIgNS41OTc0NyA1LjY1NDk3IDcuMzI5OTkgNS42NTQ5NyA5LjQzMTlDNS42NTQ5NyAxMS41MzM4IDcuMzAyNTEgMTMuMjUxNiA5LjQxODE3IDEzLjI1MTZDMTEuNTQ4MSAxMy4yNTE2IDEzLjE5NTYgMTEuNTMzMyAxMy4xOTU2IDkuNDMxOUMxMy4xOTUxIDguOTEzOTMgMTMuMDkzOCA4LjQxOTM2IDEyLjkxMTcgNy45NjY1MloiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTAgOS40MzdDMCA0LjIyNzc1IDQuMjAyODEgMCA5LjQxMjA2IDBDMTQuNjQ2OCAwIDE4Ljg0OTEgNC4yMjc3NSAxOC44NDkxIDkuNDM3QzE4Ljg0OTEgMTQuNjQ2MiAxNC42NDYyIDE4Ljg3NCA5LjQxMjA2IDE4Ljg3NEM0LjIwMjgxIDE4Ljg3NCAwIDE0LjY0NjIgMCA5LjQzN1pNMTYuMTA2IDkuNDM3QzE2LjEwNiA1LjcxMjQ3IDEzLjE4NyAyLjY0MjI4IDkuNDEyMDYgMi42NDIyOEM1LjY2MjYxIDIuNjQyMjggMi43NDMwMiA1LjcxMjQ3IDIuNzQzMDIgOS40MzdDMi43NDMwMiAxMy4xNjE1IDUuNjYyMSAxNi4yMDYzIDkuNDEyMDYgMTYuMjA2M0MxMy4xODcgMTYuMjA2OCAxNi4xMDYgMTMuMTYxNSAxNi4xMDYgOS40MzdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=="></a>
-  <a href="packages/kernel"><img alt="Kernel 7.2.10-300.1.dellptl" src="https://img.shields.io/badge/kernel-7.2.10--300.1.dellptl-FCC624?logo=linux&amp;logoColor=black"></a>
+  <a href="packages/kernel"><img alt="Kernel 7.2.11-300.1.dellptl" src="https://img.shields.io/badge/kernel-7.2.11--300.1.dellptl-FCC624?logo=linux&amp;logoColor=black"></a>
   <a href="docs/findings.md#ir-camera-himax-hm1092"><img alt="IR face unlock" src="https://img.shields.io/badge/IR%20face%20unlock-working-2ea44f?logo=linux&amp;logoColor=white"></a>
   <img alt="Secure Boot on" src="https://img.shields.io/badge/Secure%20Boot-on-2ea44f">
 </p>
@@ -58,7 +58,7 @@ Most of it is not specific to this laptop. The camera, NPU and AI packages shoul
 | 🖱️ | **Touchpad** | `2C2F:0033` |
 | 🔌 | **Ports** | 3 USB-C with Thunderbolt 4 / USB4 |
 | 🔋 | **Battery** | BYD, 68.6 Wh |
-| 🐧 | **Software** | Fedora 45, KDE Plasma 6.7.5, kernel 7.2.10-300.1.dellptl |
+| 🐧 | **Software** | Fedora 45, KDE Plasma 6.7.5, kernel 7.2.11-300.1.dellptl |
 
 <details>
 <summary>📋 Full <code>lspci</code></summary>
@@ -119,7 +119,7 @@ Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 
 | Component | Stock Fedora 45 | With this repo | How |
 | --- | :---: | :---: | --- |
-| 🐧 **Fedora kernel 7.2.10 with Panther Lake fixes** | ⚠️ no display and PSR fixes | ✅ | `kernel` 7.2.10-300.1.dellptl from the COPR, Secure Boot stays on |
+| 🐧 **Fedora kernel 7.2.11 with Panther Lake fixes** | ⚠️ no display and PSR fixes | ✅ | `kernel` 7.2.11-300.1.dellptl from the COPR, Secure Boot stays on |
 
 ### 🖥️ Display and graphics
 

@@ -26,6 +26,7 @@ on:
           - python-optimum-intel
           - dell-xps-ptl-config
           - intel-ipu7-kmod
+          - libdisplay-info
       chroot:
         description: Build only for this chroot (empty builds all)
         required: false
@@ -56,7 +57,7 @@ jobs:
           CHROOT: ${{ inputs.chroot }}
         run: |
           case "$PACKAGE" in
-            dell-xps-ptl-config|intel-ipu7-kmod) project=thunderbirdtr/xps-fedora ;;
+            dell-xps-ptl-config|intel-ipu7-kmod|libdisplay-info) project=thunderbirdtr/xps-fedora ;;
             *) project=thunderbirdtr/intel-ai-stack ;;
           esac
           args=()

@@ -29,6 +29,7 @@ declare -A project=(
   [python-optimum-intel]=intel-ai-stack
   [dell-xps-ptl-config]=xps-fedora
   [intel-ipu7-kmod]=xps-fedora
+  [libdisplay-info]=xps-fedora
 )
 # The kernel builds from Fedora dist-git (scripts/build-kernel.sh srpm) and
 # intel-ipu7-camera contains closed libraries, so neither is registered here.

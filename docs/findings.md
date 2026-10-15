@@ -10,6 +10,7 @@ What was broken on stock Fedora 45 on the Dell XPS 16 DA16260, how it was tracke
 | --- | --- | :---: | --- |
 | 🌈 | [VRR](#display-vrr) | ✅ | kernel patch 0029 reads the DisplayID Adaptive Sync range |
 | ✨ | [Panel self refresh](#display-panel-self-refresh) | ✅ | PSR2 with selective fetch and Early Transport, driver defaults (`dell-xps-ptl-config` 1.7) |
+| 🌗 | [HDR](#display-hdr) | ✅ | `libdisplay-info` 0.3.0-2.fc45.1 reads the DisplayID 2.0 HDR and luminance blocks |
 | 🔐 | [Secure Boot](#secure-boot) | ✅ | kernel-install hook signs with the akmods key |
 | 📷 | [Camera](#camera-ipu7) | ✅ | `intel-ipu7-kmod` with ACPI, `intel-ipu7-camera`, `v4l2-relayd` |
 | 🙂 | [IR camera](#ir-camera-himax-hm1092) | ✅ | kernel 301.2: 19.2 MHz hm1092, ipu-bridge entry; Gaze face unlock on the lock screen |
@@ -84,6 +85,44 @@ PSR2 selective fetch: enabled
 - The quirk's author withdrew 0034 on 2026-09-23, since fast wake above IO wake is what stops PSR2 selective updates. `300.3` dropped it and added 0035 to 0037 from mainline 7.3.
 - PSR2 trial from 2026-10-09 to 2026-10-12 on `300.3` and `301.2`, with an empty `/etc/modprobe.d/dell-xps-ptl-xe.conf` overriding the package option: no glitches or freezes seen. The journal shows two short bursts of `[PLANE:125:plane 4A] fault` and `[PLANE:35:plane 1A] fault` in four days, one as the polkit dialog opened, with nothing visible on screen. The unmerged intel-gfx series "Fix stale selective fetch enable bit" (2026-09-09) addresses a related stale per-plane fetch state.
 - `dell-xps-ptl-config` 1.7 drops the option, so the driver defaults pick PSR2.
+
+</details>
+
+## Display: HDR
+
+HDR works: Plasma detects the panel as HDR capable with its real luminance, 525 nits peak, 400 nits frame average and 0.0005 nits black, and HDR is turned on under System Settings, Display & Monitor.
+
+```text
+$ kscreen-doctor -o | grep -iA6 hdr
+	HDR: enabled
+		Peak brightness: 525 nits
+		Max average brightness: 400 nits
+		Min brightness: 0.0005 nits
+	Wide Color Gamut: enabled
+```
+
+Stock Fedora shows "HDR: incapable". The driver is not the problem: `xe` offers `HDR_OUTPUT_METADATA`, the `Colorspace` property with `BT2020_RGB` and `max bpc` 10 on eDP-1. The panel declares HDR only in a DisplayID 2.0 extension, with no CTA-861 extension at all, and libdisplay-info 0.3.0, the EDID library KWin uses, looks for HDR only in CTA-861 blocks.
+
+| EDID block | What the LG panel (`LGD 0x1989`) declares |
+| --- | --- |
+| DisplayID 2.0 Display Interface Features (0x26) | 10 bpc RGB; DCI-P3 and BT.2020 with SMPTE ST 2084 (PQ) |
+| DisplayID 2.0 Display Parameters (0x21) | 400 cd/m² full screen, 525 cd/m² on a 10% window, 0.0005 cd/m² minimum, 12 bpc native |
+
+`libdisplay-info` 0.3.0-2.fc45.1 in the xps-fedora COPR carries three patches:
+
+1. **0001**: DisplayID 2.0 data block parsing, upstream commit 788c0563 from 0.4.0.
+2. **0002**: [libdisplay-info MR 210](https://gitlab.freedesktop.org/emersion/libdisplay-info/-/merge_requests/210) by Sean Paul (ChromeOS), not merged: Display Interface Features as a fallback for HDR and BT.2020 detection. On its own it makes HDR capable, but KWin still shows peak and average brightness as "unknown".
+3. **0003**: ours, the panel luminance from the Display Parameters block as the HDR static metadata (10% window maximum as peak, full screen maximum as frame average).
+
+It stays on 0.3.0, so the library version (`libdisplay-info.so.3`) and every symbol Fedora's KWin uses are unchanged; the 64 upstream tests pass.
+
+<details>
+<summary>How it was found</summary>
+
+- `edid-decode /sys/class/drm/card0-eDP-1/edid` shows the two DisplayID 2.0 blocks above; a small ctypes script against `libdisplay-info.so.3` showed `pq` and `bt2020_rgb` false and all luminance 0.
+- KWin 6.7.5 (`drm_output.cpp`) offers HDR only when the connector has `HDR_OUTPUT_METADATA`, `Colorspace` with BT.2020 and the EDID reports PQ and BT.2020. `KWIN_FORCE_ASSUME_HDR_SUPPORT=1` skips the EDID check but leaves the luminance unknown.
+- `LD_LIBRARY_PATH` cannot be used to test a library in KWin: `kwin_wayland` has `cap_sys_nice`, so the loader ignores it. The patched library has to be installed as a package.
+- With "unknown" luminance a manual peak brightness override in Display settings is easy to set too high; set it back to automatic so Plasma uses the panel's 525 nits.
 
 </details>
 

@@ -1,0 +1,68 @@
+#!/bin/bash
+# Start, stop and check the local LLM server (llama.cpp Vulkan) on
+# http://127.0.0.1:8080/v1, for Hermes Agent and the llama-server web chat.
+# Runs as the user unit ai-local, so it stops cleanly and logs to the journal.
+#
+#   ai-local start [gpt-oss|qwen30b|qwen30b-chat]   (default gpt-oss)
+#   ai-local stop | status | log | list
+#
+# Measured on the XPS 16 (32 GB, Arc B390), 2026-10-12:
+#   gpt-oss       gpt-oss-20b MXFP4, 64K context: 13.2 GB, Hermes first reply 37 s
+#   qwen30b       Qwen3-30B-A3B IQ4_XS, 64K: 22.7 GB, close the browser first
+#   qwen30b-chat  Qwen3-30B-A3B IQ4_XS, 16K: lighter, for the web chat (Hermes needs 64K)
+# 16-bit KV cache without flash attention: on this GPU the 8-bit cache and
+# flash attention are many times slower once the context grows.
+set -euo pipefail
+
+MODELS=${AI_LOCAL_MODELS:-$HOME/models/gguf}
+UNIT=ai-local
+PORT=8080
+
+profile() {
+    case $1 in
+        gpt-oss)      echo "$MODELS/gpt-oss-20b-MXFP4.gguf 65536 gpt-oss-20b" ;;
+        qwen30b)      echo "$MODELS/Qwen3-30B-A3B-Instruct-2507-IQ4_XS.gguf 65536 qwen3-30b-a3b" ;;
+        qwen30b-chat) echo "$MODELS/Qwen3-30B-A3B-Instruct-2507-IQ4_XS.gguf 16384 qwen3-30b-a3b" ;;
+        *) echo "unknown profile '$1', try: ai-local list" >&2; exit 1 ;;
+    esac
+}
+
+gpu_mem() {
+    local pid
+    pid=$(systemctl --user show -p MainPID --value $UNIT 2>/dev/null)
+    [[ -n $pid && $pid != 0 ]] || return 0
+    grep -h '^drm-total-gtt' /proc/$pid/fdinfo/* 2>/dev/null |
+        awk '{ if ($2 > m) m = $2 } END { if (m) printf "GPU memory %.1f GB, ", m / 1048576 }'
+}
+
+case ${1:-status} in
+    start)
+        read -r model ctx alias <<<"$(profile "${2:-gpt-oss}")"
+        [[ -f $model ]] || { echo "missing $model" >&2; exit 1; }
+        systemctl --user is-active -q $UNIT && systemctl --user stop $UNIT
+        systemd-run --user --unit=$UNIT --collect -q -p KillSignal=SIGINT \
+            /usr/bin/llama-server -m "$model" -dev Vulkan0 -ngl 99 -c "$ctx" -fa off -np 1 \
+            --jinja --alias "$alias" --host 127.0.0.1 --port $PORT
+        printf 'loading %s (%s context) ' "$alias" "$ctx"
+        for _ in $(seq 120); do
+            curl -sf http://127.0.0.1:$PORT/health >/dev/null && { echo; "$0" status; exit 0; }
+            systemctl --user is-active -q $UNIT || { echo; echo "failed, see: ai-local log" >&2; exit 1; }
+            printf . ; sleep 1
+        done
+        echo; echo "still loading, see: ai-local log" ;;
+    stop)
+        systemctl --user stop $UNIT 2>/dev/null && echo stopped || echo "not running" ;;
+    status)
+        if curl -sf http://127.0.0.1:$PORT/health >/dev/null; then
+            model=$(curl -s http://127.0.0.1:$PORT/v1/models | python3 -c 'import json,sys; print(json.load(sys.stdin)["data"][0]["id"])')
+            echo "running: $model on http://127.0.0.1:$PORT/v1 ($(gpu_mem)RAM available $(awk '/MemAvailable/ {printf "%.1f GB", $2/1048576}' /proc/meminfo))"
+        else
+            echo "not running (RAM available $(awk '/MemAvailable/ {printf "%.1f GB", $2/1048576}' /proc/meminfo))"
+        fi ;;
+    log)
+        journalctl --user -u $UNIT -n 50 --no-pager ;;
+    list)
+        sed -n 's/^#   \(gpt-oss\|qwen30b\)/\1/p' "$0" ;;
+    *)
+        sed -n '2,8p' "$0" | sed 's/^# \?//'; exit 1 ;;
+esac

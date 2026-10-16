@@ -12,6 +12,7 @@ Measured on 2026-10-08 on the Dell XPS 16 DA16260 (Core Ultra X7 358H, Arc B390,
 | 🦙 Easiest setup | **Ollama** with `ollama-vulkan` | as fast as llama.cpp on the same GGUF, with model downloads and a simple API |
 | 🎙️ Speech to text | whisper.cpp **Vulkan** | large-v3-turbo transcribes 66 s of audio in 7.8 s |
 | 🔎 Embeddings | llama.cpp **Vulkan** | embeddinggemma-2 at 138 sentences/s, same results as CPU |
+| 🧳 Offline agent on 32 GB | llama.cpp **Vulkan**, gpt-oss-20b with a 16-bit KV cache | Hermes Agent at 64K context in 13.2 GB, see [local-llm](local-llm.md) |
 | 🙂 Face login | **NPU** through ONNX Runtime's OpenVINO provider | Gaze's IR recognizer in 2.6 ms instead of 22 ms, with steady timings |
 
 ## 🦙 llama.cpp

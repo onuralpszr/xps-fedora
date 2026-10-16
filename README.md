@@ -441,6 +441,8 @@ scripts/fedora-rebuild.sh <package>     # rebuild a Fedora package for the COPR
 - [Install guide](docs/install.md)
 - [Hardware findings](docs/findings.md): what was broken and how it was fixed
 - [Local AI benchmarks](docs/benchmarks.md): llama.cpp, OpenVINO GenAI, whisper.cpp and embeddings on CPU, GPU and NPU
+- [Offline LLM on 32 GB](docs/local-llm.md): what fits for agents like Hermes, memory limits and KV cache settings
+- [GPU and NPU in containers](docs/containers.md): rootless Podman, SELinux and DL Streamer on GPU and NPU
 - [Roadmap](docs/roadmap.md)
 - [Upstreaming](docs/upstreaming.md): what can go to Fedora, RPM Fusion and upstream
 - [Fedora to-do](docs/fedora-todo.md): the steps to get the packages into Fedora

@@ -185,6 +185,17 @@ Do not use `unbind` on `0000:00:05.0` as a reset: the IPU7 driver crashes in `ip
 
 </details>
 
+<details>
+<summary>Camera stuck after a USB IO bridge reset (2026-10-16)</summary>
+
+The OV08X40 sits behind the CVS vision chip and gets its power and GPIOs through the Synaptics SVP7500 USB IO bridge (`06cb:0701`, usb 3-3). Once, while the camera streamed, the bridge dropped off USB and came back (`usb 3-3: USB disconnect`, then `INT3472:01-avdd: failed to disable: -ENODEV`). `intel_cvs` probed again and its link to CSI2 port 0 was gone, so the HAL only logged `Poll: Device node fd 22 poll timeout`.
+
+Restarting `v4l2-relayd@ipu7` then crashed the driver: after `stream stop time out`, `ipu7_isys_csi2_disable_streams` read the missing remote pad (`kernel NULL pointer dereference 0x20`). The relay stayed `<defunct>` holding the stream locks and only a reboot brought the camera back. The same code is in mainline `staging/media/ipu7`.
+
+`intel-ipu7-kmod` 1.0.6-4 (`0007`) skips the missing source and still stops the receiver, so the relay can exit. The bridge reset itself is not explained yet; autosuspend is already off for it.
+
+</details>
+
 ## IR camera (Himax HM1092)
 
 The Windows Hello IR sensor is a Himax HM1092 (ACPI `HIMX1092`, `\_SB_.LNK0`). Power, reset and the IR flood LED come from `INT3472:00`, which already exposes `/sys/class/leds/HIMX1092_00::ir_flood_led`. The three `OVTI01AF` entries are disabled BIOS placeholders.
@@ -349,4 +360,5 @@ The key sends `LEFTMETA + LEFTSHIFT + F23`. xkeyboard-config 2.48 maps Shift+Sup
 - `xe` `[PLANE:135:plane 5A] fault`, also on the stock kernel. It shows up when a camera or video window opens in KWin, likely an overlay plane buffer freed while still on screen. No visible effect so far.
 - Brief green flash when the camera opens, because the relay starts before the first ISP frame; a black splash source would hide it.
 - thermald fix: confirm over several cold boots.
+- SVP7500 USB IO bridge reset once while the camera streamed (2026-10-16); cause unknown.
 - Battery: 10 to 15 hours in daily use so far; idle and sleep drain still to measure.

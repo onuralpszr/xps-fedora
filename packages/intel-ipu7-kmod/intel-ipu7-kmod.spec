@@ -23,7 +23,7 @@
 Name:           %{prjname}-kmod
 Summary:        Kernel module (kmod) for %{prjname}
 Version:        1.0.6
-Release:        3.dellptl%{?dist}
+Release:        4.dellptl%{?dist}
 License:        GPL-2.0-only
 URL:            https://github.com/intel/ipu7-drivers
 
@@ -33,6 +33,8 @@ Patch0:         0004-ipu7-psys-register-device-bus.patch
 Patch1:         0005-ipu7-psys-harden-userptr-pinning.patch
 # Y10 capture for the HM1092 IR sensor (linux-media 2026-10-10, ported from staging)
 Patch2:         0006-ipu7-isys-add-10-bit-greyscale-capture-formats.patch
+# Do not oops when the sensor is unbound while streaming (USB IO bridge reset)
+Patch3:         0007-ipu7-isys-csi2-handle-a-source-that-is-gone.patch
 # Fedora enables mainline lt6911uxe; hide LT6911 from the ACPI pdata build
 Patch101:       0101-Fedora-hide-LT6911-from-IPU-ACPI-build.patch
 
@@ -56,6 +58,7 @@ kmodtool --target %{_target_cpu} --repo rpmfusion --kmodname %{prjname} %{?build
 %patch -P0 -p1 -F0
 %patch -P1 -p1 -F0
 %patch -P2 -p1 -F0
+%patch -P3 -p1 -F0
 %patch -P101 -p1
 )
 
@@ -77,6 +80,10 @@ done
 %{?akmod_install}
 
 %changelog
+* Fri Oct 16 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-4.dellptl
+- Do not oops in CSI-2 stream off when the sensor was unbound while
+  streaming (SVP7500 USB IO bridge reset); the camera needed a reboot
+
 * Sat Oct 10 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-3.dellptl
 - Add Y10 and Y10P capture formats so the HM1092 IR sensor can be captured
 

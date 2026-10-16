@@ -1,0 +1,62 @@
+From: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+Subject: [PATCH] media: ipu7: isys: csi2: Handle a source sub-device that is gone
+
+On the Dell XPS 16 DA16260 the OV08X40 sensor sits behind Intel CVS and
+is powered through the Synaptics SVP7500 USB IO bridge. When that bridge
+resets while the camera streams, the CVS sub-device is unbound and its
+link to the CSI-2 receiver sink pad is removed. Stopping the stream then
+dereferences the NULL remote pad in ipu7_isys_csi2_disable_streams():
+
+  intel_ipu7_isys.isys intel_ipu7.isys.40: stream stop time out
+  Oops: general protection fault, kernel NULL pointer dereference 0x20
+  RIP: ipu7_isys_csi2_disable_streams+0x96/0x120 [intel_ipu7_isys]
+   v4l2_subdev_disable_streams+0x215/0x3e0 [videodev]
+   ipu7_isys_video_set_streaming+0x94/0x280 [intel_ipu7_isys]
+   stop_streaming+0x100/0x130 [intel_ipu7_isys]
+   __vb2_queue_cancel+0x2e/0x320 [videobuf2_common]
+
+The task dies holding the stream locks, the process cannot be reaped and
+only a reboot brings the camera back.
+
+Skip the source when it is gone and still stop the receiver, and refuse
+to start streaming without a source.
+
+Signed-off-by: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+---
+--- a/drivers/media/pci/intel/ipu7/ipu7-isys-csi2.c
++++ b/drivers/media/pci/intel/ipu7/ipu7-isys-csi2.c
+@@ -323,6 +323,9 @@ static int ipu7_isys_csi2_enable_streams(struct v4l2_subdev *sd,
+ 	u32 sink_pad, sink_stream;
+ 	int ret, i;
+ 
++	if (!media_pad_remote_pad_first(&sd->entity.pads[IPU7_CSI2_PAD_SINK]))
++		return -ENOLINK;
++
+ 	if (!csi2->stream_count) {
+ 		dev_dbg(&csi2->isys->adev->auxdev.dev,
+ 			"stream on CSI2-%u with %u lanes\n", csi2->port,
+@@ -379,10 +382,21 @@ static int ipu7_isys_csi2_disable_streams(struct v4l2_subdev *sd,
+ 	if (ret)
+ 		return ret;
+ 
++	/*
++	 * The source sub-device and its link are gone if the sensor was
++	 * unbound while streaming, e.g. when the USB IO bridge powering it
++	 * was reset. Still stop the receiver so the stream can be torn down.
++	 */
+ 	rp = media_pad_remote_pad_first(&sd->entity.pads[IPU7_CSI2_PAD_SINK]);
+-	r_sd = media_entity_to_v4l2_subdev(rp->entity);
+-
+-	v4l2_subdev_disable_streams(r_sd, rp->index, BIT_ULL(sink_stream));
++	if (rp) {
++		r_sd = media_entity_to_v4l2_subdev(rp->entity);
++		v4l2_subdev_disable_streams(r_sd, rp->index,
++					    BIT_ULL(sink_stream));
++	} else {
++		dev_warn(&csi2->isys->adev->auxdev.dev,
++			 "CSI2-%u source is gone, stopping the receiver only\n",
++			 csi2->port);
++	}
+ 
+ 	if (--csi2->stream_count)
+ 		return 0;

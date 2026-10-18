@@ -48,7 +48,7 @@ Each batch needs the previous ones in the COPR repo first.
 
 onnxruntime renames its symbol version every release (`VERS_1.26.0` to `VERS_1.30.0`), so these Fedora/RPM Fusion packages must be rebuilt in the COPR or dnf refuses the update:
 
-calibre, crow-translate, gstreamer1-plugins-bad-free, monado, pipewire, vcmi (RPM Fusion; the COPR needs RPM Fusion free as an external repo).
+calibre, crow-translate, gstreamer1-plugins-bad-free, monado, pipewire, vcmi (RPM Fusion; the COPR needs RPM Fusion free as an external repo). `pipewire` also carries the upstream v4l2 buffer fix `7a8e4938` (release suffix `.2.ovstack`).
 
 On rawhide, python-torch links the system onnx, so it is rebuilt too (Fedora 45 torch carries its own onnx copy and is not affected).
 

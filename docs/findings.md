@@ -196,6 +196,13 @@ Restarting `v4l2-relayd@ipu7` then crashed the driver: after `stream stop time o
 
 </details>
 
+<details>
+<summary>PipeWire crashes when a camera app opens (2026-10-19)</summary>
+
+Opening Kamoso crashed PipeWire in `spa_v4l2_use_buffers` (`libspa-v4l2.so`). The app asked for fewer buffers than the 16 the `v4l2loopback` device hands out once the relay streams, and PipeWire 1.6.9 walked all 16 entries of the app's shorter buffer list. Upstream fixed it in master as `7a8e4938` ("spa: v4l2: do not walk past the buffers the caller provided"), not yet in 1.6.x. `pipewire` 1.6.9-1.fc45.2.ovstack in `thunderbirdtr/intel-ai-stack` carries the backport.
+
+</details>
+
 ## IR camera (Himax HM1092)
 
 The Windows Hello IR sensor is a Himax HM1092 (ACPI `HIMX1092`, `\_SB_.LNK0`). Power, reset and the IR flood LED come from `INT3472:00`, which already exposes `/sys/class/leds/HIMX1092_00::ir_flood_led`. The three `OVTI01AF` entries are disabled BIOS placeholders.

@@ -1,0 +1,31 @@
+From: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+Subject: [PATCH] media: ipu7: isys: Do not treat Y10 greyscale as Bayer
+
+MEDIA_BUS_FMT_Y10_1X10 maps to the RAW10 CSI-2 data type, so
+ipu7_isys_is_bayer_format() reports it as Bayer. Setting a crop on a
+CSI-2 receiver fed by a monochrome sensor then calls
+ipu7_isys_convert_bayer_order(), which has no entry for Y10 and warns:
+
+  WARNING: drivers/media/pci/intel/ipu7/ipu7-isys-subdev.c:95 at ipu7_isys_convert_bayer_order+0x33/0xc0 [intel_ipu7_isys]
+   ipu7_isys_csi2_set_sel+0x185/0x1c0 [intel_ipu7_isys]
+   call_set_selection_state+0x8b/0x140 [videodev]
+   subdev_do_ioctl+0x40a/0xe60 [videodev]
+
+This hits every capture from the Himax HM1092 IR sensor on the Dell XPS
+16 DA16260. Report Y10 as not Bayer, so the source format keeps its code.
+
+Signed-off-by: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+---
+--- a/drivers/media/pci/intel/ipu7/ipu7-isys-subdev.c
++++ b/drivers/media/pci/intel/ipu7/ipu7-isys-subdev.c
+@@ -55,6 +55,10 @@ unsigned int ipu7_isys_mbus_code_to_mipi(u32 code)
+ 
+ bool ipu7_isys_is_bayer_format(u32 code)
+ {
++	/* Greyscale shares the RAW10 data type but has no Bayer order */
++	if (code == MEDIA_BUS_FMT_Y10_1X10)
++		return false;
++
+ 	switch (ipu7_isys_mbus_code_to_mipi(code)) {
+ 	case MIPI_CSI2_DT_RAW8:
+ 	case MIPI_CSI2_DT_RAW10:

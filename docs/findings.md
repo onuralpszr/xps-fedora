@@ -209,6 +209,7 @@ It **works** on kernel `7.2.9-301.2.dellptl` with `intel-ipu7-kmod` 1.0.6-3: 648
 - `0038` ours: `-EPROBE_DEFER` until ipu-bridge has created the fwnode endpoint, the part of our old ACPI patch that 0033 lacks.
 - `0039` `media: ipu-bridge: Add Himax HM1092 IR sensor`, mainline [4fdb0342f05e](https://github.com/torvalds/linux/commit/4fdb0342f05e) (7.3).
 - `intel-ipu7-kmod` `0006`: Y10 and Y10P capture formats, patch 2 of the same series ported from staging/ipu7 to the ipu7-drivers tree. Without it no monochrome sensor can be captured.
+- `intel-ipu7-kmod` `0008`: Y10 shares the RAW10 data type, so the driver took it for Bayer and setting the IR crop hit `WARN_ON` in `ipu7_isys_convert_bayer_order` on every capture, tainting the kernel. Since 1.0.6-5 Y10 is reported as not Bayer. Mainline staging/ipu7 has the same code.
 
 </details>
 

@@ -53,7 +53,30 @@ fi
 sed -i -E "0,/^Release:/s/^(Release:[[:space:]]*.*)$/\1.${suffix}/" "$pkg.spec"
 evr=$(rpmspec -q --srpm --qf '%{evr}\n' "$pkg.spec" 2>/dev/null | head -1)
 date=$(LC_ALL=C date +'%a %b %d %Y')
-sed -i "/^%changelog/a * ${date} ${packager} - ${evr}\n- ${reason}\n" "$pkg.spec"
+
+# Patches we carry on top of Fedora's spec: rebuilds/<pkg>/*.patch, added
+# as Patch9000 and up after the last Source line; %autosetup applies them
+entry="- ${reason}"
+patches=()
+[ -d "$root/rebuilds/$pkg" ] && mapfile -t patches < <(cd "$root/rebuilds/$pkg" && ls -- *.patch 2>/dev/null)
+if [ ${#patches[@]} -gt 0 ]; then
+  if ! grep -qE '^%autosetup.*-p1' "$pkg.spec"; then
+    echo "$pkg.spec does not use %autosetup -p1, cannot add rebuilds/$pkg" >&2
+    exit 1
+  fi
+  lines="" n=9000
+  for p in "${patches[@]}"; do
+    cp "$root/rebuilds/$pkg/$p" .
+    lines+="Patch$n:       $p\n"
+    subject=$(sed -n 's/^Subject: \(\[PATCH[^]]*\] \)\{0,1\}//p' "$p" | head -1)
+    commit=$(sed -n '1s/^From \([0-9a-f]\{8\}\).*/\1/p' "$p")
+    entry+="\n- Carry ${commit:+upstream $commit: }${subject:-$p}"
+    n=$((n + 1))
+  done
+  last=$(grep -nE '^Source[0-9]*:' "$pkg.spec" | tail -1 | cut -d: -f1)
+  sed -i "${last}a # carried by xps-fedora, see rebuilds/$pkg\n${lines%\\n}" "$pkg.spec"
+fi
+sed -i "/^%changelog/a * ${date} ${packager} - ${evr}\n${entry}\n" "$pkg.spec"
 
 case $from in
   distgit)   fedpkg --release "$branch" sources >/dev/null ;;

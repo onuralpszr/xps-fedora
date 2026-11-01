@@ -48,11 +48,11 @@ Each batch needs the previous ones in the COPR repo first.
 
 onnxruntime renames its symbol version every release (`VERS_1.26.0` to `VERS_1.30.0`), so these Fedora/RPM Fusion packages must be rebuilt in the COPR or dnf refuses the update:
 
-calibre, crow-translate, gstreamer1-plugins-bad-free, monado, pipewire, vcmi (RPM Fusion; the COPR needs RPM Fusion free as an external repo). `pipewire` also carries the upstream v4l2 buffer fix `7a8e4938` (release suffix `.2.ovstack`).
+calibre, crow-translate, gstreamer1-plugins-bad-free, monado, pipewire, vcmi (RPM Fusion; the COPR needs RPM Fusion free as an external repo). `pipewire` also carries the upstream v4l2 fixes `7a8e4938` and `682932a6`, neither in 1.6.11 yet.
 
 On rawhide, python-torch links the system onnx, so it is rebuilt too (Fedora 45 torch carries its own onnx copy and is not affected).
 
-`scripts/fedora-rebuild.sh <pkg>` makes the SRPM: Fedora's spec unchanged, release `<fedora release>.1.ovstack`, one changelog line. Upload those SRPMs to COPR (`copr-cli build <project> output/rebuild/<pkg>/*.src.rpm`). When Fedora updates one of them, rerun the script.
+`scripts/fedora-rebuild.sh <pkg>` makes the SRPM: Fedora's spec unchanged, release `<fedora release>.1.ovstack`, one changelog line. Patches in `rebuilds/<pkg>/` are added as `Patch9000` and up, so a carried fix survives each Fedora update (the spec must use `%autosetup -p1`). Drop a patch from there once Fedora's release has it. Upload those SRPMs to COPR (`copr-cli build <project> output/rebuild/<pkg>/*.src.rpm`). When Fedora updates one of them, rerun the script.
 
 ### COPR project settings
 

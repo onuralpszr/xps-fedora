@@ -47,7 +47,7 @@ Name:           llama-cpp
 # This is the main license
 
 License:        MIT AND Apache-2.0 AND LicenseRef-Fedora-Public-Domain
-Version:        b11574
+Version:        b11960
 Release:        1%{?dist}
 
 URL:            https://github.com/ggml-org/llama.cpp
@@ -414,6 +414,9 @@ export LD_LIBRARY_PATH=$PWD/%{_vpath_builddir}/bin
 %endif
 
 %changelog
+* Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11960-1
+- Update to b11960 (v0.8.0)
+
 * Mon Oct 12 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - b11574-1
 - Update to b11574
 

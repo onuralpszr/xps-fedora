@@ -1,5 +1,5 @@
 # Patches applied on top of Fedora's kernel, in this order.
-# Lines starting with # are comments; 0028 and 0034 are kept but no longer applied.
+# Lines starting with # are comments; 0028, 0034 and 0040 are kept but no longer applied.
 
 # Dell XPS 16 / Panther Lake display fixes (from omarchy linux-ptl)
 0020-drm-i915-alpm-limit-pr-alpm-to-panel-replay.patch
@@ -22,6 +22,6 @@
 0035-drm-i915-display-Ensure-a-non-zero-safe-window-from-PTL-onwards.patch
 0036-drm-i915-dsb-shift-delayed-vblank-DSL-wait-start-by-one-scanline.patch
 
-# 7.2.11 regression: the sof_sdw OT25 DAI switch without its codec side
-# (upstream 86c8360c97f6) leaves the XPS 16 with no sound card at all
-0040-Revert-ASoC-sdw_utils-Switch-CS35L56-57-62-63-to-use-OT25-DAI.patch
+# 0040 (revert of the sof_sdw OT25 DAI switch, the 7.2.11 no-sound regression)
+# is kept but no longer applied: the codec side it was missing (upstream
+# 86c8360c97f6) is in stable 7.2.12

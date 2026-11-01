@@ -23,7 +23,7 @@ What was broken on stock Fedora 45 on the Dell XPS 16 DA16260, how it was tracke
 | 🔌 | [External displays](#external-displays) | ℹ️ | refresh rate depends on the dock or adapter |
 | 🎬 | [Codecs, fingerprint, haptics](#not-hardware-problems) | ℹ️ | not hardware problems |
 
-The kernel in use is `7.2.11-300.2.dellptl` with the patches in `packages/kernel/series`: 0020, 0029, 0031 to 0033, 0035, 0036, 0038, 0039 and 0040 (reverts the 7.2.11 OT25 DAI switch that left no sound card).
+The kernel in use is `7.2.11-300.2.dellptl` with the patches in `packages/kernel/series`: 0020, 0029, 0031 to 0033, 0035, 0036, 0038 and 0039. 0040 (the revert of the 7.2.11 OT25 DAI switch that left no sound card) was dropped in 7.2.15 because stable 7.2.12 took the missing cs35l56 side (86c8360c97f6).
 
 ## Display: VRR
 

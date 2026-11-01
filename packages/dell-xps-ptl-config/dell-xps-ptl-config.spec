@@ -157,8 +157,8 @@ fi
 * Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.8-1
 - Add dell-xps-ptl-camera-tuning: reads the camera module EEPROM while it
   streams and installs Dell's tuning for that module (from Dell's YMY0G
-  driver, downloaded on this machine) and the module NVM, which fixes the
-  yellow cast with red and blue corners
+  driver, downloaded in a browser and checked by sha256) and the module
+  NVM, which fixes the yellow cast with red and blue corners
 
 * Mon Oct 12 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.7-1
 - Drop enable_psr2_sel_fetch=0: without the withdrawn fast wake quirk the

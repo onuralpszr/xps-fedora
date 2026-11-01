@@ -13,8 +13,10 @@
 #     the one in the sensor's ACPI resources, and the read waits for power.
 #     It gives the module code and the NVM block (at 4096, Dell's
 #     NVMStartAddr).
-#  2. downloads Dell's Windows camera driver (YMY0G), checks its sha256 and
-#     takes OV08X40_<module>_PTL.aiqb from it.
+#  2. takes OV08X40_<module>_PTL.aiqb from Dell's Windows camera driver
+#     (YMY0G), after checking its sha256. Dell's server does not allow
+#     scripted downloads, so download it in a browser first (link below);
+#     it is looked for in ~/Downloads, or pass its path with --driver.
 #  3. installs that tuning over the KAFE799 one (the original is kept as
 #     .intel) and the NVM as /var/lib/intel-ipu7-camera/ov08x40-uf.nvm,
 #     which intel-ipu7-camera 1.0.6-6 and later loads, then restarts the
@@ -22,10 +24,11 @@
 #
 # Dell's files are not redistributable, so they stay on this machine.
 #
-# Usage: dell-xps-ptl-camera-tuning [--module CODE]   install
-#        dell-xps-ptl-camera-tuning --restore         put Intel's tuning back
+# Usage: dell-xps-ptl-camera-tuning [--driver FILE] [--module CODE]
+#        dell-xps-ptl-camera-tuning --restore     put Intel's tuning back
 set -euo pipefail
 
+exe_name=Intel-2D-Imaging-USB-IO-Vision-Driver-for-Camera_YMY0G_WIN64_81.26100.0.13_A01_01.EXE
 url=https://dl.dell.com/FOLDER13986670M/2/Intel-2D-Imaging-USB-IO-Vision-Driver-for-Camera_YMY0G_WIN64_81.26100.0.13_A01_01.EXE
 sha256=510eb985ad01e22e866560fcba1944633174d70bea790a70157574ddce1b99d8
 cache=/var/cache/dell-xps-ptl-camera
@@ -39,10 +42,12 @@ relay=v4l2-relayd@ipu7.service
 die() { echo "dell-xps-ptl-camera-tuning: $*" >&2; exit 1; }
 
 module=
+driver=
 restore=0
 while [ $# -gt 0 ]; do
     case $1 in
         --module) module=${2:?--module needs a code, e.g. BBG809N3A}; shift 2 ;;
+        --driver) driver=${2:?--driver needs the path of the YMY0G .EXE}; shift 2 ;;
         --restore) restore=1; shift ;;
         -h|--help) sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit 0 ;;
         *) die "unknown argument $1 (see --help)" ;;
@@ -66,9 +71,30 @@ if [ $restore = 1 ]; then
     exit 0
 fi
 
-for tool in 7z curl sha256sum gst-launch-1.0; do
-    command -v $tool >/dev/null || die "$tool is missing (sudo dnf install 7zip curl gstreamer1-plugins-good)"
+for tool in 7z sha256sum gst-launch-1.0; do
+    command -v $tool >/dev/null || die "$tool is missing (sudo dnf install 7zip gstreamer1-plugins-good)"
 done
+
+# Dell's driver, before touching the camera: --driver, the cached copy, or
+# the user's Downloads folder
+exe=$cache/YMY0G.exe
+matches() { [ -f "$1" ] && echo "$sha256  $1" | sha256sum -c --status; }
+if [ -n "$driver" ]; then
+    matches "$driver" || die "$driver is not Dell's YMY0G 81.26100.0.13 A01 (sha256 differs)"
+elif ! matches "$exe"; then
+    home=$(getent passwd "${SUDO_USER:-root}" | cut -d: -f6)
+    downloads=$(sudo -u "${SUDO_USER:-root}" xdg-user-dir DOWNLOAD 2>/dev/null || echo "$home/Downloads")
+    for f in "$downloads/$exe_name" "$home/Downloads/$exe_name"; do
+        matches "$f" && { driver=$f; break; }
+    done
+    [ -n "$driver" ] || die "Dell's camera driver is needed. Download it in a browser:
+  $url
+then run this again (it looks in $downloads), or pass --driver <file>"
+fi
+if [ -n "$driver" ]; then
+    mkdir -p "$cache"
+    cp -f "$driver" "$exe"
+fi
 [ -e "$tuning" ] || die "$tuning not found, is intel-ipu7-camera installed?"
 [ -e "$sensor" ] || die "the OV08X40 sensor ($sensor) is not there"
 [ -e "$loopback" ] || die "$loopback not found, is $relay set up?"
@@ -124,15 +150,7 @@ code=$(tr -c '[:print:]' '\n' < "$work/eeprom.bin" | grep -v '^$' |
 echo "module: ${code:-unknown}"
 
 # --- 2. Dell's tuning for that module ---
-mkdir -p "$cache"
-exe=$cache/YMY0G.exe
-if [ ! -e "$exe" ] || ! echo "$sha256  $exe" | sha256sum -c --status; then
-    echo "downloading Dell's camera driver (58 MB)..."
-    curl -fL --retry 3 -o "$exe.part" "$url"
-    mv -f "$exe.part" "$exe"
-fi
-echo "$sha256  $exe" | sha256sum -c --status || die "$exe does not match the expected sha256"
-
+matches "$exe" || die "$exe does not match the expected sha256"
 7z e -y -bd -o"$work/dell" "$exe" 'OV08X40_*_PTL.aiqb' -r >/dev/null
 if [ -z "$module" ]; then
     [ -n "$code" ] || die "no module code in the EEPROM, pass --module (see $work/dell)"

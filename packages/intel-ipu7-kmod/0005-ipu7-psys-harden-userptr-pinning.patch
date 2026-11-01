@@ -12,11 +12,9 @@ release the surviving buffer.
 
 Upstream-Status: Not submitted
 ---
- drivers/media/pci/intel/ipu7/psys/ipu-psys.c | 71 lines changed
- 1 file changed, 40 insertions(+), 31 deletions(-)
+ drivers/media/pci/intel/ipu7/psys/ipu-psys.c | 59 +++++++++++++++++++++++++++-------------
+ 1 file changed, 33 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/media/pci/intel/ipu7/psys/ipu-psys.c b/drivers/media/pci/intel/ipu7/psys/ipu-psys.c
-index fee9ee82465b..03fe0b1d054b 100644
 --- a/drivers/media/pci/intel/ipu7/psys/ipu-psys.c
 +++ b/drivers/media/pci/intel/ipu7/psys/ipu-psys.c
 @@ -13,6 +13,7 @@
@@ -27,7 +25,7 @@ index fee9ee82465b..03fe0b1d054b 100644
  #include <linux/pm_runtime.h>
  #include <linux/poll.h>
  #include <uapi/linux/sched/types.h>
-@@ -49,63 +50,63 @@
+@@ -49,65 +50,63 @@
  
  static int ipu7_psys_get_userpages(struct ipu7_dma_buf_attach *attach)
  {
@@ -83,11 +81,9 @@ index fee9ee82465b..03fe0b1d054b 100644
 +	flags = FOLL_WRITE | FOLL_LONGTERM;
  	nr = pin_user_pages_fast(start & PAGE_MASK, npages,
  				 flags, pages);
--	if (nr < npages)
+-	if (nr < npages) {
+-		ret = nr < 0 ? nr : -EFAULT;
 -		goto error;
--
--	attach->pages = pages;
--	attach->npages = npages;
 +	if (nr < 0) {
 +		ret = nr;
 +		goto unpin_pages;
@@ -95,16 +91,18 @@ index fee9ee82465b..03fe0b1d054b 100644
 +	if ((size_t)nr != npages) {
 +		ret = -EFAULT;
 +		goto unpin_pages;
-+	}
+ 	}
+-
+-	attach->pages = pages;
+-	attach->npages = npages;
  
  	ret = sg_alloc_table_from_pages(sgt, pages, npages,
  					start & ~PAGE_MASK, attach->len,
  					GFP_KERNEL);
  	if (ret < 0)
 -		goto error;
--
 +		goto unpin_pages;
-+
+ 
 +	attach->pages = pages;
 +	attach->npages = npages;
  	attach->sgt = sgt;
@@ -114,15 +112,14 @@ index fee9ee82465b..03fe0b1d054b 100644
 -error_up_read:
 -	mmap_read_unlock(current->mm);
 -error:
--	if (nr)
 +unpin_pages:
-+	if (nr > 0)
+ 	if (nr > 0)
  		unpin_user_pages(pages, nr);
 -
  	kvfree(pages);
  free_sgt:
  	kfree(sgt);
-@@ -126,6 +127,8 @@
+@@ -128,6 +127,8 @@
  
  	sg_free_table(attach->sgt);
  	kfree(attach->sgt);
@@ -131,7 +128,7 @@ index fee9ee82465b..03fe0b1d054b 100644
  	attach->sgt = NULL;
  }
  
-@@ -580,6 +583,11 @@
+@@ -582,6 +583,11 @@
  		return -EINVAL;
  	}
  
@@ -143,7 +140,7 @@ index fee9ee82465b..03fe0b1d054b 100644
  	kbuf = kzalloc(sizeof(*kbuf), GFP_KERNEL);
  	if (!kbuf)
  		return -ENOMEM;
-@@ -782,6 +790,7 @@
+@@ -784,6 +790,7 @@
  	dma_buf_detach(kbuf->dbuf, kbuf->db_attach);
  
  attach_fail:

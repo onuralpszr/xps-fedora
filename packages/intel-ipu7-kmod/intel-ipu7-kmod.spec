@@ -15,7 +15,7 @@
 %global debug_package %{nil}
 %endif
 
-%global drivers_commit a88b19096a738d0708742a78d6540d6d4a3021ff
+%global drivers_commit 484d713a0a16635fef5a50975687d5f34fcb535e
 %global drivers_shortcommit %(c=%{drivers_commit}; echo ${c:0:7})
 
 %global prjname intel-ipu7
@@ -23,7 +23,7 @@
 Name:           %{prjname}-kmod
 Summary:        Kernel module (kmod) for %{prjname}
 Version:        1.0.6
-Release:        6.dellptl%{?dist}
+Release:        7.dellptl%{?dist}
 License:        GPL-2.0-only
 URL:            https://github.com/intel/ipu7-drivers
 
@@ -31,7 +31,6 @@ Source0:        https://github.com/intel/ipu7-drivers/archive/%{drivers_commit}/
 Source1:        intel-ipu7-kmod-depmod.conf
 Source2:        90-intel-ipu7-kmod-dracut.conf
 
-Patch0:         0004-ipu7-psys-register-device-bus.patch
 Patch1:         0005-ipu7-psys-harden-userptr-pinning.patch
 # Y10 capture for the HM1092 IR sensor (linux-media 2026-10-10, ported from staging)
 Patch2:         0006-ipu7-isys-add-10-bit-greyscale-capture-formats.patch
@@ -74,7 +73,6 @@ kmodtool --target %{_target_cpu} --repo rpmfusion --kmodname %{prjname} %{?build
 
 %setup -q -c
 (cd ipu7-drivers-%{drivers_commit}
-%patch -P0 -p1 -F0
 %patch -P1 -p1 -F0
 %patch -P2 -p1 -F0
 %patch -P3 -p1 -F0
@@ -87,8 +85,10 @@ for kernel_version in %{?kernel_versions} ; do
 done
 
 %build
+# Upstream builds only psys from 6.17 on and leaves the bus and ISYS to
+# staging; we need ours (Y10, the CSI-2 fixes), so raise that threshold
 for kernel_version in %{?kernel_versions} ; do
-  make %{?_smp_mflags} -C ${kernel_version##*___} M=${PWD}/_kmod_build_${kernel_version%%___*} BUILD_INTEL_IPU_ACPI=1 modules
+  make %{?_smp_mflags} -C ${kernel_version##*___} M=${PWD}/_kmod_build_${kernel_version%%___*} BUILD_INTEL_IPU_ACPI=1 KV_IPU7_ISYS=999.0.0 modules
 done
 
 %install
@@ -120,6 +120,13 @@ fi
 %endif
 
 %changelog
+* Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-7.dellptl
+- Update ipu7-drivers to 484d713 (Intel IPU7 release of 2026-09-26)
+- Drop the psys bus registration patch, upstream as 23cf17a
+- Rebase the userptr pinning hardening; upstream took part of it
+- Keep building our intel-ipu7 bus and ISYS: upstream now builds only
+  psys on 6.17 and later
+
 * Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-6.dellptl
 - Add the intel-ipu7-kmod-common subpackage with the depmod and dracut
   settings: akmod-intel-ipu7 required it, but only intel-ipu7-camera

@@ -17,16 +17,7 @@ before V4L2_CID_ANALOGUE_GAIN, and set it to 1 for the ov08x40 on both
 IPU7.5 and IPU7: the Lunar Lake tuning (OV08X40_BBG802N3_LNL.aiqb)
 carries the same gain table. Sensors without the option are unchanged.
 ---
- config/linux/ipu75xa/sensors/ov08x40-uf.json |  3 +++
- config/linux/ipu7x/sensors/ov08x40-uf.json   |  3 +++
- src/core/SensorHwCtrl.cpp                    |  9 ++++++---
- src/platformdata/CameraSensorsParser.cpp     |  3 +++
- src/platformdata/PlatformData.cpp            |  4 ++++
- src/platformdata/PlatformData.h              | 11 +++++++++++
- 6 files changed, 30 insertions(+), 3 deletions(-)
-
 diff --git a/config/linux/ipu75xa/sensors/ov08x40-uf.json b/config/linux/ipu75xa/sensors/ov08x40-uf.json
-index 483bf1d..dbe2363 100644
 --- a/config/linux/ipu75xa/sensors/ov08x40-uf.json
 +++ b/config/linux/ipu75xa/sensors/ov08x40-uf.json
 @@ -194,6 +194,9 @@
@@ -40,7 +31,6 @@ index 483bf1d..dbe2363 100644
          "ltmGainLag": 1,
          // There are 2 yuv color range mode, like full, reduced.
 diff --git a/config/linux/ipu7x/sensors/ov08x40-uf.json b/config/linux/ipu7x/sensors/ov08x40-uf.json
-index 472b0da..00f78d7 100644
 --- a/config/linux/ipu7x/sensors/ov08x40-uf.json
 +++ b/config/linux/ipu7x/sensors/ov08x40-uf.json
 @@ -194,6 +194,9 @@
@@ -54,12 +44,11 @@ index 472b0da..00f78d7 100644
          "ltmGainLag": 1,
          // There are 2 yuv color range mode, like full, reduced.
 diff --git a/src/core/SensorHwCtrl.cpp b/src/core/SensorHwCtrl.cpp
-index 799e02e..a7832a2 100644
 --- a/src/core/SensorHwCtrl.cpp
 +++ b/src/core/SensorHwCtrl.cpp
-@@ -136,9 +136,12 @@ int SensorHwCtrl::setAnalogGains(const vector<int>& analogGains) {
-     CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
-     CheckAndLogError(analogGains.empty(), BAD_VALUE, "No analog gain data!");
+@@ -242,9 +242,12 @@
+     }
+     // CRL_MODULE_E
  
 -    LOG2("%s analogGain=%d", __func__, analogGains[0]);
 -    int status = mPixelArraySubdev->SetControl(V4L2_CID_ANALOGUE_GAIN, analogGains[0]);
@@ -74,10 +63,9 @@ index 799e02e..a7832a2 100644
      return OK;
  }
 diff --git a/src/platformdata/CameraSensorsParser.cpp b/src/platformdata/CameraSensorsParser.cpp
-index c5a4633..04ac4ef 100644
 --- a/src/platformdata/CameraSensorsParser.cpp
 +++ b/src/platformdata/CameraSensorsParser.cpp
-@@ -804,6 +804,9 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
+@@ -815,6 +815,9 @@
      if (node.isMember("gainLag")) {
          mCurCam->mAnalogGainLag = node["gainLag"].asInt();
      }
@@ -88,10 +76,9 @@ index c5a4633..04ac4ef 100644
          mCurCam->mDigitalGainLag = node["digitalGainLag"].asInt();
      }
 diff --git a/src/platformdata/PlatformData.cpp b/src/platformdata/PlatformData.cpp
-index 7e25e61..d4b7cd3 100644
 --- a/src/platformdata/PlatformData.cpp
 +++ b/src/platformdata/PlatformData.cpp
-@@ -379,6 +379,10 @@ int PlatformData::getDigitalGainLag(int cameraId) {
+@@ -379,6 +379,10 @@
      return getInstance()->mStaticCfg.mCameras[cameraId].mDigitalGainLag;
  }
  
@@ -103,10 +90,9 @@ index 7e25e61..d4b7cd3 100644
      return getInstance()->mStaticCfg.mCameras[cameraId].mExposureLag;
  }
 diff --git a/src/platformdata/PlatformData.h b/src/platformdata/PlatformData.h
-index 8f1f84d..bfc8e6e 100644
 --- a/src/platformdata/PlatformData.h
 +++ b/src/platformdata/PlatformData.h
-@@ -211,6 +211,7 @@ class PlatformData {
+@@ -211,6 +211,7 @@
                        mDigitalGainLag(-1),
                        mExposureLag(MAX_BUFFER_COUNT),
                        mAnalogGainLag(0),
@@ -114,7 +100,7 @@ index 8f1f84d..bfc8e6e 100644
                        mMaxSensorDigitalGain(0),
                        mSensorDgType(SensorDgType::SENSOR_DG_TYPE_NONE),
                        mISysFourcc(V4L2_PIX_FMT_SGRBG8),
-@@ -296,6 +297,7 @@ class PlatformData {
+@@ -296,6 +297,7 @@
              int mDigitalGainLag;
              int mExposureLag;
              int mAnalogGainLag;
@@ -122,7 +108,7 @@ index 8f1f84d..bfc8e6e 100644
              int mMaxSensorDigitalGain;
              SensorDgType mSensorDgType;
              std::string mCustomAicLibraryName;
-@@ -843,6 +845,15 @@ class PlatformData {
+@@ -843,6 +845,15 @@
       * \return the value of digital gain lag
       */
      static int getDigitalGainLag(int cameraId);

@@ -8,10 +8,10 @@
 # The Go module vendor archive is made at SRPM time by make-vendor.sh.
 
 # llama.cpp release pinned in LLAMA_CPP_VERSION
-%global llama_cpp_tag b11351
+%global llama_cpp_tag b11963
 
 Name:           ollama
-Version:        0.40.3
+Version:        0.40.13
 Release:        1%{?dist}
 Summary:        Get up and running with large language models locally
 
@@ -135,6 +135,9 @@ test -e %{buildroot}%{_prefix}/lib/ollama/vulkan/libggml-vulkan.so
 %{_prefix}/lib/ollama/vulkan
 
 %changelog
+* Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 0.40.13-1
+- Update to 0.40.13 and its llama.cpp b11963
+
 * Mon Oct 12 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 0.40.3-1
 - Update to 0.40.3, still on llama.cpp b11351
 

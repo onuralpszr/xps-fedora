@@ -55,7 +55,7 @@ jobs:
           scripts/build-kernel.sh srpm
           cd "work/kernel-${NVR#kernel-}.1"
           dnf -y builddep kernel.spec
-          rpmbuild -bp --target x86_64 --define "_sourcedir $PWD" \
+          rpmbuild -bp --target x86_64 --define "_sourcedir $PWD" --define "_specdir $PWD" \
             --define "_builddir $PWD/build" kernel.spec > ../prep.log 2>&1 || {
               tail -100 ../prep.log; exit 1; }
 

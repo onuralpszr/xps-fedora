@@ -14,7 +14,7 @@
 #   client streams
 
 Name:           dell-xps-ptl-config
-Version:        1.7
+Version:        1.8
 Release:        1%{?dist}
 Summary:        Fedora configuration for Dell XPS on Intel Panther Lake
 License:        MIT
@@ -35,6 +35,7 @@ Source11:       dell-xps-ptl-refresh.service
 Source12:       ir-relay
 Source13:       dell-xps-ptl-ir-relay.service
 Source14:       70-dell-xps-ptl-ir-relay.rules
+Source15:       camera-tuning
 
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  systemd-udev
@@ -83,6 +84,7 @@ install -Dm644 %{SOURCE11} %{buildroot}%{_userunitdir}/dell-xps-ptl-refresh.serv
 install -Dm755 %{SOURCE12} %{buildroot}%{_libexecdir}/dell-xps-ptl/ir-relay
 install -Dm644 %{SOURCE13} %{buildroot}%{_unitdir}/dell-xps-ptl-ir-relay.service
 install -Dm644 %{SOURCE14} %{buildroot}%{_udevrulesdir}/70-dell-xps-ptl-ir-relay.rules
+install -Dm755 %{SOURCE15} %{buildroot}%{_bindir}/dell-xps-ptl-camera-tuning
 install -d %{buildroot}%{_userpresetdir}
 echo 'enable dell-xps-ptl-refresh.service' > %{buildroot}%{_userpresetdir}/80-dell-xps-ptl.preset
 # profile, Dell thermal mode, SoC power slider
@@ -149,8 +151,15 @@ fi
 %{_userpresetdir}/80-dell-xps-ptl.preset
 %{_unitdir}/dell-xps-ptl-ir-relay.service
 %{_udevrulesdir}/70-dell-xps-ptl-ir-relay.rules
+%{_bindir}/dell-xps-ptl-camera-tuning
 
 %changelog
+* Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.8-1
+- Add dell-xps-ptl-camera-tuning: reads the camera module EEPROM while it
+  streams and installs Dell's tuning for that module (from Dell's YMY0G
+  driver, downloaded on this machine) and the module NVM, which fixes the
+  yellow cast with red and blue corners
+
 * Mon Oct 12 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.7-1
 - Drop enable_psr2_sel_fetch=0: without the withdrawn fast wake quirk the
   LG OLED runs PSR2 with selective fetch and Early Transport without glitches

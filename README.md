@@ -244,6 +244,12 @@ sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/inte
 
 The camera appears as "Intel MIPI Camera" after a reboot.
 
+If the picture looks yellow with red and blue corners, install Dell's tuning for your camera module and its calibration. This needs `dell-xps-ptl-config` 1.8 and `intel-ipu7-camera` 1.0.6-6 or newer. The tool downloads Dell's Windows camera driver on your machine and takes only the tuning file from it ([why](docs/findings.md#camera-ipu7)):
+
+```bash
+sudo dell-xps-ptl-camera-tuning             # --restore puts Intel's tuning back
+```
+
 </details>
 
 <details>

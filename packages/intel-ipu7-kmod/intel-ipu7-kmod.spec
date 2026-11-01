@@ -6,7 +6,7 @@
 # All three modules are built: the out-of-tree PSYS depends on the
 # out-of-tree intel-ipu7 bus, so they replace the in-tree staging
 # intel-ipu7/intel-ipu7-isys (see the depmod.d override in
-# intel-ipu7-camera). Built with BUILD_INTEL_IPU_ACPI=1 like omarchy:
+# intel-ipu7-kmod-common). Built with BUILD_INTEL_IPU_ACPI=1 like omarchy:
 # the isys async-notifier path that binds the sensor via ipu_bridge and
 # the Intel CVS bridge is only compiled with CONFIG_INTEL_IPU_ACPI.
 
@@ -23,11 +23,13 @@
 Name:           %{prjname}-kmod
 Summary:        Kernel module (kmod) for %{prjname}
 Version:        1.0.6
-Release:        5.dellptl%{?dist}
+Release:        6.dellptl%{?dist}
 License:        GPL-2.0-only
 URL:            https://github.com/intel/ipu7-drivers
 
 Source0:        https://github.com/intel/ipu7-drivers/archive/%{drivers_commit}/ipu7-drivers-%{drivers_commit}.tar.gz
+Source1:        intel-ipu7-kmod-depmod.conf
+Source2:        90-intel-ipu7-kmod-dracut.conf
 
 Patch0:         0004-ipu7-psys-register-device-bus.patch
 Patch1:         0005-ipu7-psys-harden-userptr-pinning.patch
@@ -50,6 +52,21 @@ BuildRequires:  kmodtool
 %description
 Out-of-tree Intel IPU7 drivers (intel-ipu7, intel-ipu7-isys and
 intel-ipu7-psys) needed by the IPU7 camera HAL on Panther Lake.
+
+# akmods rebuilds this spec with "kernels" set; common comes from the repo
+%if %{undefined kernels}
+%package -n %{prjname}-kmod-common
+Summary:        Module settings for the %{prjname} kmod
+BuildArch:      noarch
+Requires:       kmod
+Requires:       dracut
+
+%description -n %{prjname}-kmod-common
+depmod and dracut settings for the out-of-tree Intel IPU7 drivers: the
+akmod modules take precedence over the in-tree staging ones, and the IPU7
+drivers are kept out of the initramfs, where the probe fails without
+ipu7ptl_fw.bin.
+%endif
 
 %prep
 %{?kmodtool_check}
@@ -82,7 +99,32 @@ for kernel_version in %{?kernel_versions}; do
 done
 %{?akmod_install}
 
+%if %{undefined kernels}
+install -Dm644 %{SOURCE1} %{buildroot}%{_prefix}/lib/depmod.d/intel-ipu7-kmod.conf
+install -Dm644 %{SOURCE2} %{buildroot}%{_prefix}/lib/dracut/dracut.conf.d/90-intel-ipu7-kmod.conf
+
+%post -n %{prjname}-kmod-common
+for k in /lib/modules/*/; do depmod -a "$(basename "$k")" 2>/dev/null || :; done
+[ $1 -eq 1 ] && touch /run/%{prjname}-kmod-common.dracut || :
+
+%posttrans -n %{prjname}-kmod-common
+# on first install, drop the IPU7 drivers from existing initramfs images
+if [ -e /run/%{prjname}-kmod-common.dracut ]; then
+    rm -f /run/%{prjname}-kmod-common.dracut
+    dracut --regenerate-all --force >/dev/null 2>&1 || :
+fi
+
+%files -n %{prjname}-kmod-common
+%{_prefix}/lib/depmod.d/intel-ipu7-kmod.conf
+%{_prefix}/lib/dracut/dracut.conf.d/90-intel-ipu7-kmod.conf
+%endif
+
 %changelog
+* Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-6.dellptl
+- Add the intel-ipu7-kmod-common subpackage with the depmod and dracut
+  settings: akmod-intel-ipu7 required it, but only intel-ipu7-camera
+  provided it, so the kmod could not be installed on its own (#36)
+
 * Mon Oct 19 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-5.dellptl
 - Treat Y10 as greyscale, not Bayer: setting the IR sensor crop warned
   in ipu7_isys_convert_bayer_order on every capture

@@ -1,8 +1,8 @@
 # Intel IPU7 MIPI camera stack for Dell XPS 14/16 (Panther Lake, OV08X40 behind
 # Intel CVS). Fedora port of omarchy-pkgs pkgbuilds/intel-ipu7-camera.
 
-%global bins_commit    adf55525ab9d370828723b1ff8bee76ed7a492e8
-%global hal_commit     42d26ec6dd51236ea6ab9cfd9eb41a9f1c2c5b92
+%global bins_commit    0525cdfb501b56dcffbacd4e46a13c63ab0f2866
+%global hal_commit     30ad691a040142e362e5ea0158460366386b9465
 %global icsrc_commit   4fb31db76b618aae72184c59314b839dedb42689
 
 # Prebuilt Intel imaging libraries: don't strip or generate debuginfo
@@ -13,7 +13,7 @@
 
 Name:           intel-ipu7-camera
 Version:        1.0.6
-Release:        7.dellptl%{?dist}
+Release:        8.dellptl%{?dist}
 Summary:        Intel IPU7 MIPI camera stack (OV08X40 + hardware ISP)
 License:        GPL-2.0-or-later AND Apache-2.0 AND LGPL-2.1-or-later AND LicenseRef-Intel-Proprietary
 URL:            https://github.com/intel/ipu7-camera-hal
@@ -163,6 +163,8 @@ popd
 %install
 # --- HAL (plugins + adaptor + /etc/camera configs) ---
 make -C ipu7-camera-hal/build DESTDIR=%{buildroot} install
+# serdes firmware for the ISX031 automotive sensors (IoT boards), not used here
+rm -f %{buildroot}/boot/max96724_isx031_ipu75xa.img
 
 pushd ipu7-camera-hal/config/linux/ipu75xa
 install -Dm644 libcamhal_configs.json -t %{buildroot}%{_datadir}/defaults/etc/camera/
@@ -238,6 +240,11 @@ systemctl daemon-reload || :
 %{_prefix}/lib/systemd/system-sleep/ipu7-camera
 
 %changelog
+* Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-8.dellptl
+- Update ipu7-camera-hal to 30ad691 and ipu7-camera-bins to 0525cdf
+  (Intel IPU7 release of 2026-09-26, new OV08X40_KAFE799 graph)
+- Do not ship the ISX031 serdes image the new HAL installs to /boot
+
 * Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-7.dellptl
 - Move the depmod and dracut settings to intel-ipu7-kmod-common and stop
   providing it here, so the akmod installs from the COPR on its own (#36)

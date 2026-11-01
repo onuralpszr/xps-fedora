@@ -199,7 +199,7 @@ Restarting `v4l2-relayd@ipu7` then crashed the driver: after `stream stop time o
 <details>
 <summary>PipeWire crashes when a camera app opens (2026-10-19)</summary>
 
-Opening Kamoso crashed PipeWire in `spa_v4l2_use_buffers` (`libspa-v4l2.so`). The app asked for fewer buffers than the 16 the `v4l2loopback` device hands out once the relay streams, and PipeWire 1.6.9 walked all 16 entries of the app's shorter buffer list. Upstream fixed it in master as `7a8e4938` ("spa: v4l2: do not walk past the buffers the caller provided"), not yet in 1.6.x. `pipewire` 1.6.9-1.fc45.2.ovstack in `thunderbirdtr/intel-ai-stack` carries the backport.
+Opening Kamoso crashed PipeWire in `spa_v4l2_use_buffers` (`libspa-v4l2.so`). The app asked for fewer buffers than the 16 the `v4l2loopback` device hands out once the relay streams, and PipeWire 1.6.9 walked all 16 entries of the app's shorter buffer list. Upstream fixed it in master as `7a8e4938` ("spa: v4l2: do not walk past the buffers the caller provided"), not yet in 1.6.x. The second crash, in `mmap_read`, was a dequeued buffer index that was never queued (upstream `682932a6`, "spa: v4l2: skip a dequeued buffer that was never queued"). `pipewire` in `thunderbirdtr/intel-ai-stack` carries both, from `rebuilds/pipewire/` (1.6.11-1.fc45.1.ovstack; 1.6.11 has neither).
 
 </details>
 

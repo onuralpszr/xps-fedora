@@ -1,0 +1,79 @@
+From 682932a6fbd7ec61cef013c784574ec2a2cc7a2e Mon Sep 17 00:00:00 2001
+From: Viorel Cernateanu <vrilutza@gmail.com>
+Date: Sat, 19 Sep 2026 07:36:43 +0300
+Subject: [PATCH] spa: v4l2: skip a dequeued buffer that was never queued
+
+mmap_read() takes the buffer from the index VIDIOC_DQBUF returns
+without checking it. The source queues only buffers 0..n_buffers-1,
+and a compliant driver only returns those. A driver that also returns
+the extra buffers VIDIOC_REQBUFS allocated beyond the request gives
+an index with no buffer of ours behind it: its pointers are NULL or
+left over from an earlier, larger negotiation, and the data thread
+crashes on them.
+
+Work around such drivers: give the buffer back and skip it, warning
+once per stream. The frame it carries is lost, but the daemon keeps
+running. Keeping the buffer instead would not help, since a driver
+that returns an unqueued buffer does not track what the reader
+queued.
+
+Signed-off-by: Viorel Cernateanu <vrilutza@gmail.com>
+---
+ spa/plugins/v4l2/v4l2-source.c |  1 +
+ spa/plugins/v4l2/v4l2-utils.c  | 21 +++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/spa/plugins/v4l2/v4l2-source.c b/spa/plugins/v4l2/v4l2-source.c
+index f90193b3b..0b5654e67 100644
+--- a/spa/plugins/v4l2/v4l2-source.c
++++ b/spa/plugins/v4l2/v4l2-source.c
+@@ -81,6 +81,7 @@ struct port {
+ 	bool probed_expbuf;
+ 	bool have_expbuf;
+ 	bool first_buffer;
++	bool warned_unqueued;
+ 	uint32_t max_buffers;
+ 
+ 	bool next_fmtdesc;
+diff --git a/spa/plugins/v4l2/v4l2-utils.c b/spa/plugins/v4l2/v4l2-utils.c
+index 9915ee2ad..6a024437c 100644
+--- a/spa/plugins/v4l2/v4l2-utils.c
++++ b/spa/plugins/v4l2/v4l2-utils.c
+@@ -1437,6 +1437,26 @@ static int mmap_read(struct impl *this)
+ 
+ 	spa_log_trace(this->log, "v4l2 %p: have output %d/%d", this, buf.index, buf.sequence);
+ 
++	if (buf.index >= port->n_buffers) {
++		/* Guard against drivers that dequeue a buffer that was never
++		 * queued. The source only queues buffers 0..n_buffers-1, and a
++		 * compliant driver never returns any other, so this is only a
++		 * workaround for drivers that break that rule, such as
++		 * v4l2loopback, which hands the reader buffers in write order.
++		 * We have no buffer for this index: queue it back and skip the
++		 * frame. Keeping it would not help, since such a driver does
++		 * not track what the reader queued, and on a driver that does
++		 * it would take a buffer out of rotation for the whole
++		 * session. */
++		spa_log_lev(this->log, port->warned_unqueued ? SPA_LOG_LEVEL_DEBUG : SPA_LOG_LEVEL_WARN,
++				"'%s' dequeued buffer %u, but only %u were queued",
++				this->props.device, buf.index, port->n_buffers);
++		port->warned_unqueued = true;
++		if (xioctl(dev->fd, VIDIOC_QBUF, &buf) < 0)
++			spa_log_warn(this->log, "v4l2 %p: error qbuf: %m", this);
++		return 0;
++	}
++
+ 	/* Drop the first frame in order to work around common firmware
+ 	 * timestamp issues */
+ 	if (port->first_buffer) {
+@@ -1893,6 +1913,7 @@ static int spa_v4l2_stream_on(struct impl *this)
+ 		port->first_buffer = true;
+ 	else
+ 		port->first_buffer = false;
++	port->warned_unqueued = false;
+ 	mmap_read(this);
+ 
+ 	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+-- 
+GitLab
+

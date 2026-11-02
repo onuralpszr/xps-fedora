@@ -1,0 +1,66 @@
+From: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+Subject: [PATCH] camhal: load the module NVM from a file named in the sensor config
+
+The HAL only takes NVM (per-module lens shading and AWB calibration) from an
+ACPI-enumerated EEPROM bound to at24. On Dell Panther Lake laptops the
+OV08X40 module EEPROM sits behind the USB IO bridge at 0x50 and is not
+enumerated, so AIQ never gets the module calibration and the image shows
+colour shading. PlatformData already passes mNvmOverwrittenFile to AIQ, but
+nothing sets it.
+
+Parse "nvmOverwrittenFile": [path, max size] from the sensor config, and
+point the ipu75xa ov08x40 config at /var/lib/intel-ipu7-camera/ov08x40-uf.nvm.
+Without that file the HAL behaves as before.
+
+Signed-off-by: Onuralp SEZER <thunderbirdtr@fedoraproject.org>
+---
+--- a/src/platformdata/CameraSensorsParser.cpp
++++ b/src/platformdata/CameraSensorsParser.cpp
+@@ -436,6 +436,15 @@
+     mNVMDeviceInfo.push_back(info);
+ }
+ 
++void CameraSensorsParser::parseNvmOverwrittenFile(const Json::Value& node) {
++    if (node.size() != 2) {
++        LOGW("%s, Bad NVM file object", __func__);
++        return;
++    }
++    mCurCam->mNvmOverwrittenFile = node[0].asString();
++    mCurCam->mNvmOverwrittenFileSize = node[1].asInt();
++}
++
+ void CameraSensorsParser::parsesupportModuleNames(const Json::Value& node) {
+     std::vector<std::string> supportModuleNames;
+ 
+@@ -834,6 +843,9 @@
+     if (node.isMember("nvmDeviceInfo")) {
+         parseNvmeDeviceInfo(node["nvmDeviceInfo"]);
+     }
++    if (node.isMember("nvmOverwrittenFile")) {
++        parseNvmOverwrittenFile(node["nvmOverwrittenFile"]);
++    }
+     if (node.isMember("supportModuleNames")) {
+         parsesupportModuleNames(node["supportModuleNames"]);
+     }
+--- a/src/platformdata/CameraSensorsParser.h
++++ b/src/platformdata/CameraSensorsParser.h
+@@ -107,6 +107,7 @@
+     int getCameraModuleNameFromEEPROM(const std::string& nvmDir, std::string* cameraModule);
+     void updateNVMDir();
+     void parseNvmeDeviceInfo(const Json::Value& node);
++    void parseNvmOverwrittenFile(const Json::Value& node);
+     void parsesupportModuleNames(const Json::Value& node);
+     void parseSensorSection(const Json::Value& node);
+     void parseSupportedTuningConfig(const Json::Value& node);
+--- a/config/linux/ipu75xa/sensors/ov08x40-uf.json
++++ b/config/linux/ipu75xa/sensors/ov08x40-uf.json
+@@ -189,6 +189,9 @@
+         "supportedISysSizes": [[3856, 2176]],
+         "supportedISysFormat": ["V4L2_PIX_FMT_SGRBG10"],
+         "enableAIQ": true,
++        // Per-module calibration (lens shading, AWB) from the module EEPROM. It is
++        // not ACPI-enumerated on Dell PTL, so it is dumped to a file once.
++        "nvmOverwrittenFile": ["/var/lib/intel-ipu7-camera/ov08x40-uf.nvm", 4096],
+         "iSysRawFormat": "V4L2_PIX_FMT_SGRBG10",
+         "maxRawDataNum": 32,
+         "initialSkipFrame": 0,

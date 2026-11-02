@@ -1,8 +1,8 @@
 # Intel IPU7 MIPI camera stack for Dell XPS 14/16 (Panther Lake, OV08X40 behind
 # Intel CVS). Fedora port of omarchy-pkgs pkgbuilds/intel-ipu7-camera.
 
-%global bins_commit    403c67db6b279dd02752f11db6a34552f31a3ac5
-%global hal_commit     b1f6ebef12111fb5da0133b144d69dd9b001836c
+%global bins_commit    0525cdfb501b56dcffbacd4e46a13c63ab0f2866
+%global hal_commit     30ad691a040142e362e5ea0158460366386b9465
 %global icsrc_commit   4fb31db76b618aae72184c59314b839dedb42689
 
 # Prebuilt Intel imaging libraries: don't strip or generate debuginfo
@@ -13,7 +13,7 @@
 
 Name:           intel-ipu7-camera
 Version:        1.0.6
-Release:        4.dellptl%{?dist}
+Release:        8.dellptl%{?dist}
 Summary:        Intel IPU7 MIPI camera stack (OV08X40 + hardware ISP)
 License:        GPL-2.0-or-later AND Apache-2.0 AND LGPL-2.1-or-later AND LicenseRef-Intel-Proprietary
 URL:            https://github.com/intel/ipu7-camera-hal
@@ -23,8 +23,6 @@ Source1:        https://github.com/intel/ipu7-camera-bins/archive/%{bins_commit}
 Source2:        https://github.com/intel/ipu7-camera-hal/archive/%{hal_commit}/ipu7-camera-hal-%{hal_commit}.tar.gz
 Source3:        https://github.com/intel/icamerasrc/archive/%{icsrc_commit}/icamerasrc-%{icsrc_commit}.tar.gz
 
-Source10:       intel-ipu7-depmod.conf
-Source11:       90-intel-ipu7-camera-dracut.conf
 Source12:       camera-deps.conf
 Source13:       v4l2loopback-ipu7.conf
 Source14:       camera-init.service
@@ -38,12 +36,12 @@ Source21:       camera-tmpfiles.conf
 Source22:       camera-sleep-hook
 
 # ipu7-camera-hal
-Patch10:        0005-camhal-MediaControl-route-through-Intel-CVS-bridge.patch
 Patch11:        0006-camhal-ipu75xa-ov08x40-Intel-CVS-formats.patch
 Patch12:        0012-camhal-ipu7x-ov08x40-Intel-CVS-formats.patch
 Patch13:        0008-camhal-honor-the-reduced-YUV-color-range.patch
 Patch14:        0010-camhal-scale-analog-gain-codes-to-the-ov08x40-driver-units.patch
 Patch15:        0011-camhal-fall-back-to-the-default-ISP-tuning-when-the-mode-is-missing.patch
+Patch16:        0013-camhal-load-the-module-NVM-from-a-file-named-in-the-sensor-config.patch
 # icamerasrc
 Patch20:        0009-icamerasrc-add-an-fps-range-property-for-auto-exposure.patch
 
@@ -67,8 +65,9 @@ BuildRequires:  pkgconfig(libva-drm)
 BuildRequires:  systemd-rpm-macros
 
 # Kernel modules come from the akmod (intel-ipu7-kmod.spec)
+# depmod and dracut settings for the akmod are in intel-ipu7-kmod-common
 Requires:       intel-ipu7-kmod >= %{version}
-Provides:       intel-ipu7-kmod-common = %{version}-%{release}
+Requires:       intel-ipu7-kmod-common >= 1.0.6-6
 Requires:       v4l2-relayd
 Requires:       v4l2loopback
 Requires:       gstreamer1-plugins-base
@@ -97,12 +96,12 @@ cp -p ipu7-camera-hal/LICENSE LICENSE.ipu7-camera-hal
 cp -p icamerasrc/LICENSE LICENSE.icamerasrc
 
 pushd ipu7-camera-hal
-%patch -P10 -p1
 %patch -P11 -p1
 %patch -P12 -p1
 %patch -P13 -p1
 %patch -P14 -p1
 %patch -P15 -p1
+%patch -P16 -p1
 popd
 pushd icamerasrc
 %patch -P20 -p1
@@ -164,6 +163,8 @@ popd
 %install
 # --- HAL (plugins + adaptor + /etc/camera configs) ---
 make -C ipu7-camera-hal/build DESTDIR=%{buildroot} install
+# serdes firmware for the ISX031 automotive sensors (IoT boards), not used here
+rm -f %{buildroot}/boot/max96724_isx031_ipu75xa.img
 
 pushd ipu7-camera-hal/config/linux/ipu75xa
 install -Dm644 libcamhal_configs.json -t %{buildroot}%{_datadir}/defaults/etc/camera/
@@ -184,8 +185,6 @@ make -C icamerasrc DESTDIR=%{buildroot} install
 find %{buildroot} -name '*.la' -delete
 
 # --- System integration ---
-install -Dm644 %{SOURCE10} %{buildroot}%{_prefix}/lib/depmod.d/intel-ipu7.conf
-install -Dm644 %{SOURCE11} %{buildroot}%{_prefix}/lib/dracut/dracut.conf.d/90-intel-ipu7-camera.conf
 install -Dm644 %{SOURCE12} %{buildroot}%{_modprobedir}/ipu7-camera-deps.conf
 install -Dm644 %{SOURCE13} %{buildroot}%{_sysconfdir}/modprobe.d/v4l2-relayd.conf
 install -Dm644 %{SOURCE14} %{buildroot}%{_unitdir}/camera-init.service
@@ -200,15 +199,10 @@ install -Dm755 %{SOURCE22} %{buildroot}%{_prefix}/lib/systemd/system-sleep/ipu7-
 
 %post
 /sbin/ldconfig
-for k in /lib/modules/*/; do depmod -a "$(basename "$k")" 2>/dev/null || :; done
 systemd-tmpfiles --create %{_tmpfilesdir}/ipu7-camera.conf || :
 udevadm control --reload-rules 2>/dev/null || :
 systemctl daemon-reload || :
 systemctl enable camera-init.service || :
-
-%posttrans
-# drop the IPU7 drivers from existing initramfs images (see the dracut conf)
-dracut --regenerate-all --force >/dev/null 2>&1 || :
 
 %preun
 if [ $1 -eq 0 ]; then
@@ -234,8 +228,6 @@ systemctl daemon-reload || :
 %{_includedir}/gstreamer-1.0/
 %config(noreplace) %{_sysconfdir}/camera/
 %{_datadir}/defaults/etc/camera/
-%{_prefix}/lib/depmod.d/intel-ipu7.conf
-%{_prefix}/lib/dracut/dracut.conf.d/90-intel-ipu7-camera.conf
 %{_modprobedir}/ipu7-camera-deps.conf
 %config(noreplace) %{_sysconfdir}/modprobe.d/v4l2-relayd.conf
 %config(noreplace) %{_sysconfdir}/v4l2-relayd.d/ipu7.conf
@@ -248,6 +240,25 @@ systemctl daemon-reload || :
 %{_prefix}/lib/systemd/system-sleep/ipu7-camera
 
 %changelog
+* Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-8.dellptl
+- Update ipu7-camera-hal to 30ad691 and ipu7-camera-bins to 0525cdf
+  (Intel IPU7 release of 2026-09-26, new OV08X40_KAFE799 graph)
+- Do not ship the ISX031 serdes image the new HAL installs to /boot
+
+* Mon Nov 02 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-7.dellptl
+- Move the depmod and dracut settings to intel-ipu7-kmod-common and stop
+  providing it here, so the akmod installs from the COPR on its own (#36)
+
+* Mon Oct 19 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-6.dellptl
+- Load the OV08X40 module NVM (lens shading and AWB calibration) from
+  /var/lib/intel-ipu7-camera/ov08x40-uf.nvm when present
+
+* Mon Oct 19 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-5.dellptl
+- Update ipu7-camera-hal to 42d26ec and ipu7-camera-bins to adf5552 (new
+  OV08X40 graph, AIQ/AIC/CCA libraries)
+- Drop the CVS routing backport, upstream since 4de10b6
+- Rebase the analog gain scaling patch on the new SensorHwCtrl
+
 * Wed Oct 07 2026 Onuralp SEZER <thunderbirdtr@fedoraproject.org> - 1.0.6-4.dellptl
 - Ship the license of each component, including the Intel camera binaries
 

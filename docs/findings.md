@@ -203,6 +203,20 @@ Opening Kamoso crashed PipeWire in `spa_v4l2_use_buffers` (`libspa-v4l2.so`). Th
 
 </details>
 
+<details>
+<summary>Yellow picture with red and blue corners: the wrong module tuning (2026-10-19)</summary>
+
+The picture had a yellow cast, with red and blue tints toward the corners. The neutral-pixel R−G / B−G, measured in thirds (left, centre, right), was +6.6/−7.3, +10.1/−5.1, +7.9/−11.6. Intel's HAL only has tuning for its reference module `KAFE799`. The XPS 16 module is `BBG809N3A`: ACPI `_DDN` of the sensor, and `BBG809` in the module EEPROM next to Dell's part number. Windows uses two things that Linux was missing:
+
+- **Tuning.** Dell's driver (YMY0G) ships `OV08X40_BBG809N3A_PTL.aiqb` and 19 other OV08X40 module tunings.
+- **Calibration.** It reads per-module calibration (lens shading and AWB) from the module EEPROM at I2C `0x50` on the USB IO bridge bus (`NVMStartAddr` 4096 in its INF). The HAL can load NVM from a file (`nvmOverwrittenFile`), and `intel-ipu7-camera` 1.0.6-6 adds that file to the OV08X40 config: `/var/lib/intel-ipu7-camera/ov08x40-uf.nvm`.
+
+With both, the thirds are +3.2/−6.0, +1.0/−1.7, +1.5/+0.2. The Dell files are not redistributable, so `dell-xps-ptl-config` 1.8 has `sudo dell-xps-ptl-camera-tuning` to do it on the machine. Dell's server refuses scripted downloads, so YMY0G is downloaded in a browser; the tool finds it in `~/Downloads` (or takes `--driver <file>`) and checks its sha256. It reads the EEPROM once while the camera streams, then installs the tuning for the module it found over the KAFE799 one (keeping Intel's as `.intel`) and installs the NVM. `--restore` undoes it.
+
+The EEPROM is only powered while the sensor streams. The SVP7500 bridge hangs on an I2C transfer nobody answers: `i2cdetect` on that bus wedged it, and the `usbio` driver then oopsed in `usbio_bulk_msg` after the bridge disconnected. Do not probe that bus.
+
+</details>
+
 ## IR camera (Himax HM1092)
 
 The Windows Hello IR sensor is a Himax HM1092 (ACPI `HIMX1092`, `\_SB_.LNK0`). Power, reset and the IR flood LED come from `INT3472:00`, which already exposes `/sys/class/leds/HIMX1092_00::ir_flood_led`. The three `OVTI01AF` entries are disabled BIOS placeholders.

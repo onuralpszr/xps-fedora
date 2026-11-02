@@ -1,0 +1,174 @@
+#!/bin/bash
+# Install Dell's camera tuning and the module calibration for the XPS 16 RGB
+# camera (OV08X40), on this machine only.
+#
+# Intel's ipu7-camera-hal tunes the OV08X40 for its reference module
+# (KAFE799). The XPS 16 DA16260 ships other modules, and without their
+# tuning and per-module calibration (NVM: lens shading, white balance) the
+# picture has a yellow cast with red and blue corners. This:
+#
+#  1. reads the module EEPROM once while the camera streams. The module is
+#     only powered then, and the SVP7500 USB IO bridge hangs on an I2C
+#     transfer nobody answers, so nothing is probed: the EEPROM address is
+#     the one in the sensor's ACPI resources, and the read waits for power.
+#     It gives the module code and the NVM block (at 4096, Dell's
+#     NVMStartAddr).
+#  2. takes OV08X40_<module>_PTL.aiqb from Dell's Windows camera driver
+#     (YMY0G), after checking its sha256. Dell's server does not allow
+#     scripted downloads, so download it in a browser first (link below);
+#     it is looked for in ~/Downloads, or pass its path with --driver.
+#  3. installs that tuning over the KAFE799 one (the original is kept as
+#     .intel) and the NVM as /var/lib/intel-ipu7-camera/ov08x40-uf.nvm,
+#     which intel-ipu7-camera 1.0.6-6 and later loads, then restarts the
+#     camera relay.
+#
+# Dell's files are not redistributable, so they stay on this machine.
+#
+# Usage: dell-xps-ptl-camera-tuning [--driver FILE] [--module CODE]
+#        dell-xps-ptl-camera-tuning --restore     put Intel's tuning back
+set -euo pipefail
+
+exe_name=Intel-2D-Imaging-USB-IO-Vision-Driver-for-Camera_YMY0G_WIN64_81.26100.0.13_A01_01.EXE
+url=https://dl.dell.com/FOLDER13986670M/2/Intel-2D-Imaging-USB-IO-Vision-Driver-for-Camera_YMY0G_WIN64_81.26100.0.13_A01_01.EXE
+sha256=510eb985ad01e22e866560fcba1944633174d70bea790a70157574ddce1b99d8
+cache=/var/cache/dell-xps-ptl-camera
+state=/var/lib/intel-ipu7-camera
+tuning=/etc/camera/ipu75xa/OV08X40_KAFE799_PTL.aiqb
+sensor=/sys/bus/i2c/devices/i2c-OVTI08F4:00
+eeprom_addr=0x50
+loopback=/dev/video50
+relay=v4l2-relayd@ipu7.service
+
+die() { echo "dell-xps-ptl-camera-tuning: $*" >&2; exit 1; }
+
+module=
+driver=
+restore=0
+while [ $# -gt 0 ]; do
+    case $1 in
+        --module) module=${2:?--module needs a code, e.g. BBG809N3A}; shift 2 ;;
+        --driver) driver=${2:?--driver needs the path of the YMY0G .EXE}; shift 2 ;;
+        --restore) restore=1; shift ;;
+        -h|--help) sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit 0 ;;
+        *) die "unknown argument $1 (see --help)" ;;
+    esac
+done
+
+[ "$(id -u)" = 0 ] || die "run it with sudo"
+[ "$(cat /sys/class/dmi/id/product_name 2>/dev/null)" = "XPS 16 DA16260" ] ||
+    die "this is only for the Dell XPS 16 DA16260"
+
+restart_relay() {
+    if systemctl -q is-active "$relay"; then
+        systemctl restart "$relay" && echo "restarted $relay"
+    fi
+}
+
+if [ $restore = 1 ]; then
+    [ -e "$tuning.intel" ] && mv -f "$tuning.intel" "$tuning" && echo "restored Intel's $tuning"
+    rm -f "$state/ov08x40-uf.nvm"
+    restart_relay
+    exit 0
+fi
+
+for tool in 7z sha256sum gst-launch-1.0; do
+    command -v $tool >/dev/null || die "$tool is missing (sudo dnf install 7zip gstreamer1-plugins-good)"
+done
+
+# Dell's driver, before touching the camera: --driver, the cached copy, or
+# the user's Downloads folder
+exe=$cache/YMY0G.exe
+matches() { [ -f "$1" ] && echo "$sha256  $1" | sha256sum -c --status; }
+if [ -n "$driver" ]; then
+    matches "$driver" || die "$driver is not Dell's YMY0G 81.26100.0.13 A01 (sha256 differs)"
+elif ! matches "$exe"; then
+    home=$(getent passwd "${SUDO_USER:-root}" | cut -d: -f6)
+    downloads=$(sudo -u "${SUDO_USER:-root}" xdg-user-dir DOWNLOAD 2>/dev/null || echo "$home/Downloads")
+    for f in "$downloads/$exe_name" "$home/Downloads/$exe_name"; do
+        matches "$f" && { driver=$f; break; }
+    done
+    [ -n "$driver" ] || die "Dell's camera driver is needed. Download it in a browser:
+  $url
+then run this again (it looks in $downloads), or pass --driver <file>"
+fi
+if [ -n "$driver" ]; then
+    mkdir -p "$cache"
+    cp -f "$driver" "$exe"
+fi
+[ -e "$tuning" ] || die "$tuning not found, is intel-ipu7-camera installed?"
+[ -e "$sensor" ] || die "the OV08X40 sensor ($sensor) is not there"
+[ -e "$loopback" ] || die "$loopback not found, is $relay set up?"
+
+work=$(mktemp -d)
+gst=
+dev=
+cleanup() {
+    [ -n "$dev" ] && [ -e "$dev" ] && echo $eeprom_addr > "$adapter/delete_device" 2>/dev/null
+    [ -n "$gst" ] && kill "$gst" 2>/dev/null && wait "$gst" 2>/dev/null
+    rm -rf "$work"
+}
+trap cleanup EXIT
+
+# --- 1. module EEPROM, read only while the sensor is powered ---
+adapter=$(readlink -f "$sensor/..")
+bus=$(basename "$adapter")
+eeprom_dev=/sys/bus/i2c/devices/${bus#i2c-}-00${eeprom_addr#0x}
+[ -e "$eeprom_dev" ] && die "$eeprom_dev already exists, not touching it"
+
+echo "starting the camera to power the module..."
+timeout 60 gst-launch-1.0 -q v4l2src device="$loopback" ! fakesink >/dev/null 2>&1 &
+gst=$!
+powered=0
+for _ in $(seq 30); do
+    kill -0 "$gst" 2>/dev/null || break
+    if [ "$(cat "$sensor/power/runtime_status")" = active ]; then powered=1; break; fi
+    sleep 1
+done
+[ $powered = 1 ] || die "the sensor did not power up; close any app using the camera and try again"
+sleep 3   # let streaming settle before the bridge sees other traffic
+
+modprobe at24 io_limit=32
+echo 24c128 $eeprom_addr > "$adapter/new_device"
+dev=$eeprom_dev
+sleep 1
+[ -r "$dev/eeprom" ] || die "the EEPROM driver did not bind (see journalctl -k)"
+dd if="$dev/eeprom" of="$work/eeprom.bin" bs=4096 count=2 status=none
+echo $eeprom_addr > "$adapter/delete_device"
+dev=
+kill "$gst" 2>/dev/null; wait "$gst" 2>/dev/null || :
+gst=
+
+dd if="$work/eeprom.bin" of="$work/ov08x40-uf.nvm" bs=1024 skip=4 count=1 status=none
+case $(od -An -v -tx1 -N16 "$work/ov08x40-uf.nvm" | tr -d ' \n') in
+    ffffffffffffffffffffffffffffffff|00000000000000000000000000000000)
+        die "no NVM at 4096 in the EEPROM" ;;
+esac
+
+# the module code follows the "ASSY,CMRA,..." record, e.g. "BBG809,"
+code=$(tr -c '[:print:]' '\n' < "$work/eeprom.bin" | grep -v '^$' |
+    grep -m1 -A1 '^ASSY,CMRA' | sed -n '2s/,.*//p')
+echo "module: ${code:-unknown}"
+
+# --- 2. Dell's tuning for that module ---
+matches "$exe" || die "$exe does not match the expected sha256"
+7z e -y -bd -o"$work/dell" "$exe" 'OV08X40_*_PTL.aiqb' -r >/dev/null
+if [ -z "$module" ]; then
+    [ -n "$code" ] || die "no module code in the EEPROM, pass --module (see $work/dell)"
+    # base tuning only: not the _B, _GR, _RG or PNP variants
+    mapfile -t found < <(cd "$work/dell" && ls OV08X40_"$code"*_PTL.aiqb 2>/dev/null |
+        grep -Ev '_(B|GR|RG)_PTL|PNP_PTL')
+    [ ${#found[@]} = 1 ] || die "no single Dell tuning for module $code (${found[*]:-none}), pass --module"
+    module=$(sed 's/^OV08X40_//; s/_PTL\.aiqb$//' <<< "${found[0]}")
+fi
+src=$work/dell/OV08X40_${module}_PTL.aiqb
+[ -e "$src" ] || die "Dell's driver has no OV08X40_${module}_PTL.aiqb"
+
+# --- 3. install ---
+[ -e "$tuning.intel" ] || cp -a "$tuning" "$tuning.intel"
+install -m644 "$src" "$tuning"
+install -d -m755 "$state"
+install -m644 "$work/ov08x40-uf.nvm" "$state/ov08x40-uf.nvm"
+install -m600 "$work/eeprom.bin" "$state/ov08x40-eeprom.bin"
+echo "installed Dell's $module tuning as $tuning (Intel's kept as $tuning.intel)"
+echo "installed the module NVM as $state/ov08x40-uf.nvm"
+restart_relay

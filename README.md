@@ -179,7 +179,7 @@ Everything comes from three places: two COPR repositories for the open packages,
 Adds every repository, sets up the Secure Boot key and installs everything. `mokutil` asks for a one-time password; enroll the key in MOK Manager on the next boot.
 
 ```bash
-sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf copr enable -y thunderbirdtr/xps-fedora && sudo dnf copr enable -y thunderbirdtr/intel-ai-stack && sudo dnf install -y akmods sbsigntools mokutil && sudo kmodgenca -a && sudo mokutil --import /etc/pki/akmods/certs/public_key.der && sudo dnf install -y dell-xps-ptl-config && sudo dnf install -y kernel akmod-intel-ipu7 plasma-light-and-presence https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm intel-npu-driver intel-npu-compiler openvino libopenvino-intel-npu-plugin python3-openvino-genai llama-cpp-vulkan llama-cpp-openvino && sudo dnf upgrade -y libdisplay-info && sudo dnf swap -y libva-intel-media-driver intel-media-driver --allowerasing && sudo reboot
+sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf copr enable -y thunderbirdtr/xps-fedora && sudo dnf copr enable -y thunderbirdtr/intel-ai-stack && sudo dnf install -y akmods sbsigntools mokutil && sudo kmodgenca -a && sudo mokutil --import /etc/pki/akmods/certs/public_key.der && sudo dnf install -y dell-xps-ptl-config && sudo dnf install -y kernel akmod-intel-ipu7 plasma-light-and-presence https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-8.dellptl/intel-ipu7-camera-1.0.6-8.dellptl.fc45.x86_64.rpm intel-npu-driver intel-npu-compiler openvino libopenvino-intel-npu-plugin python3-openvino-genai llama-cpp-vulkan llama-cpp-openvino && sudo dnf upgrade -y libdisplay-info && sudo dnf swap -y libva-intel-media-driver intel-media-driver --allowerasing && sudo reboot
 ```
 
 ### 🚀 Everything, step by step
@@ -204,7 +204,7 @@ sudo dnf swap libva-intel-media-driver intel-media-driver --allowerasing
 sudo dnf upgrade libdisplay-info   # HDR on the OLED
 
 # 4. Camera
-sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm
+sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-8.dellptl/intel-ipu7-camera-1.0.6-8.dellptl.fc45.x86_64.rpm
 
 # 5. NPU and AI stack
 sudo dnf install intel-npu-driver intel-npu-compiler openvino libopenvino-intel-npu-plugin \
@@ -239,7 +239,7 @@ Needs RPM Fusion for `v4l2-relayd` and `v4l2loopback`. Remove RPM Fusion's IPU6 
 ```bash
 sudo dnf remove akmod-intel-ipu6 'kmod-intel-ipu6*' ipu6-camera-hal ipu6-camera-bins gstreamer1-plugins-icamerasrc
 sudo dnf install akmod-intel-ipu7
-sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm
+sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-8.dellptl/intel-ipu7-camera-1.0.6-8.dellptl.fc45.x86_64.rpm
 ```
 
 The camera appears as "Intel MIPI Camera" after a reboot.
@@ -399,7 +399,7 @@ Live status of the last COPR build of each package.
 | --- | --- | --- | --- |
 | `kernel` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![kernel](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/kernel/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/kernel/) | Fedora kernel with the XPS 16 patches |
 | `intel-ipu7-kmod` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![intel-ipu7-kmod](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/intel-ipu7-kmod/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/intel-ipu7-kmod/) | IPU7 camera drivers (akmod) |
-| `intel-ipu7-camera` | [GitHub release](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-4.dellptl) | [![intel-ipu7-camera](https://img.shields.io/github/v/release/onuralpszr/xps-fedora?filter=intel-ipu7-camera-*&label=release)](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-4.dellptl) | IPU7 camera HAL, firmware and relay service |
+| `intel-ipu7-camera` | [GitHub release](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-8.dellptl) | [![intel-ipu7-camera](https://img.shields.io/github/v/release/onuralpszr/xps-fedora?filter=intel-ipu7-camera-*&label=release)](https://github.com/onuralpszr/xps-fedora/releases/tag/intel-ipu7-camera-1.0.6-8.dellptl) | IPU7 camera HAL, firmware and relay service |
 | `dell-xps-ptl-config` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![dell-xps-ptl-config](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/dell-xps-ptl-config/) | thermald, power profiles, kernel signing, IR camera relay |
 | `libdisplay-info` | [xps-fedora](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/) | [![libdisplay-info](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/libdisplay-info/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/xps-fedora/package/libdisplay-info/) | EDID library with DisplayID 2.0 HDR, for HDR on the OLED |
 | `plasma-light-and-presence` | [plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/) | [![plasma-light-and-presence](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/package/plasma-light-and-presence/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/thunderbirdtr/plasma-light-and-presence/package/plasma-light-and-presence/) | ambient light brightness for Plasma |

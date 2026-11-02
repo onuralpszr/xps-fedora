@@ -53,7 +53,7 @@ The `.dellptl` kernel sorts above Fedora's kernel of the same version. When Fedo
 
 ```bash
 sudo dnf install akmod-intel-ipu7
-sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-4.dellptl/intel-ipu7-camera-1.0.6-4.dellptl.fc45.x86_64.rpm
+sudo dnf install https://github.com/onuralpszr/xps-fedora/releases/download/intel-ipu7-camera-1.0.6-8.dellptl/intel-ipu7-camera-1.0.6-8.dellptl.fc45.x86_64.rpm
 ```
 
 akmods builds the IPU7 modules for every installed kernel on the next boot. To build them right away:
